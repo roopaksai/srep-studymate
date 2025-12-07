@@ -4,24 +4,58 @@ import Document from "@/lib/models/Document"
 import FlashcardSet from "@/lib/models/FlashcardSet"
 import { verifyToken } from "@/lib/auth"
 
-function generateSampleFlashcards(text: string) {
-  const sentences = text
-    .split(".")
-    .filter((s) => s.trim().length > 0)
-    .slice(0, 5)
-  const cards = sentences.map((sentence, index) => ({
-    question: `What is concept ${index + 1}?`,
-    answer: sentence.trim() + ".",
-  }))
-  return cards.length > 0
-    ? cards
-    : [
-        { question: "What is this document about?", answer: "This document covers important study material." },
-        {
-          question: "What are the key topics?",
-          answer: "The document covers multiple key topics for exam preparation.",
-        },
-      ]
+async function generateFlashcardsWithAI(text: string): Promise<{ question: string; answer: string }[]> {
+  try {
+    const apiKey = process.env.OPENROUTER_API_KEY
+    if (!apiKey) {
+      throw new Error("OPENROUTER_API_KEY not configured")
+    }
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "meta-llama/llama-3.1-8b-instruct:free",
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert educator creating flashcards. Generate 8-10 high-quality flashcards from the provided study material. Return ONLY a JSON array with objects containing 'question' and 'answer' fields. Make questions clear and concise, and answers detailed but focused.",
+          },
+          {
+            role: "user",
+            content: `Create flashcards from this study material:\n\n${text.substring(0, 3000)}`,
+          },
+        ],
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`OpenRouter API failed: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    const content = data.choices[0]?.message?.content
+
+    // Try to parse JSON from the response
+    const jsonMatch = content.match(/\[[\s\S]*\]/)
+    if (jsonMatch) {
+      const cards = JSON.parse(jsonMatch[0])
+      return cards.filter((card: any) => card.question && card.answer)
+    }
+
+    throw new Error("Failed to parse AI response")
+  } catch (error) {
+    console.error("AI generation failed, using fallback:", error)
+    // Fallback to simple extraction
+    const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 20).slice(0, 8)
+    return sentences.map((sentence, index) => ({
+      question: `What is the key concept ${index + 1} from the material?`,
+      answer: sentence.trim(),
+    }))
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -48,7 +82,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Document not found" }, { status: 404 })
     }
 
-    const cards = generateSampleFlashcards(document.extractedText)
+    const cards = await generateFlashcardsWithAI(document.extractedText)
 
     const flashcardSet = new FlashcardSet({
       userId: payload.userId,

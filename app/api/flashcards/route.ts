@@ -18,7 +18,13 @@ export async function GET(request: NextRequest) {
     await connectDB()
     const flashcardSets = await FlashcardSet.find({ userId: payload.userId }).sort({ createdAt: -1 })
 
-    return NextResponse.json({ flashcardSets })
+    // Transform _id to id for frontend compatibility
+    const transformedSets = flashcardSets.map((set) => ({
+      ...set.toObject(),
+      id: set._id.toString(),
+    }))
+
+    return NextResponse.json({ flashcardSets: transformedSets })
   } catch (error) {
     console.error("Get flashcards error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

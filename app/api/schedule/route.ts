@@ -18,7 +18,13 @@ export async function GET(request: NextRequest) {
     await connectDB()
     const schedules = await Schedule.find({ userId: payload.userId }).sort({ createdAt: -1 })
 
-    return NextResponse.json({ schedules })
+    // Transform _id to id for frontend compatibility
+    const transformedSchedules = schedules.map((schedule) => ({
+      ...schedule.toObject(),
+      id: schedule._id.toString(),
+    }))
+
+    return NextResponse.json({ schedules: transformedSchedules })
   } catch (error) {
     console.error("Get schedules error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

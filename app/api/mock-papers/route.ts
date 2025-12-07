@@ -18,8 +18,10 @@ export async function GET(request: NextRequest) {
     await connectDB()
     const mockPapers = await MockPaper.find({ userId: payload.userId }).sort({ createdAt: -1 })
 
+    // Transform _id to id and add totalMarks for frontend compatibility
     const papersWithMarks = mockPapers.map((paper) => ({
       ...paper.toObject(),
+      id: paper._id.toString(),
       totalMarks: paper.questions.reduce((sum: number, q: any) => sum + (q.marks || 0), 0),
     }))
 

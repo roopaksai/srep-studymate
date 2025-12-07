@@ -1,29 +1,33 @@
-# SREP - Your Studymate to Score in Exams
+# SREP - Your Studymate to Score in Exams 🎓
 
-Updated to reflect Next.js full-stack architecture instead of separate MERN monorepo
+> **Now with AI-Powered Content Generation!** ✨
 
-A modern full-stack Next.js application that helps students prepare for exams by providing tools for document analysis, flashcard generation, mock papers, and study scheduling.
+A modern full-stack Next.js application that helps students prepare for exams by providing AI-powered tools for document analysis, flashcard generation, mock papers, and study scheduling. All data is stored in MongoDB with intelligent content generation powered by OpenRouter AI.
 
-## Features
+## 🚀 Features
 
 - **User Authentication**: Secure JWT-based signup and login with bcrypt password hashing
-- **Document Upload**: Upload study materials (TXT/PDF/DOCX files)
-- **Flashcards**: Generate interactive flashcard sets from documents with flip-card UI
-- **Mock Papers**: Create practice exam papers with questions and marks
-- **Answer Analysis**: Upload answer scripts and get detailed feedback reports with strengths, weaknesses, and recommendations
+- **Document Upload**: Upload study materials (TXT/PDF/DOCX files) - stored in MongoDB
+- **AI Flashcards**: Generate intelligent flashcard sets from documents using Llama 3.1 AI
+- **AI Mock Papers**: Create practice exam papers with AI-generated questions and marks
+- **AI Answer Analysis**: Upload answer scripts and get detailed AI-powered feedback with strengths, weaknesses, and study recommendations
 - **Study Scheduler**: Generate personalized study schedules across dates with topic distribution
 - **Responsive Design**: Beautiful orange and cream themed UI that works on desktop and mobile
+- **Real Database**: All user data persisted in MongoDB (no mock data!)
+- **Fallback Mechanisms**: Reliable operation even if AI services are temporarily unavailable
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 ### Frontend & Backend (All in Next.js)
-- **Framework**: Next.js 16 (App Router)
+- **Framework**: Next.js 16 (App Router with Turbopack)
 - **Authentication**: JWT with jose library for token verification
-- **Database**: MongoDB with Mongoose ODM
+- **Database**: MongoDB Atlas with Mongoose ODM
+- **AI Integration**: OpenRouter API (Llama 3.1 8B Instruct)
 - **Password Hashing**: bcrypt for secure password storage
 - **State Management**: React Context API
 - **Styling**: Tailwind CSS v4
-- **UI Components**: shadcn/ui components
+- **UI Components**: shadcn/ui with Radix UI primitives
+- **TypeScript**: Full type safety across the application
 
 ## Project Structure
 
@@ -83,15 +87,22 @@ SREP/
    
    Create `.env.local` in the root directory:
    \`\`\`bash
-   # MongoDB Connection
-   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/srep
+   # MongoDB Connection (REQUIRED)
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/srep_studymate?retryWrites=true&w=majority
 
-   # JWT Secret (change this to a secure random string)
-   JWT_SECRET=your-super-secret-jwt-key-change-in-production-12345
+   # JWT Secret (REQUIRED - change this to a secure random string)
+   JWT_SECRET=your-super-secret-jwt-key-change-in-production-min-32-chars
+
+   # OpenRouter API Key (REQUIRED for AI features)
+   OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
 
    # API URL (for development)
    NEXT_PUBLIC_API_URL=http://localhost:3000/api
    \`\`\`
+   
+   **Get your API keys:**
+   - MongoDB: Sign up at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) (free tier)
+   - OpenRouter: Get API key at [OpenRouter.ai](https://openrouter.ai/keys) (free tier available)
 
 4. **Start development server**
    \`\`\`bash

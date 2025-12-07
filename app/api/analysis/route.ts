@@ -18,7 +18,13 @@ export async function GET(request: NextRequest) {
     await connectDB()
     const reports = await AnalysisReport.find({ userId: payload.userId }).sort({ createdAt: -1 })
 
-    return NextResponse.json({ reports })
+    // Transform _id to id for frontend compatibility
+    const transformedReports = reports.map((report) => ({
+      ...report.toObject(),
+      id: report._id.toString(),
+    }))
+
+    return NextResponse.json({ reports: transformedReports })
   } catch (error) {
     console.error("Get analysis reports error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

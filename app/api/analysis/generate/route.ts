@@ -4,22 +4,82 @@ import Document from "@/lib/models/Document"
 import AnalysisReport from "@/lib/models/AnalysisReport"
 import { verifyToken } from "@/lib/auth"
 
-function generateSampleAnalysis() {
-  return {
-    summary:
-      "Based on the answer script analysis, the student demonstrates good understanding of fundamental concepts with some areas for improvement in advanced topics.",
-    strengths: ["Strong grasp of basic concepts", "Clear explanation of core topics", "Good problem-solving approach"],
-    weaknesses: [
-      "Needs improvement in calculations",
-      "Could provide more detailed explanations",
-      "Some conceptual gaps in advanced topics",
-    ],
-    recommendedTopics: [
-      "Advanced Problem Solving",
-      "Detailed Concept Analysis",
-      "Calculation Techniques",
-      "Application of Theories",
-    ],
+async function generateAnalysisWithAI(answerText: string): Promise<{
+  summary: string
+  strengths: string[]
+  weaknesses: string[]
+  recommendedTopics: string[]
+}> {
+  try {
+    const apiKey = process.env.OPENROUTER_API_KEY
+    if (!apiKey) {
+      throw new Error("OPENROUTER_API_KEY not configured")
+    }
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "meta-llama/llama-3.1-8b-instruct:free",
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert educational assessor. Analyze the student's answer script and provide constructive feedback. Return ONLY a JSON object with these fields:
+- summary: string (2-3 sentences overview)
+- strengths: array of 3-4 strings
+- weaknesses: array of 3-4 strings
+- recommendedTopics: array of 4-5 strings (topics to study)`,
+          },
+          {
+            role: "user",
+            content: `Analyze this student answer script:\n\n${answerText.substring(0, 3000)}`,
+          },
+        ],
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`OpenRouter API failed: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    const content = data.choices[0]?.message?.content
+
+    // Try to parse JSON from the response
+    const jsonMatch = content.match(/\{[\s\S]*\}/)
+    if (jsonMatch) {
+      const analysis = JSON.parse(jsonMatch[0])
+      if (analysis.summary && analysis.strengths && analysis.weaknesses && analysis.recommendedTopics) {
+        return analysis
+      }
+    }
+
+    throw new Error("Failed to parse AI response")
+  } catch (error) {
+    console.error("AI generation failed, using fallback:", error)
+    // Fallback analysis
+    return {
+      summary: "The answer script shows understanding of basic concepts but needs more depth in explanations and examples.",
+      strengths: [
+        "Clear writing and structure",
+        "Good attempt at core concepts",
+        "Relevant topic coverage",
+      ],
+      weaknesses: [
+        "Could provide more detailed explanations",
+        "Needs more examples and illustrations",
+        "Some topics need deeper understanding",
+      ],
+      recommendedTopics: [
+        "In-depth concept analysis",
+        "Practical application examples",
+        "Advanced problem-solving techniques",
+        "Critical thinking and analysis",
+      ],
+    }
   }
 }
 
@@ -47,7 +107,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Document not found" }, { status: 404 })
     }
 
-    const analysis = generateSampleAnalysis()
+    const analysis = await generateAnalysisWithAI(document.extractedText)
 
     const report = new AnalysisReport({
       userId: payload.userId,
