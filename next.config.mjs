@@ -1,5 +1,3 @@
-Added API route configuration and error handling settings
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -7,11 +5,6 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
-  },
-  api: {
-    bodyParser: {
-      sizeLimit: '5mb',
-    },
   },
   env: {
     MONGODB_URI: process.env.MONGODB_URI,
