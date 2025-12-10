@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import User from "@/lib/models/User"
 import { generateToken } from "@/lib/auth"
-import bcrypt from "bcrypt"
+import bcryptjs from "bcryptjs"
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User already exists" }, { status: 400 })
     }
 
-    const passwordHash = await bcrypt.hash(password, 10)
+    const passwordHash = bcryptjs.hashSync(password, 10)
     const user = new User({ email, passwordHash, name })
     await user.save()
 
