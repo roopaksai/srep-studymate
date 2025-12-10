@@ -117,10 +117,15 @@ export async function POST(request: NextRequest) {
     // Generate flashcards for specific topic if provided
     const cards = await generateFlashcardsWithAI(document.extractedText, topic)
 
+    // Use document name with topic suffix if topic is specified
+    const defaultTitle = topic 
+      ? `${document.originalFileName} - ${topic}` 
+      : document.originalFileName
+
     const flashcardSet = new FlashcardSet({
       userId: payload.userId,
       documentId,
-      title: title || (topic ? `${topic} Flashcards` : "Flashcard Set"),
+      title: title || defaultTitle,
       topic: topic || "",
       cards,
     })
