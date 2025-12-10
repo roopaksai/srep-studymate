@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
           id: mockPaper._id,
           title: mockPaper.title,
           questions: mockPaper.questions,
-          totalMarks: mockPaper.questions.reduce((sum: number, q) => sum + (q.marks || 0), 0),
+          totalMarks: mockPaper.questions.reduce((sum: number, q: any) => sum + (q.marks || 0), 0),
           createdAt: mockPaper.createdAt,
         },
       },
