@@ -14,7 +14,7 @@ async function generateQuestionsWithAI(text: string): Promise<{ text: string; ma
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -22,7 +22,8 @@ async function generateQuestionsWithAI(text: string): Promise<{ text: string; ma
         messages: [
           {
             role: "system",
-            content: "You are an expert exam question creator. Generate 6-8 exam questions from the study material. Return ONLY a JSON array with objects containing 'text' (the question) and 'marks' (integer between 3-10) fields. Create a mix of short-answer, long-answer, and application questions.",
+            content:
+              "You are an expert exam question creator. Generate 6-8 exam questions from the study material. Return ONLY a JSON array with objects containing 'text' (the question) and 'marks' (integer between 3-10) fields. Create a mix of short-answer, long-answer, and application questions.",
           },
           {
             role: "user",
@@ -43,7 +44,7 @@ async function generateQuestionsWithAI(text: string): Promise<{ text: string; ma
     const jsonMatch = content.match(/\[[\s\S]*\]/)
     if (jsonMatch) {
       const questions = JSON.parse(jsonMatch[0])
-      return questions.filter((q: any) => q.text && typeof q.marks === 'number')
+      return questions.filter((q: any) => q.text && typeof q.marks === "number")
     }
 
     throw new Error("Failed to parse AI response")
@@ -101,7 +102,14 @@ export async function POST(request: NextRequest) {
           id: mockPaper._id,
           title: mockPaper.title,
           questions: mockPaper.questions,
+<<<<<<< HEAD
           totalMarks: mockPaper.questions.reduce((sum: number, q: any) => sum + (q.marks || 0), 0),
+=======
+          totalMarks: mockPaper.questions.reduce(
+            (sum: number, q: { text: string; marks: number }) => sum + (q.marks || 0),
+            0,
+          ),
+>>>>>>> a61a9fcfc8361f0291319802a6a71d4030afc3cf
           createdAt: mockPaper.createdAt,
         },
       },
