@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     const document = new Document({
       userId: payload.userId,
       originalFileName: file.name,
-      extractedText: extractedText.substring(0, 10000), // Store more text now
+      extractedText: extractedText.substring(0, 5000), // Store 5000 chars (sufficient for AI processing)
       topics,
       type,
     })
