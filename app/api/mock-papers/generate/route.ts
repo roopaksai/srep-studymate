@@ -102,14 +102,10 @@ export async function POST(request: NextRequest) {
           id: mockPaper._id,
           title: mockPaper.title,
           questions: mockPaper.questions,
-<<<<<<< HEAD
-          totalMarks: mockPaper.questions.reduce((sum: number, q: any) => sum + (q.marks || 0), 0),
-=======
           totalMarks: mockPaper.questions.reduce(
             (sum: number, q: { text: string; marks: number }) => sum + (q.marks || 0),
             0,
           ),
->>>>>>> a61a9fcfc8361f0291319802a6a71d4030afc3cf
           createdAt: mockPaper.createdAt,
         },
       },
