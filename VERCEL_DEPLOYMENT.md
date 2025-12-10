@@ -5,36 +5,36 @@
 Add these in your Vercel Dashboard → Settings → Environment Variables:
 
 ### 1. MONGODB_URI (Required)
-```
+\`\`\`
 mongodb+srv://roopak:hyMA38xFNjtIc9IB@cluster0.lxzxlsb.mongodb.net/srep_studymate?retryWrites=true&w=majority&appName=Cluster0
-```
+\`\`\`
 - **Type**: Plain Text
 - **Environment**: Production, Preview, Development
 
 ### 2. JWT_SECRET (Required)
 Generate a secure random string:
-```bash
+\`\`\`bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
+\`\`\`
 Or use this for testing (CHANGE IN PRODUCTION):
-```
+\`\`\`
 srep-studymate-jwt-secret-key-change-in-production-min-32-chars
-```
+\`\`\`
 - **Type**: Secret
 - **Environment**: Production, Preview, Development
 
 ### 3. OPENROUTER_API_KEY (Required)
-```
+\`\`\`
 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
-```
+\`\`\`
 - **Type**: Secret
 - **Environment**: Production, Preview, Development
 
 ### 4. NEXT_PUBLIC_API_URL (Optional)
 This will be auto-configured based on deployment URL. You can leave it empty or set it to:
-```
+\`\`\`
 https://your-app-name.vercel.app/api
-```
+\`\`\`
 - **Type**: Plain Text
 - **Environment**: Production, Preview, Development
 
@@ -43,11 +43,11 @@ https://your-app-name.vercel.app/api
 ## Step-by-Step Deployment
 
 ### Step 1: Push to GitHub
-```bash
+\`\`\`bash
 git add .
 git commit -m "Add MongoDB and AI integration"
 git push origin main
-```
+\`\`\`
 
 ### Step 2: Import to Vercel
 1. Go to [vercel.com](https://vercel.com)
