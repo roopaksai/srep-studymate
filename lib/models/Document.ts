@@ -15,6 +15,10 @@ const documentSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    topics: {
+      type: [String],
+      default: [],
+    },
     type: {
       type: String,
       enum: ["study-material", "answer-script"],

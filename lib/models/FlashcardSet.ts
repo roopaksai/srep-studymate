@@ -16,6 +16,10 @@ const flashcardSetSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    topic: {
+      type: String,
+      default: "",
+    },
     cards: [
       {
         question: String,

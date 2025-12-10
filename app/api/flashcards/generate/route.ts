@@ -4,12 +4,20 @@ import Document from "@/lib/models/Document"
 import FlashcardSet from "@/lib/models/FlashcardSet"
 import { verifyToken } from "@/lib/auth"
 
-async function generateFlashcardsWithAI(text: string): Promise<{ question: string; answer: string }[]> {
+async function generateFlashcardsWithAI(text: string, topic?: string): Promise<{ question: string; answer: string }[]> {
   try {
     const apiKey = process.env.OPENROUTER_API_KEY
     if (!apiKey) {
       throw new Error("OPENROUTER_API_KEY not configured")
     }
+
+    const systemPrompt = topic
+      ? `You are an expert educator creating flashcards. Generate 8-10 high-quality flashcards specifically about "${topic}" from the provided study material. Focus ONLY on content related to ${topic}. Return ONLY a JSON array with objects containing 'question' and 'answer' fields. Make questions clear and concise, and answers detailed but focused.`
+      : "You are an expert educator creating flashcards. Generate 8-10 high-quality flashcards from the provided study material. Return ONLY a JSON array with objects containing 'question' and 'answer' fields. Make questions clear and concise, and answers detailed but focused."
+
+    const userPrompt = topic
+      ? `Create flashcards about "${topic}" from this study material:\n\n${text.substring(0, 3000)}`
+      : `Create flashcards from this study material:\n\n${text.substring(0, 3000)}`
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -18,15 +26,15 @@ async function generateFlashcardsWithAI(text: string): Promise<{ question: strin
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-3.1-8b-instruct:free",
+        model: "qwen/qwen3-coder:free",
         messages: [
           {
             role: "system",
-            content: "You are an expert educator creating flashcards. Generate 8-10 high-quality flashcards from the provided study material. Return ONLY a JSON array with objects containing 'question' and 'answer' fields. Make questions clear and concise, and answers detailed but focused.",
+            content: systemPrompt,
           },
           {
             role: "user",
-            content: `Create flashcards from this study material:\n\n${text.substring(0, 3000)}`,
+            content: userPrompt,
           },
         ],
       }),
@@ -71,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     await connectDB()
-    const { documentId, title } = await request.json()
+    const { documentId, title, topic } = await request.json()
 
     const document = await Document.findOne({
       _id: documentId,
@@ -82,12 +90,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Document not found" }, { status: 404 })
     }
 
-    const cards = await generateFlashcardsWithAI(document.extractedText)
+    // Check if flashcards already exist for this document and topic
+    const existingFlashcardSet = await FlashcardSet.findOne({
+      userId: payload.userId,
+      documentId,
+      topic: topic || "",
+    })
+
+    if (existingFlashcardSet) {
+      // Return existing flashcards instead of generating new ones
+      return NextResponse.json(
+        {
+          flashcardSet: {
+            id: existingFlashcardSet._id,
+            title: existingFlashcardSet.title,
+            topic: existingFlashcardSet.topic,
+            cards: existingFlashcardSet.cards,
+            createdAt: existingFlashcardSet.createdAt,
+          },
+          message: "Returning existing flashcard set",
+        },
+        { status: 200 },
+      )
+    }
+
+    // Generate flashcards for specific topic if provided
+    const cards = await generateFlashcardsWithAI(document.extractedText, topic)
 
     const flashcardSet = new FlashcardSet({
       userId: payload.userId,
       documentId,
-      title: title || "Flashcard Set",
+      title: title || (topic ? `${topic} Flashcards` : "Flashcard Set"),
+      topic: topic || "",
       cards,
     })
 
@@ -98,6 +132,7 @@ export async function POST(request: NextRequest) {
         flashcardSet: {
           id: flashcardSet._id,
           title: flashcardSet.title,
+          topic: flashcardSet.topic,
           cards: flashcardSet.cards,
           createdAt: flashcardSet.createdAt,
         },
