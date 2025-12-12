@@ -9,6 +9,7 @@ async function extractTextFromFile(file: File): Promise<string> {
 
   try {
     if (fileName.endsWith(".pdf")) {
+      // @ts-ignore - pdf-parse-fork doesn't have type definitions
       const pdfParse = (await import("pdf-parse-fork")).default
       const buffer = Buffer.from(fileBuffer)
       const data = await pdfParse(buffer)
