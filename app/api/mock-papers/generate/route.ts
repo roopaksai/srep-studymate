@@ -95,57 +95,107 @@ Return ONLY a JSON array with objects containing:
 Ensure questions test understanding, application, and analysis.`
     }
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "qwen/qwen3-coder:free",
-        messages: [
-          {
-            role: "system",
-            content: systemPrompt,
+    // Retry logic with exponential backoff
+    let lastError = null
+    const maxRetries = 3
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          // Wait before retrying (exponential backoff: 1s, 2s, 4s)
+          const waitTime = Math.pow(2, attempt) * 1000
+          await new Promise(resolve => setTimeout(resolve, waitTime))
+        }
+        
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://studymate.app",
+            "X-Title": "StudyMate"
           },
-          {
-            role: "user",
-            content: `Create exam questions from this material:\n\n${text.substring(0, 3000)}`,
-          },
-        ],
-      }),
-    })
+          body: JSON.stringify({
+            model: "qwen/qwen-2.5-coder-32b-instruct:free",
+            messages: [
+              {
+                role: "system",
+                content: systemPrompt,
+              },
+              {
+                role: "user",
+                content: `Create exam questions from this material:\n\n${text.substring(0, 6000)}`,
+              },
+            ],
+            temperature: 0.7,
+            max_tokens: 2000,
+          }),
+        })
 
-    if (!response.ok) {
-      throw new Error(`OpenRouter API failed: ${response.statusText}`)
+        if (!response.ok) {
+          const errorText = await response.text()
+          lastError = new Error(`OpenRouter API failed: ${response.status} ${response.statusText} - ${errorText}`)
+          
+          // If rate limited (429), retry. Otherwise, throw immediately
+          if (response.status === 429 && attempt < maxRetries - 1) {
+            console.log(`Rate limited, retrying in ${Math.pow(2, attempt + 1)}s... (attempt ${attempt + 1}/${maxRetries})`)
+            continue
+          }
+          throw lastError
+        }
+
+        // Success! Parse and return
+        const data = await response.json()
+        const content = data.choices[0]?.message?.content
+
+        if (!content) {
+          throw new Error("Empty response from AI")
+        }
+
+        // Try to parse JSON from the response
+        const jsonMatch = content.match(/\[[\s\S]*\]/)
+        if (jsonMatch) {
+          const questions = JSON.parse(jsonMatch[0]) as Question[]
+          // Filter to ensure only the requested type and valid questions
+          const filtered = questions.filter((q) => {
+            if (!q.text || typeof q.marks !== 'number' || !q.type) return false
+            
+            // Ensure type matches what was requested
+            if (questionType === 'mcq' && q.type !== 'mcq') return false
+            if (questionType === 'descriptive' && q.type !== 'descriptive') return false
+            
+            // For MCQ, ensure it has options and correctAnswer
+            if (questionType === 'mcq' && (!q.options || !q.correctAnswer)) return false
+            
+            return true
+          })
+          
+          // Take only the first 10 questions of the correct type
+          const finalQuestions = filtered.slice(0, 10)
+          
+          if (finalQuestions.length >= 10) {
+            return finalQuestions
+          }
+          
+          // If we didn't get enough questions, try again
+          throw new Error(`Only got ${finalQuestions.length} valid questions, need 10`)
+        }
+
+        throw new Error("Failed to parse AI response - no JSON array found")
+        
+      } catch (error) {
+        lastError = error
+        console.error(`Attempt ${attempt + 1} failed:`, error)
+        
+        // If this was the last attempt, throw
+        if (attempt === maxRetries - 1) {
+          throw error
+        }
+      }
     }
-
-    const data = await response.json()
-    const content = data.choices[0]?.message?.content
-
-    // Try to parse JSON from the response
-    const jsonMatch = content.match(/\[[\s\S]*\]/)
-    if (jsonMatch) {
-      const questions = JSON.parse(jsonMatch[0]) as Question[]
-      // Filter to ensure only the requested type and valid questions
-      const filtered = questions.filter((q) => {
-        if (!q.text || typeof q.marks !== 'number' || !q.type) return false
-        
-        // Ensure type matches what was requested
-        if (questionType === 'mcq' && q.type !== 'mcq') return false
-        if (questionType === 'descriptive' && q.type !== 'descriptive') return false
-        
-        // For MCQ, ensure it has options and correctAnswer
-        if (questionType === 'mcq' && (!q.options || !q.correctAnswer)) return false
-        
-        return true
-      })
-      
-      // Take only the first 10 questions of the correct type
-      return filtered.slice(0, 10)
-    }
-
-    throw new Error("Failed to parse AI response")
+    
+    // This shouldn't be reached, but just in case
+    throw new Error("All retry attempts failed")
   } catch (error) {
     console.error("AI generation failed, using fallback:", error)
     
