@@ -11,6 +11,16 @@ import Link from "next/link"
 interface AnalysisReport {
   id: string
   summary: string
+  totalScore?: number
+  maxScore?: number
+  grade?: string
+  questionScores?: Array<{
+    questionNumber: number
+    questionText: string
+    scoredMarks: number
+    maxMarks: number
+    feedback: string
+  }>
   strengths: string[]
   weaknesses: string[]
   recommendedTopics: string[]
@@ -22,6 +32,7 @@ export default function AnalysisPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const docId = searchParams.get("doc")
+  const reportId = searchParams.get("report")
   const [reports, setReports] = useState<AnalysisReport[]>([])
   const [selectedReport, setSelectedReport] = useState<AnalysisReport | null>(null)
   const [uploadLoading, setUploadLoading] = useState(false)
@@ -37,6 +48,15 @@ export default function AnalysisPage() {
       fetchReports()
     }
   }, [token])
+
+  useEffect(() => {
+    if (reportId && reports.length > 0) {
+      const report = reports.find(r => r.id === reportId)
+      if (report) {
+        setSelectedReport(report)
+      }
+    }
+  }, [reportId, reports])
 
   const fetchReports = async () => {
     try {
@@ -177,17 +197,64 @@ export default function AnalysisPage() {
             {selectedReport ? (
               <>
                 <div className="bg-white rounded-2xl shadow-lg p-8">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6">Analysis Summary</h2>
-                  <p className="text-gray-700 leading-relaxed mb-8">{selectedReport.summary}</p>
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-800 mb-3">Analysis Report</h2>
+                      {selectedReport.totalScore !== undefined && (
+                        <div className="flex items-center gap-4">
+                          <div className="text-4xl font-bold text-orange-600">
+                            {selectedReport.totalScore}/{selectedReport.maxScore}
+                          </div>
+                          <div className="text-xl text-gray-600">
+                            ({((selectedReport.totalScore / (selectedReport.maxScore || 1)) * 100).toFixed(1)}%)
+                          </div>
+                          {selectedReport.grade && (
+                            <div className="bg-orange-100 text-orange-700 px-5 py-2 rounded-full text-2xl font-bold">
+                              {selectedReport.grade}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 p-5 rounded-lg mb-6">
+                    <p className="text-gray-800 font-medium">{selectedReport.summary}</p>
+                  </div>
+
+                  {selectedReport.questionScores && selectedReport.questionScores.length > 0 && (
+                    <div className="mb-8">
+                      <h3 className="text-xl font-bold text-gray-800 mb-4">Question-wise Performance</h3>
+                      <div className="space-y-3">
+                        {selectedReport.questionScores.map((qs, idx) => (
+                          <div key={idx} className="border-l-4 border-orange-500 pl-4 py-3 bg-gray-50 rounded">
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex-1">
+                                <p className="font-semibold text-gray-800 mb-1">Q{qs.questionNumber}. {qs.questionText}</p>
+                                <p className="text-sm text-gray-600">{qs.feedback}</p>
+                              </div>
+                              <span className={`px-4 py-1 rounded-full text-sm font-bold ml-4 whitespace-nowrap ${
+                                qs.scoredMarks === qs.maxMarks ? 'bg-green-100 text-green-700' :
+                                qs.scoredMarks === 0 ? 'bg-red-100 text-red-700' :
+                                'bg-yellow-100 text-yellow-700'
+                              }`}>
+                                {qs.scoredMarks}/{qs.maxMarks}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="bg-green-50 rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
-                    <h3 className="text-xl font-bold text-green-700 mb-4">Strengths</h3>
+                    <h3 className="text-xl font-bold text-green-700 mb-4">✓ Strengths</h3>
                     <ul className="space-y-2">
                       {selectedReport.strengths.map((strength, idx) => (
                         <li key={idx} className="text-green-700 flex items-start gap-2">
-                          <span className="text-green-500 font-bold mt-0.5">✓</span>
+                          <span className="text-green-500 font-bold mt-0.5">•</span>
                           <span>{strength}</span>
                         </li>
                       ))}
@@ -195,11 +262,11 @@ export default function AnalysisPage() {
                   </div>
 
                   <div className="bg-red-50 rounded-2xl shadow-lg p-6 border-l-4 border-red-500">
-                    <h3 className="text-xl font-bold text-red-700 mb-4">Weaknesses</h3>
+                    <h3 className="text-xl font-bold text-red-700 mb-4">⚠ Areas to Improve</h3>
                     <ul className="space-y-2">
                       {selectedReport.weaknesses.map((weakness, idx) => (
                         <li key={idx} className="text-red-700 flex items-start gap-2">
-                          <span className="text-red-500 font-bold mt-0.5">×</span>
+                          <span className="text-red-500 font-bold mt-0.5">•</span>
                           <span>{weakness}</span>
                         </li>
                       ))}
@@ -207,16 +274,24 @@ export default function AnalysisPage() {
                   </div>
 
                   <div className="bg-blue-50 rounded-2xl shadow-lg p-6 border-l-4 border-blue-500">
-                    <h3 className="text-xl font-bold text-blue-700 mb-4">Recommended Topics</h3>
+                    <h3 className="text-xl font-bold text-blue-700 mb-4">📚 Study Topics</h3>
                     <ul className="space-y-2">
                       {selectedReport.recommendedTopics.map((topic, idx) => (
                         <li key={idx} className="text-blue-700 flex items-start gap-2">
-                          <span className="text-blue-500 font-bold mt-0.5">→</span>
+                          <span className="text-blue-500 font-bold mt-0.5">•</span>
                           <span>{topic}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-lg p-6 mt-6">
+                  <Link href="/app/scheduler">
+                    <Button className="w-full bg-purple-500 hover:bg-purple-600 py-6 text-lg font-semibold">
+                      📅 Create Study Schedule Based on This Analysis
+                    </Button>
+                  </Link>
                 </div>
               </>
             ) : (

@@ -16,9 +16,30 @@ const analysisReportSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    totalScore: {
+      type: Number,
+      default: 0,
+    },
+    maxScore: {
+      type: Number,
+      default: 100,
+    },
+    questionScores: [
+      {
+        questionNumber: Number,
+        questionText: String,
+        scoredMarks: Number,
+        maxMarks: Number,
+        feedback: String,
+      },
+    ],
     strengths: [String],
     weaknesses: [String],
     recommendedTopics: [String],
+    grade: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true },
 )

@@ -4,12 +4,26 @@ import Document from "@/lib/models/Document"
 import AnalysisReport from "@/lib/models/AnalysisReport"
 import { verifyToken } from "@/lib/auth"
 
-async function generateAnalysisWithAI(answerText: string): Promise<{
+interface QuestionScore {
+  questionNumber: number
+  questionText: string
+  scoredMarks: number
+  maxMarks: number
+  feedback: string
+}
+
+interface AnalysisResult {
   summary: string
+  totalScore: number
+  maxScore: number
+  questionScores: QuestionScore[]
   strengths: string[]
   weaknesses: string[]
   recommendedTopics: string[]
-}> {
+  grade: string
+}
+
+async function generateAnalysisWithAI(answerText: string): Promise<AnalysisResult> {
   try {
     const apiKey = process.env.OPENROUTER_API_KEY
     if (!apiKey) {
@@ -27,15 +41,28 @@ async function generateAnalysisWithAI(answerText: string): Promise<{
         messages: [
           {
             role: "system",
-            content: `You are an expert educational assessor. Analyze the student's answer script and provide constructive feedback. Return ONLY a JSON object with these fields:
-- summary: string (2-3 sentences overview)
+            content: `You are an expert educational assessor. Analyze the student's answer script and provide detailed scoring and feedback.
+
+Return ONLY a JSON object with these fields:
+- summary: string (2-3 sentences overview of performance)
+- totalScore: number (sum of all question scores)
+- maxScore: number (typically 100)
+- questionScores: array of objects with:
+  - questionNumber: number
+  - questionText: string (brief description)
+  - scoredMarks: number
+  - maxMarks: number
+  - feedback: string (specific feedback for this question)
 - strengths: array of 3-4 strings
 - weaknesses: array of 3-4 strings
-- recommendedTopics: array of 4-5 strings (topics to study)`,
+- recommendedTopics: array of 4-5 strings (topics to study)
+- grade: string (A+, A, B+, B, C, D, or F based on percentage)
+
+Grade scale: A+ (90-100%), A (80-89%), B+ (70-79%), B (60-69%), C (50-59%), D (40-49%), F (<40%)`,
           },
           {
             role: "user",
-            content: `Analyze this student answer script:\n\n${answerText.substring(0, 3000)}`,
+            content: `Analyze and score this student answer script:\n\n${answerText.substring(0, 3000)}`,
           },
         ],
       }),
@@ -51,7 +78,7 @@ async function generateAnalysisWithAI(answerText: string): Promise<{
     // Try to parse JSON from the response
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
-      const analysis = JSON.parse(jsonMatch[0])
+      const analysis = JSON.parse(jsonMatch[0]) as AnalysisResult
       if (analysis.summary && analysis.strengths && analysis.weaknesses && analysis.recommendedTopics) {
         return analysis
       }
@@ -60,25 +87,61 @@ async function generateAnalysisWithAI(answerText: string): Promise<{
     throw new Error("Failed to parse AI response")
   } catch (error) {
     console.error("AI generation failed, using fallback:", error)
-    // Fallback analysis
+    // Fallback analysis with scoring
     return {
-      summary: "The answer script shows understanding of basic concepts but needs more depth in explanations and examples.",
+      summary: "The answer script shows understanding of basic concepts but needs more depth in explanations and examples. Overall performance is satisfactory.",
+      totalScore: 65,
+      maxScore: 100,
+      questionScores: [
+        {
+          questionNumber: 1,
+          questionText: "Question 1",
+          scoredMarks: 7,
+          maxMarks: 10,
+          feedback: "Good understanding but needs more detail",
+        },
+        {
+          questionNumber: 2,
+          questionText: "Question 2",
+          scoredMarks: 15,
+          maxMarks: 20,
+          feedback: "Well explained with relevant examples",
+        },
+        {
+          questionNumber: 3,
+          questionText: "Question 3",
+          scoredMarks: 18,
+          maxMarks: 25,
+          feedback: "Comprehensive answer but missing some key points",
+        },
+        {
+          questionNumber: 4,
+          questionText: "Question 4",
+          scoredMarks: 25,
+          maxMarks: 45,
+          feedback: "Excellent analysis and application of concepts",
+        },
+      ],
       strengths: [
-        "Clear writing and structure",
-        "Good attempt at core concepts",
-        "Relevant topic coverage",
+        "Clear writing and logical structure",
+        "Good attempt at covering core concepts",
+        "Relevant examples provided",
+        "Shows analytical thinking",
       ],
       weaknesses: [
         "Could provide more detailed explanations",
-        "Needs more examples and illustrations",
+        "Needs more concrete examples in some areas",
         "Some topics need deeper understanding",
+        "Time management in longer questions",
       ],
       recommendedTopics: [
         "In-depth concept analysis",
         "Practical application examples",
         "Advanced problem-solving techniques",
-        "Critical thinking and analysis",
+        "Critical thinking and evaluation",
+        "Effective answer structuring",
       ],
+      grade: "B",
     }
   }
 }

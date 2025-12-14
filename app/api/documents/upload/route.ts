@@ -67,11 +67,17 @@ async function identifyTopics(text: string): Promise<string[]> {
           {
             role: "system",
             content:
-              "You are an expert at identifying key topics from study materials. Extract 3-8 main topics/concepts from the provided text. Return ONLY a JSON array of topic strings, e.g., [\"Photosynthesis\", \"Cell Division\", \"DNA Structure\"]. Keep topics concise (2-4 words each).",
+              "You are an expert at analyzing academic and study materials to identify key topics. Your task is to extract 3-8 main topics/concepts by analyzing the CONTENT itself, not relying on headings or table of contents. Look for:\n" +
+              "- Recurring themes and concepts\n" +
+              "- Subject matter that is explained in detail\n" +
+              "- Technical terms or theories being discussed\n" +
+              "- Problems or case studies presented\n" +
+              "- Key formulas, processes, or methodologies\n\n" +
+              "Return ONLY a JSON array of topic strings, e.g., [\"Photosynthesis Process\", \"Cellular Respiration\", \"DNA Replication\"]. Keep topics concise (2-5 words each) and academically meaningful.",
           },
           {
             role: "user",
-            content: `Identify main topics from this study material:\n\n${text.substring(0, 3000)}`,
+            content: `Analyze this study material and extract the main topics being discussed. Focus on the actual content, not just headings:\n\n${text.substring(0, 3000)}`,
           },
         ],
       }),
