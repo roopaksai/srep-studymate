@@ -99,15 +99,11 @@ export default function MockPapersPage() {
         // Set the newly generated paper as selected
         setSelectedPaper(newPaper)
         
-        // If MCQ paper, automatically start quiz mode
-        if (questionType === 'mcq') {
-          setTimeout(() => {
-            setQuizMode(true)
-            setCurrentQuestionIndex(0)
-            setUserAnswers([])
-            setSelectedOption(null)
-          }, 500)
-        }
+        // Reset quiz mode states to show the Start Quiz button
+        setQuizMode(false)
+        setCurrentQuestionIndex(0)
+        setUserAnswers([])
+        setSelectedOption(null)
       } else {
         const err = await res.json()
         setError(err.error || "Generation failed")
