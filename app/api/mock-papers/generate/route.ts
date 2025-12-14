@@ -95,39 +95,28 @@ Return ONLY a JSON array with objects containing:
 Ensure questions test understanding, application, and analysis.`
     }
 
-    // Retry logic with exponential backoff
-    let lastError = null
-    const maxRetries = 3
+    // Try different models in order of preference
+    const models = [
+      "meta-llama/llama-3.2-1b-instruct:free",
+      "qwen/qwen-2-7b-instruct:free", 
+      "microsoft/phi-3-mini-128k-instruct:free",
+      "google/gemini-pro-1.5:free"
+    ]
     
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
+    let lastError = null
+    
+    for (const model of models) {
       try {
-        if (attempt > 0) {
-          // Wait before retrying (exponential backoff: 1s, 2s, 4s)
-          const waitTime = Math.pow(2, attempt) * 1000
-          await new Promise(resolve => setTimeout(resolve, waitTime))
-        }
-        
-        // Try different free models in order of preference
-        const models = [
-          "meta-llama/llama-3.2-3b-instruct:free",
-          "nousresearch/hermes-3-llama-3.1-405b:free",
-          "google/gemini-flash-1.5-8b:free",
-          "qwen/qwen-2.5-coder-32b-instruct"
-        ]
-        
-        const modelToUse = models[attempt % models.length]
-        console.log(`Attempting with model: ${modelToUse} (attempt ${attempt + 1}/${maxRetries})`)
+        console.log(`Trying model: ${model}`)
         
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${apiKey}`,
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://studymate.app",
-            "X-Title": "StudyMate"
           },
           body: JSON.stringify({
-            model: modelToUse,
+            model: model,
             messages: [
               {
                 role: "system",
@@ -135,24 +124,17 @@ Ensure questions test understanding, application, and analysis.`
               },
               {
                 role: "user",
-                content: `Create exam questions from this material:\n\n${text.substring(0, 6000)}`,
+                content: `Create exam questions from this material:\n\n${text.substring(0, 3500)}`,
               },
             ],
-            temperature: 0.7,
-            max_tokens: 2000,
           }),
         })
 
         if (!response.ok) {
           const errorText = await response.text()
-          lastError = new Error(`OpenRouter API failed: ${response.status} ${response.statusText} - ${errorText}`)
-          
-          // If rate limited (429), retry. Otherwise, throw immediately
-          if (response.status === 429 && attempt < maxRetries - 1) {
-            console.log(`Rate limited, retrying in ${Math.pow(2, attempt + 1)}s... (attempt ${attempt + 1}/${maxRetries})`)
-            continue
-          }
-          throw lastError
+          console.error(`Model ${model} failed (${response.status}):`, errorText)
+          lastError = new Error(`OpenRouter API failed with ${model}: ${response.status}`)
+          continue // Try next model
         }
 
         // Success! Parse and return
@@ -160,7 +142,9 @@ Ensure questions test understanding, application, and analysis.`
         const content = data.choices[0]?.message?.content
 
         if (!content) {
-          throw new Error("Empty response from AI")
+          console.error(`Model ${model} returned empty content`)
+          lastError = new Error("Empty response from AI")
+          continue // Try next model
         }
 
         // Try to parse JSON from the response
@@ -185,28 +169,29 @@ Ensure questions test understanding, application, and analysis.`
           const finalQuestions = filtered.slice(0, 10)
           
           if (finalQuestions.length >= 10) {
+            console.log(`Successfully generated ${finalQuestions.length} questions with ${model}`)
             return finalQuestions
           }
           
-          // If we didn't get enough questions, try again
-          throw new Error(`Only got ${finalQuestions.length} valid questions, need 10`)
+          // If we didn't get enough questions, try next model
+          console.error(`Only got ${finalQuestions.length} valid questions from ${model}, trying next model`)
+          lastError = new Error(`Only got ${finalQuestions.length} valid questions, need 10`)
+          continue
         }
 
-        throw new Error("Failed to parse AI response - no JSON array found")
+        console.error(`Failed to parse response from ${model}`)
+        lastError = new Error("Failed to parse AI response - no JSON array found")
+        continue
         
       } catch (error) {
         lastError = error
-        console.error(`Attempt ${attempt + 1} failed:`, error)
-        
-        // If this was the last attempt, throw
-        if (attempt === maxRetries - 1) {
-          throw error
-        }
+        console.error(`Model ${model} error:`, error)
+        continue // Try next model
       }
     }
     
-    // This shouldn't be reached, but just in case
-    throw new Error("All retry attempts failed")
+    // All models failed
+    throw lastError || new Error("All models failed")
   } catch (error) {
     console.error("AI generation failed, using fallback:", error)
     
@@ -291,7 +276,7 @@ export async function POST(request: NextRequest) {
     }
 
     await connectDB()
-    const { documentId, title, questionType = "mixed" } = await request.json()
+    const { documentId, title, questionType = "mixed", reattempt = false } = await request.json()
 
     // Validate question type
     if (!["mcq", "descriptive", "mixed"].includes(questionType)) {
@@ -310,6 +295,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Document not found" }, { status: 404 })
     }
 
+    // Check if a paper of this type already exists for this document (unless reattempt)
+    if (!reattempt) {
+      const existingPaper = await MockPaper.findOne({
+        userId: payload.userId,
+        documentId,
+        paperType: questionType,
+      }).sort({ createdAt: -1 })
+
+      if (existingPaper) {
+        console.log(`Found existing ${questionType} paper, returning it instead of generating new one`)
+        return NextResponse.json(
+          {
+            mockPaper: {
+              id: existingPaper._id,
+              documentId: existingPaper.documentId,
+              title: existingPaper.title,
+              paperType: existingPaper.paperType,
+              questions: existingPaper.questions,
+              totalMarks: existingPaper.questions.reduce(
+                (sum: number, q: { marks: number }) => sum + (q.marks || 0),
+                0,
+              ),
+              createdAt: existingPaper.createdAt,
+            },
+            isExisting: true, // Flag to indicate this is an existing paper
+          },
+          { status: 200 },
+        )
+      }
+    } else {
+      console.log(`Reattempt requested, generating new ${questionType} paper`)
+      // Delete old paper of this type if reattempt is true
+      await MockPaper.deleteMany({
+        userId: payload.userId,
+        documentId,
+        paperType: questionType,
+      })
+    }
+
     const questions = await generateQuestionsWithAI(document.extractedText, questionType as 'mcq' | 'descriptive' | 'mixed')
 
     const mockPaper = new MockPaper({
@@ -326,7 +350,9 @@ export async function POST(request: NextRequest) {
       {
         mockPaper: {
           id: mockPaper._id,
+          documentId: mockPaper.documentId,
           title: mockPaper.title,
+          paperType: mockPaper.paperType,
           questions: mockPaper.questions,
           totalMarks: mockPaper.questions.reduce(
             (sum: number, q: { text: string; marks: number }) => sum + (q.marks || 0),
@@ -334,6 +360,7 @@ export async function POST(request: NextRequest) {
           ),
           createdAt: mockPaper.createdAt,
         },
+        isExisting: false, // This is a newly generated paper
       },
       { status: 201 },
     )

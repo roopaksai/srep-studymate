@@ -16,6 +16,7 @@ interface Question {
 
 interface MockPaper {
   id: string
+  documentId: string
   title: string
   paperType: 'mcq' | 'descriptive'
   questions: Question[]
@@ -70,7 +71,7 @@ export default function MockPapersPage() {
     }
   }
 
-  const generateMockPaper = async (documentId: string, questionType: 'mcq' | 'descriptive' | 'mixed') => {
+  const generateMockPaper = async (documentId: string, questionType: 'mcq' | 'descriptive' | 'mixed', reattempt = false) => {
     try {
       setGenLoading(true)
       setError("")
@@ -85,13 +86,15 @@ export default function MockPapersPage() {
         body: JSON.stringify({ 
           documentId, 
           title: `${questionType.toUpperCase()} Mock Paper`,
-          questionType 
+          questionType,
+          reattempt 
         }),
       })
 
       if (res.ok) {
         const data = await res.json()
         const newPaper = data.mockPaper
+        const isExisting = data.isExisting
         
         // Fetch updated list and then select the new paper
         await fetchMockPapers()
@@ -104,6 +107,11 @@ export default function MockPapersPage() {
         setCurrentQuestionIndex(0)
         setUserAnswers([])
         setSelectedOption(null)
+        
+        // Show message if existing paper was returned
+        if (isExisting && !reattempt) {
+          setError(`Using existing ${questionType} paper for this document. Click "Regenerate" to create a new one.`)
+        }
       } else {
         const err = await res.json()
         setError(err.error || "Generation failed")
@@ -396,11 +404,23 @@ export default function MockPapersPage() {
                   <div className="mb-6">
                     <div className="flex justify-between items-center mb-2">
                       <h2 className="text-2xl font-bold text-gray-800">{selectedPaper.title}</h2>
-                      <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                        selectedPaper.paperType === 'mcq' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                      }`}>
-                        {selectedPaper.paperType === 'mcq' ? 'MCQ Quiz' : 'Descriptive'}
-                      </span>
+                      <div className="flex gap-2 items-center">
+                        <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                          selectedPaper.paperType === 'mcq' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                        }`}>
+                          {selectedPaper.paperType === 'mcq' ? 'MCQ Quiz' : 'Descriptive'}
+                        </span>
+                        <Button
+                          onClick={() => {
+                            generateMockPaper(selectedPaper.documentId, selectedPaper.paperType, true)
+                          }}
+                          variant="outline"
+                          className="text-sm"
+                          disabled={genLoading}
+                        >
+                          {genLoading ? "Regenerating..." : "🔄 Regenerate"}
+                        </Button>
+                      </div>
                     </div>
                     <div className="flex gap-4 text-gray-600">
                       <span>Questions: {selectedPaper.questions.length}</span>
