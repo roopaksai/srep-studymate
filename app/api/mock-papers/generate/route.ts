@@ -107,6 +107,17 @@ Ensure questions test understanding, application, and analysis.`
           await new Promise(resolve => setTimeout(resolve, waitTime))
         }
         
+        // Try different free models in order of preference
+        const models = [
+          "meta-llama/llama-3.2-3b-instruct:free",
+          "nousresearch/hermes-3-llama-3.1-405b:free",
+          "google/gemini-flash-1.5-8b:free",
+          "qwen/qwen-2.5-coder-32b-instruct"
+        ]
+        
+        const modelToUse = models[attempt % models.length]
+        console.log(`Attempting with model: ${modelToUse} (attempt ${attempt + 1}/${maxRetries})`)
+        
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -116,7 +127,7 @@ Ensure questions test understanding, application, and analysis.`
             "X-Title": "StudyMate"
           },
           body: JSON.stringify({
-            model: "qwen/qwen-2.5-coder-32b-instruct:free",
+            model: modelToUse,
             messages: [
               {
                 role: "system",
