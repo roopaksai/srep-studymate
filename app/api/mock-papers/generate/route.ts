@@ -347,7 +347,7 @@ export async function POST(request: NextRequest) {
 
     // Generate title: "doc name_type_mock paper" (strip file extension from originalFileName)
     const docNameWithoutExt = document.originalFileName.replace(/\.(pdf|docx|doc|txt)$/i, '')
-    const paperTitle = `${docNameWithoutExt}_${questionType}_mock paper`
+    const paperTitle = `${docNameWithoutExt} ${questionType} Paper`
 
     const mockPaper = new MockPaper({
       userId: payload.userId,
