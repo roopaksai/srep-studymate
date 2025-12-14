@@ -460,30 +460,32 @@ export default function MockPapersPage() {
                     </div>
                   ) : null}
 
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-gray-800">Questions:</h3>
-                    {selectedPaper.questions.map((question, idx) => (
-                      <div key={idx} className="border-l-4 border-orange-500 pl-4 py-3 bg-gray-50 rounded">
-                        <div className="flex justify-between items-start">
-                          <p className="font-semibold text-gray-800 flex-1">
-                            Q{idx + 1}. {question.text}
-                          </p>
-                          <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-semibold ml-4">
-                            {question.marks} marks
-                          </span>
-                        </div>
+                  {/* Only show questions for Descriptive papers, not for MCQ */}
+                  {selectedPaper.paperType === 'descriptive' && (
+                    <>
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-bold text-gray-800">Questions:</h3>
+                        {selectedPaper.questions.map((question, idx) => (
+                          <div key={idx} className="border-l-4 border-orange-500 pl-4 py-3 bg-gray-50 rounded">
+                            <div className="flex justify-between items-start">
+                              <p className="font-semibold text-gray-800 flex-1">
+                                Q{idx + 1}. {question.text}
+                              </p>
+                              <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-semibold ml-4">
+                                {question.marks} marks
+                              </span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
 
-                  <div className="mt-8 p-4 bg-orange-50 rounded-lg">
-                    <p className="text-sm text-gray-600">
-                      {selectedPaper.paperType === 'mcq' 
-                        ? `Estimated time: ${selectedPaper.questions.length * 2} minutes`
-                        : `Estimated time: ${selectedPaper.questions.length * 10} minutes`
-                      }
-                    </p>
-                  </div>
+                      <div className="mt-8 p-4 bg-orange-50 rounded-lg">
+                        <p className="text-sm text-gray-600">
+                          Estimated time: {selectedPaper.questions.length * 10} minutes
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               )
             ) : (
