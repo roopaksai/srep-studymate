@@ -91,8 +91,13 @@ export default function MockPapersPage() {
 
       if (res.ok) {
         const data = await res.json()
-        fetchMockPapers()
-        setSelectedPaper(data.mockPaper)
+        const newPaper = data.mockPaper
+        
+        // Fetch updated list and then select the new paper
+        await fetchMockPapers()
+        
+        // Set the newly generated paper as selected
+        setSelectedPaper(newPaper)
         
         // If MCQ paper, automatically start quiz mode
         if (questionType === 'mcq') {
@@ -222,6 +227,15 @@ export default function MockPapersPage() {
     }
   }
 
+  const handlePaperSelection = (paper: MockPaper) => {
+    setSelectedPaper(paper)
+    // Reset quiz mode when selecting a different paper
+    setQuizMode(false)
+    setCurrentQuestionIndex(0)
+    setUserAnswers([])
+    setSelectedOption(null)
+  }
+
   if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
 
   return (
@@ -251,7 +265,7 @@ export default function MockPapersPage() {
                 {mockPapers.map((paper) => (
                   <div
                     key={paper.id}
-                    onClick={() => setSelectedPaper(paper)}
+                    onClick={() => handlePaperSelection(paper)}
                     className={`p-3 rounded-lg cursor-pointer transition ${
                       selectedPaper?.id === paper.id
                         ? "bg-orange-100 border-2 border-orange-500"
