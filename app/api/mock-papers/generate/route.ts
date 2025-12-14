@@ -345,10 +345,14 @@ export async function POST(request: NextRequest) {
 
     const questions = await generateQuestionsWithAI(document.extractedText, questionType as 'mcq' | 'descriptive' | 'mixed')
 
+    // Generate title: "doc name_type_mock paper" (strip file extension from originalFileName)
+    const docNameWithoutExt = document.originalFileName.replace(/\.(pdf|docx|doc|txt)$/i, '')
+    const paperTitle = `${docNameWithoutExt}_${questionType}_mock paper`
+
     const mockPaper = new MockPaper({
       userId: payload.userId,
       documentId,
-      title: title || "Mock Paper",
+      title: paperTitle,
       paperType: questionType,
       questions,
     })

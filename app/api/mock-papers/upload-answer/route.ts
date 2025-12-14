@@ -196,10 +196,18 @@ export async function POST(request: NextRequest) {
     // Generate analysis using AI
     const analysis = await generateAnalysisWithAI(extractedText, mockPaper.questions)
 
-    // Create analysis report
+    // Fetch the original study material document to get its name
+    const studyDocument = await Document.findById(mockPaper.documentId)
+    const docNameWithoutExt = studyDocument 
+      ? studyDocument.originalFileName.replace(/\.(pdf|docx|doc|txt)$/i, '')
+      : 'document'
+    const reportTitle = `${docNameWithoutExt}_${mockPaper.paperType}_report`
+
+    // Create analysis report with title: "doc name_type_report"
     const analysisReport = new AnalysisReport({
       userId: payload.userId,
       answerScriptDocumentId: answerDoc._id,
+      title: reportTitle,
       summary: analysis.summary,
       totalScore: analysis.totalScore,
       maxScore: analysis.maxScore,

@@ -12,6 +12,10 @@ const analysisReportSchema = new mongoose.Schema(
       ref: "Document",
       required: true,
     },
+    title: {
+      type: String,
+      default: "Analysis Report",
+    },
     summary: {
       type: String,
       default: "",

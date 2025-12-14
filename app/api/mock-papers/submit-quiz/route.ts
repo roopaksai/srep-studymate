@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import MockPaper from "@/lib/models/MockPaper"
 import AnalysisReport from "@/lib/models/AnalysisReport"
+import Document from "@/lib/models/Document"
 import { verifyToken } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
@@ -32,6 +33,15 @@ export async function POST(request: NextRequest) {
     if (mockPaper.paperType !== "mcq") {
       return NextResponse.json({ error: "This is not an MCQ paper" }, { status: 400 })
     }
+
+    // Fetch the document to get its name
+    const document = await Document.findById(mockPaper.documentId)
+    if (!document) {
+      return NextResponse.json({ error: "Document not found" }, { status: 404 })
+    }
+
+    // Strip file extension from originalFileName
+    const docNameWithoutExt = document.originalFileName.replace(/\.(pdf|docx|doc|txt)$/i, '')
 
     // Calculate score
     let correctCount = 0
@@ -146,10 +156,13 @@ export async function POST(request: NextRequest) {
       recommendedTopics.push("Continue practicing similar questions for mastery")
     }
 
-    // Create analysis report
+    // Create analysis report with title: "doc name_type_report"
+    const reportTitle = `${docNameWithoutExt}_${mockPaper.paperType}_report`
+    
     const analysisReport = new AnalysisReport({
       userId: payload.userId,
       answerScriptDocumentId: mockPaper.documentId,
+      title: reportTitle,
       summary: `MCQ Quiz Performance: ${correctCount} correct, ${incorrectCount} incorrect, ${skippedCount} skipped out of ${mockPaper.questions.length} questions. Overall score: ${totalScore}/${maxScore} (${percentage.toFixed(1)}%).`,
       totalScore,
       maxScore,
