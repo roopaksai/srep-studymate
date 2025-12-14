@@ -95,28 +95,31 @@ Return ONLY a JSON array with objects containing:
 Ensure questions test understanding, application, and analysis.`
     }
 
-    // Try different models in order of preference
-    const models = [
-      "meta-llama/llama-3.2-1b-instruct:free",
-      "qwen/qwen-2-7b-instruct:free", 
-      "microsoft/phi-3-mini-128k-instruct:free",
-      "google/gemini-pro-1.5:free"
-    ]
-    
+    // Use the working model with retry logic
     let lastError = null
+    const maxRetries = 3
     
-    for (const model of models) {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        console.log(`Trying model: ${model}`)
+        if (attempt > 0) {
+          // Wait before retrying (exponential backoff)
+          const waitTime = Math.pow(2, attempt) * 1000
+          console.log(`Waiting ${waitTime}ms before retry...`)
+          await new Promise(resolve => setTimeout(resolve, waitTime))
+        }
+        
+        console.log(`Generation attempt ${attempt + 1}/${maxRetries}`)
         
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${apiKey}`,
             "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:3000",
+            "X-Title": "SREP StudyMate",
           },
           body: JSON.stringify({
-            model: model,
+            model: "openai/gpt-3.5-turbo",
             messages: [
               {
                 role: "system",
@@ -127,14 +130,22 @@ Ensure questions test understanding, application, and analysis.`
                 content: `Create exam questions from this material:\n\n${text.substring(0, 3500)}`,
               },
             ],
+            temperature: 0.7,
+            max_tokens: 2000,
           }),
         })
 
         if (!response.ok) {
           const errorText = await response.text()
-          console.error(`Model ${model} failed (${response.status}):`, errorText)
-          lastError = new Error(`OpenRouter API failed with ${model}: ${response.status}`)
-          continue // Try next model
+          console.error(`API Error (${response.status}):`, errorText)
+          lastError = new Error(`OpenRouter API failed: ${response.status} ${response.statusText}`)
+          
+          // Retry on rate limit or server errors
+          if ((response.status === 429 || response.status >= 500) && attempt < maxRetries - 1) {
+            console.log(`Rate limited or server error, retrying...`)
+            continue
+          }
+          throw lastError
         }
 
         // Success! Parse and return
@@ -142,9 +153,7 @@ Ensure questions test understanding, application, and analysis.`
         const content = data.choices[0]?.message?.content
 
         if (!content) {
-          console.error(`Model ${model} returned empty content`)
-          lastError = new Error("Empty response from AI")
-          continue // Try next model
+          throw new Error("Empty response from AI")
         }
 
         // Try to parse JSON from the response
@@ -169,29 +178,29 @@ Ensure questions test understanding, application, and analysis.`
           const finalQuestions = filtered.slice(0, 10)
           
           if (finalQuestions.length >= 10) {
-            console.log(`Successfully generated ${finalQuestions.length} questions with ${model}`)
+            console.log(`Successfully generated ${finalQuestions.length} questions`)
             return finalQuestions
           }
           
-          // If we didn't get enough questions, try next model
-          console.error(`Only got ${finalQuestions.length} valid questions from ${model}, trying next model`)
-          lastError = new Error(`Only got ${finalQuestions.length} valid questions, need 10`)
-          continue
+          // If we didn't get enough questions, retry
+          throw new Error(`Only got ${finalQuestions.length} valid questions, need 10`)
         }
 
-        console.error(`Failed to parse response from ${model}`)
-        lastError = new Error("Failed to parse AI response - no JSON array found")
-        continue
+        throw new Error("Failed to parse AI response - no JSON array found")
         
       } catch (error) {
         lastError = error
-        console.error(`Model ${model} error:`, error)
-        continue // Try next model
+        console.error(`Attempt ${attempt + 1} failed:`, error)
+        
+        // If this was the last attempt, throw
+        if (attempt === maxRetries - 1) {
+          throw error
+        }
       }
     }
     
-    // All models failed
-    throw lastError || new Error("All models failed")
+    // This shouldn't be reached, but just in case
+    throw new Error("All retry attempts failed")
   } catch (error) {
     console.error("AI generation failed, using fallback:", error)
     
