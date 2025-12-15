@@ -26,9 +26,20 @@ const documentSchema = new mongoose.Schema(
       default: "study-material",
       index: true,
     },
+    deletedAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
   },
   { timestamps: true },
 )
+
+// Soft delete: Exclude deleted documents by default
+documentSchema.pre(/^find/, function() {
+  // @ts-ignore
+  this.where({ deletedAt: null })
+})
 
 // Compound indexes for common queries
 documentSchema.index({ userId: 1, type: 1 })

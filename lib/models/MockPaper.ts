@@ -59,9 +59,20 @@ const mockPaperSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "AnalysisReport",
     },
+    deletedAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
   },
   { timestamps: true },
 )
+
+// Soft delete: Exclude deleted mock papers by default
+mockPaperSchema.pre(/^find/, function() {
+  // @ts-ignore
+  this.where({ deletedAt: null })
+})
 
 // Compound indexes for common queries
 mockPaperSchema.index({ userId: 1, documentId: 1, paperType: 1 })

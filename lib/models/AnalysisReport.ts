@@ -46,9 +46,20 @@ const analysisReportSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    deletedAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
   },
   { timestamps: true },
 )
+
+// Soft delete: Exclude deleted analysis reports by default
+analysisReportSchema.pre(/^find/, function() {
+  // @ts-ignore
+  this.where({ deletedAt: null })
+})
 
 // Compound indexes for common queries
 analysisReportSchema.index({ userId: 1, createdAt: -1 })

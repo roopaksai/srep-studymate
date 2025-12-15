@@ -43,8 +43,23 @@ const scheduleSchema = new mongoose.Schema(
         },
       },
     ],
+    deletedAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
   },
   { timestamps: true },
 )
+
+// Soft delete: Exclude deleted schedules by default
+scheduleSchema.pre(/^find/, function() {
+  // @ts-ignore
+  this.where({ deletedAt: null })
+})
+
+// Compound indexes for optimized queries
+scheduleSchema.index({ userId: 1, createdAt: -1 })
+scheduleSchema.index({ userId: 1, startDate: 1 })
 
 export default mongoose.models.Schedule || mongoose.model("Schedule", scheduleSchema)

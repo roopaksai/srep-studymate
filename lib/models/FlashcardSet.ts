@@ -26,8 +26,23 @@ const flashcardSetSchema = new mongoose.Schema(
         answer: String,
       },
     ],
+    deletedAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
   },
   { timestamps: true },
 )
+
+// Soft delete: Exclude deleted flashcard sets by default
+flashcardSetSchema.pre(/^find/, function() {
+  // @ts-ignore
+  this.where({ deletedAt: null })
+})
+
+// Compound indexes for optimized queries
+flashcardSetSchema.index({ userId: 1, documentId: 1 })
+flashcardSetSchema.index({ userId: 1, createdAt: -1 })
 
 export default mongoose.models.FlashcardSet || mongoose.model("FlashcardSet", flashcardSetSchema)
