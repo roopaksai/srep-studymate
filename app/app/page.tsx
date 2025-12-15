@@ -190,7 +190,7 @@ export default function DashboardPage() {
               <p className="text-gray-600">No documents uploaded yet</p>
             ) : (
               <div className="space-y-3">
-                {documents.map((doc) => (
+                {documents.filter(doc => doc.type !== 'answer-script').map((doc) => (
                   <div
                     key={doc._id}
                     onClick={() => setSelectedDocument(doc._id)}
