@@ -35,7 +35,8 @@ export async function GET(request: NextRequest) {
     }
     
     // Now fetch paginated reports with projections
-    const [reports, total] = await Promise.all([\n      AnalysisReport.find({ userId: payload.userId })
+    const [reports, total] = await Promise.all([
+      AnalysisReport.find({ userId: payload.userId })
         .select('title summary totalScore maxScore grade strengths weaknesses recommendedTopics createdAt')
         .sort({ createdAt: -1 })
         .skip(skip)

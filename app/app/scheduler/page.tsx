@@ -186,7 +186,7 @@ export default function SchedulerPage() {
       let yPos = 50
       doc.setFontSize(11)
       doc.setTextColor(0, 0, 0)
-      doc.setFont(undefined, "bold")
+      doc.setFont('helvetica', "bold")
       doc.text("Date", 15, yPos)
       doc.text("Topic", 60, yPos)
       doc.text("Duration", 170, yPos)
@@ -197,7 +197,7 @@ export default function SchedulerPage() {
       doc.line(15, yPos + 2, 195, yPos + 2)
 
       yPos += 8
-      doc.setFont(undefined, "normal")
+      doc.setFont('helvetica', "normal")
       doc.setFontSize(9)
 
       // Table rows

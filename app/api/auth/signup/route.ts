@@ -3,6 +3,7 @@ import connectDB from "@/lib/db"
 import User from "@/lib/models/User"
 import { generateToken } from "@/lib/auth"
 import bcryptjs from "bcryptjs"
+import { logger } from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   try {

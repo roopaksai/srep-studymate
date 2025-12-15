@@ -97,7 +97,7 @@ Rest days: ${restDays.length > 0 ? restDays.map(d => ["Sun", "Mon", "Tue", "Wed"
     throw new Error("Failed to parse AI response")
   } catch (error) {
     logger.warn('AI schedule generation failed, using fallback', { error: error instanceof Error ? error.message : String(error) })
-    return null
+    return []
   }
 }
 
@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Try AI generation first if enabled
-    let aiSessions = null
+    let aiSessions: any[] | undefined
     if (useAI) {
       aiSessions = await generateScheduleWithAI(
         topicsWithPriority,
