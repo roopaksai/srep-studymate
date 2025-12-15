@@ -72,10 +72,10 @@ async function generateAnalysisWithAI(
 Questions:
 ${questionsText}
 
-IMPORTANT: Be specific about which questions were answered well and which need improvement. Identify topics by question number and subject matter.
+IMPORTANT: Extract TOPIC NAMES (not question numbers) for strengths and weaknesses. Focus on the subject matter, not question references.
 
 Return ONLY a valid JSON object with:
-- summary: string (overall performance summary with specific question references)
+- summary: string (overall performance summary)
 - totalScore: number (sum of all scores)
 - maxScore: number (total marks: ${questions.reduce((s, q) => s + q.marks, 0)})
 - questionScores: array of objects with:
@@ -84,17 +84,16 @@ Return ONLY a valid JSON object with:
   - scoredMarks: number
   - maxMarks: number
   - feedback: string (specific feedback on what was good/missing)
-- strengths: array of 3-4 strings (be specific about which questions/topics were well done)
-- weaknesses: array of 3-4 strings (MUST include specific question numbers and topics that need improvement, e.g., "Q3: Weak explanation of concept X", "Q7: Missing key points about Y")
-- recommendedTopics: array of 4-5 specific topics to study (based on weak questions)
+- strengths: array of 3-5 TOPIC NAMES where student performed well (e.g., "Data Structures", "Algorithm Analysis", "Database Normalization" - NO question numbers)
+- weaknesses: array of 3-5 TOPIC NAMES that need improvement (e.g., "Graph Algorithms", "SQL Joins", "Time Complexity" - NO question numbers)
+- recommendedTopics: array of 4-6 specific topics to study (based on weak areas)
 - grade: string (A+, A, B+, B, C, D, F)
 
 Grade scale: A+ (90-100%), A (80-89%), B+ (70-79%), B (60-69%), C (50-59%), D (40-49%), F (<40%)
 
-Example weaknesses format:
-- "Q2: Incomplete explanation of [specific concept]"
-- "Q5: Missing critical analysis of [topic]"
-- "Q8: Needs more detail on [specific subject]"`,
+Example format:
+strengths: ["Data Structures", "Memory Management", "Code Optimization"]
+weaknesses: ["Concurrent Programming", "Design Patterns", "Testing Strategies"]`,
           },
           {
             role: "user",

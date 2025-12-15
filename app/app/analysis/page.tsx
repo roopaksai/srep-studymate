@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { exportAnalysisReportToPDF } from "@/lib/pdfExport"
 
 interface AnalysisReport {
   id: string
@@ -352,7 +353,7 @@ export default function AnalysisPage() {
                   {/* Bottom Buttons */}
                   <div className="flex gap-4 pt-6 border-t border-gray-200">
                     <Button 
-                      onClick={() => window.print()}
+                      onClick={() => exportAnalysisReportToPDF(selectedReport)}
                       className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-6 text-lg font-semibold shadow-lg"
                     >
                       📄 Download Report

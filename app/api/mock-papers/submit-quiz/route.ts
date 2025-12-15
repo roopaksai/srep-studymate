@@ -80,55 +80,62 @@ export async function POST(request: NextRequest) {
     else if (percentage >= 50) grade = "C"
     else if (percentage >= 40) grade = "D"
 
-    // Generate strengths and weaknesses with specific question analysis
-    const strengths = []
-    const weaknesses = []
-    const recommendedTopics = []
+    // Generate strengths and weaknesses with topic extraction
+    const strengths: string[] = []
+    const weaknesses: string[] = []
+    const recommendedTopics: string[] = []
     
-    // Analyze specific questions that were skipped or incorrect
-    const skippedQuestions: string[] = []
-    const incorrectQuestions: string[] = []
+    // Extract topics from questions (not full questions)
+    const extractTopic = (questionText: string): string => {
+      // Get the main subject by taking text before punctuation, removing common question words
+      let topic = questionText
+        .split(/[?.!]/)[0] // Get first sentence
+        .replace(/^(What|Which|When|Where|Why|How|Who|Is|Are|Does|Do|Can|Will|Should)\s+/i, '') // Remove question words
+        .trim()
+      
+      // If still too long, take first few meaningful words
+      const words = topic.split(/\s+/)
+      if (words.length > 6) {
+        topic = words.slice(0, 6).join(' ') + '...'
+      }
+      
+      return topic || 'General concept'
+    }
+    
+    // Collect topics from incorrect and skipped questions
+    const weakTopics = new Set<string>()
+    const strongTopics = new Set<string>()
     
     questionScores.forEach((qs: any, idx: number) => {
       const userAnswer = userAnswers.find((ans: any) => ans.questionIndex === idx)
       const question = mockPaper.questions[idx]
+      const topic = extractTopic(question.text)
       
-      if (userAnswer?.skipped) {
-        // Extract topic from question (first 60 chars or until punctuation)
-        const topic = question.text.split(/[?.!]/)[0].substring(0, 60).trim()
-        skippedQuestions.push(`Q${idx + 1}: ${topic}`)
-      } else if (qs.scoredMarks === 0) {
-        const topic = question.text.split(/[?.!]/)[0].substring(0, 60).trim()
-        incorrectQuestions.push(`Q${idx + 1}: ${topic}`)
+      if (userAnswer?.skipped || qs.scoredMarks === 0) {
+        weakTopics.add(topic)
+      } else if (qs.scoredMarks === qs.maxMarks) {
+        strongTopics.add(topic)
       }
     })
 
-    // Build strengths based on performance
+    // Build strengths based on performance - topics only
     if (correctCount >= 8) {
       strengths.push("Excellent understanding of the material")
-      strengths.push(`Correctly answered ${correctCount} out of ${mockPaper.questions.length} questions`)
     } else if (correctCount >= 6) {
       strengths.push("Good overall understanding of core concepts")
-      strengths.push(`Correctly answered ${correctCount} questions`)
     } else if (correctCount >= 4) {
       strengths.push("Partial understanding of the material")
-      strengths.push("Attempted the exam")
-    } else {
-      strengths.push("Completed the exam")
     }
+    
+    // Add strong topics
+    Array.from(strongTopics).slice(0, 5).forEach(topic => {
+      strengths.push(topic)
+    })
 
-    // Build specific weaknesses with question references
-    if (skippedQuestions.length > 0) {
-      weaknesses.push(`Skipped ${skippedQuestions.length} question(s) - Topics needing attention:`)
-      skippedQuestions.forEach(q => weaknesses.push(`  • ${q}`))
-      recommendedTopics.push("Review skipped topics thoroughly")
-    }
-
-    if (incorrectQuestions.length > 0) {
-      weaknesses.push(`Incorrect answers in ${incorrectQuestions.length} question(s) - Topics to revise:`)
-      incorrectQuestions.forEach(q => weaknesses.push(`  • ${q}`))
-      recommendedTopics.push("Focus on concepts where mistakes were made")
-    }
+    // Build weaknesses - topics only (no question numbers)
+    Array.from(weakTopics).forEach(topic => {
+      weaknesses.push(topic)
+    })
 
     // Add specific recommendations based on performance
     const incorrectCount = mockPaper.questions.length - correctCount - skippedCount
@@ -142,18 +149,23 @@ export async function POST(request: NextRequest) {
 
     if (correctCount < 5) {
       recommendedTopics.push("Strengthen fundamental concepts")
-      recommendedTopics.push("Practice more MCQ questions on these topics")
+      recommendedTopics.push("Practice more MCQ questions")
     }
+    
+    // Add weak topics to recommended topics
+    Array.from(weakTopics).slice(0, 3).forEach(topic => {
+      recommendedTopics.push(topic)
+    })
 
     // Ensure we have at least some content
     if (strengths.length === 0) {
       strengths.push("Completed the quiz")
     }
     if (weaknesses.length === 0) {
-      weaknesses.push("No major weaknesses identified - minor improvements possible")
+      weaknesses.push("Keep practicing for improvement")
     }
     if (recommendedTopics.length === 0) {
-      recommendedTopics.push("Continue practicing similar questions for mastery")
+      recommendedTopics.push("Continue practicing similar questions")
     }
 
     // Create analysis report with title: "doc name_type_report"
