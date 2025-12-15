@@ -46,10 +46,12 @@ export default function FlashcardsPage() {
       })
       if (res.ok) {
         const data = await res.json()
-        setFlashcardSets(data.flashcardSets)
+        // Handle paginated response structure
+        setFlashcardSets(data.data || data.flashcardSets || [])
       }
     } catch (err) {
       console.error("Failed to fetch flashcards:", err)
+      setFlashcardSets([]) // Ensure array on error
     }
   }
 

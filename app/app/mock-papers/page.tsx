@@ -64,10 +64,12 @@ export default function MockPapersPage() {
       })
       if (res.ok) {
         const data = await res.json()
-        setMockPapers(data.mockPapers)
+        // Handle paginated response structure
+        setMockPapers(data.data || data.mockPapers || [])
       }
     } catch (err) {
       console.error("Failed to fetch mock papers:", err)
+      setMockPapers([]) // Ensure array on error
     }
   }
 

@@ -44,10 +44,12 @@ export default function DashboardPage() {
       })
       if (res.ok) {
         const data = await res.json()
-        setDocuments(data.documents)
+        // Handle paginated response structure
+        setDocuments(data.data || data.documents || [])
       }
     } catch (err) {
       console.error("Failed to fetch documents:", err)
+      setDocuments([]) // Ensure documents is always an array
     } finally {
       setDocLoading(false)
     }

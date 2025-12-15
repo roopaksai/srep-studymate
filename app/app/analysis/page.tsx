@@ -66,10 +66,12 @@ export default function AnalysisPage() {
       })
       if (res.ok) {
         const data = await res.json()
-        setReports(data.reports)
+        // Handle paginated response structure
+        setReports(data.data || data.reports || [])
       }
     } catch (err) {
       console.error("Failed to fetch reports:", err)
+      setReports([]) // Ensure array on error
     }
   }
 
