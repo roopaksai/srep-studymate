@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import FlashcardSet from "@/lib/models/FlashcardSet"
 import { verifyToken } from "@/lib/auth"
+import { logger } from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ flashcardSets: transformedSets })
   } catch (error) {
-    console.error("Get flashcards error:", error)
+    logger.error('Get flashcards error', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined })
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

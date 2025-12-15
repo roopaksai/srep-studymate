@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import Schedule from "@/lib/models/Schedule"
 import { verifyToken } from "@/lib/auth"
+import { logger } from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     if (schedules.length > 5) {
       const schedulesToDelete = schedules.slice(5).map((s) => s._id)
       await Schedule.deleteMany({ _id: { $in: schedulesToDelete } })
-      console.log(`Deleted ${schedulesToDelete.length} old schedules for user ${payload.userId}`)
+      logger.info('Deleted old schedules', { count: schedulesToDelete.length, userId: payload.userId })
     }
 
     // Transform _id to id for frontend compatibility (only return top 5)
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ schedules: transformedSchedules })
   } catch (error) {
-    console.error("Get schedules error:", error)
+    logger.error('Get schedules error', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined })
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

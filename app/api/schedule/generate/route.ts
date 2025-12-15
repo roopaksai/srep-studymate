@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import Schedule from "@/lib/models/Schedule"
 import { verifyToken } from "@/lib/auth"
+import { logger } from "@/lib/logger"
 
 interface TopicWithPriority {
   topic: string
@@ -95,7 +96,7 @@ Rest days: ${restDays.length > 0 ? restDays.map(d => ["Sun", "Mon", "Tue", "Wed"
 
     throw new Error("Failed to parse AI response")
   } catch (error) {
-    console.error("AI schedule generation failed, using fallback:", error)
+    logger.warn('AI schedule generation failed, using fallback', { error: error instanceof Error ? error.message : String(error) })
     return null
   }
 }

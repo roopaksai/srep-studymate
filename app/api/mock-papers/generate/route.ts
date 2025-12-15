@@ -3,6 +3,7 @@ import connectDB from "@/lib/db"
 import Document from "@/lib/models/Document"
 import MockPaper from "@/lib/models/MockPaper"
 import { verifyToken } from "@/lib/auth"
+import { logger } from "@/lib/logger"
 
 interface Question {
   text: string
@@ -104,11 +105,11 @@ Ensure questions test understanding, application, and analysis.`
         if (attempt > 0) {
           // Wait before retrying (exponential backoff)
           const waitTime = Math.pow(2, attempt) * 1000
-          console.log(`Waiting ${waitTime}ms before retry...`)
+          logger.debug('Waiting before retry', { waitTime, attempt })
           await new Promise(resolve => setTimeout(resolve, waitTime))
         }
         
-        console.log(`Generation attempt ${attempt + 1}/${maxRetries}`)
+        logger.debug('Mock paper generation attempt', { attempt: attempt + 1, maxRetries })
         
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
@@ -137,12 +138,12 @@ Ensure questions test understanding, application, and analysis.`
 
         if (!response.ok) {
           const errorText = await response.text()
-          console.error(`API Error (${response.status}):`, errorText)
+          logger.error('OpenRouter API error', { status: response.status, statusText: response.statusText, errorText })
           lastError = new Error(`OpenRouter API failed: ${response.status} ${response.statusText}`)
           
           // Retry on rate limit or server errors
           if ((response.status === 429 || response.status >= 500) && attempt < maxRetries - 1) {
-            console.log(`Rate limited or server error, retrying...`)
+            logger.info('Rate limited or server error, retrying', { status: response.status, attempt })
             continue
           }
           throw lastError
@@ -178,7 +179,7 @@ Ensure questions test understanding, application, and analysis.`
           const finalQuestions = filtered.slice(0, 10)
           
           if (finalQuestions.length >= 10) {
-            console.log(`Successfully generated ${finalQuestions.length} questions`)
+            logger.info('Successfully generated questions', { count: finalQuestions.length, type: questionType })
             return finalQuestions
           }
           
@@ -190,7 +191,7 @@ Ensure questions test understanding, application, and analysis.`
         
       } catch (error) {
         lastError = error
-        console.error(`Attempt ${attempt + 1} failed:`, error)
+        logger.warn('Generation attempt failed', { attempt: attempt + 1, error: error instanceof Error ? error.message : String(error) })
         
         // If this was the last attempt, throw
         if (attempt === maxRetries - 1) {
@@ -202,7 +203,7 @@ Ensure questions test understanding, application, and analysis.`
     // This shouldn't be reached, but just in case
     throw new Error("All retry attempts failed")
   } catch (error) {
-    console.error("AI generation failed, using fallback:", error)
+    logger.warn('AI generation failed, using fallback', { error: error instanceof Error ? error.message : String(error), type: questionType })
     
     // Fallback questions based on type
     if (questionType === "mcq") {
@@ -313,7 +314,7 @@ export async function POST(request: NextRequest) {
       }).sort({ createdAt: -1 })
 
       if (existingPaper) {
-        console.log(`Found existing ${questionType} paper, returning it instead of generating new one`)
+        logger.info('Found existing paper', { questionType, documentId, userId: payload.userId })
         return NextResponse.json(
           {
             mockPaper: {
@@ -334,7 +335,7 @@ export async function POST(request: NextRequest) {
         )
       }
     } else {
-      console.log(`Reattempt requested, generating new ${questionType} paper`)
+      logger.info('Reattempt requested, generating new paper', { questionType, documentId, userId: payload.userId })
       // Delete old paper of this type if reattempt is true
       await MockPaper.deleteMany({
         userId: payload.userId,
@@ -378,7 +379,7 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     )
   } catch (error) {
-    console.error("Generate mock paper error:", error)
+    logger.error('Generate mock paper error', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined })
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -3,6 +3,7 @@ import connectDB from "@/lib/db"
 import Document from "@/lib/models/Document"
 import FlashcardSet from "@/lib/models/FlashcardSet"
 import { verifyToken } from "@/lib/auth"
+import { logger } from "@/lib/logger"
 
 async function generateFlashcardsWithAI(text: string): Promise<{ question: string; answer: string }[]> {
   try {
@@ -56,7 +57,7 @@ async function generateFlashcardsWithAI(text: string): Promise<{ question: strin
 
     throw new Error("Failed to parse AI response")
   } catch (error) {
-    console.error("AI generation failed, using fallback:", error)
+    logger.warn('AI generation failed, using fallback', { error: error instanceof Error ? error.message : String(error) })
     // Fallback to simple extraction
     const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 20).slice(0, 8)
     return sentences.map((sentence, index) => ({
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
       }).sort({ createdAt: -1 })
 
       if (existingFlashcardSet) {
-        console.log(`Found existing flashcard set, returning it instead of generating new one`)
+        logger.info('Found existing flashcard set', { documentId, userId: payload.userId })
         return NextResponse.json(
           {
             flashcardSet: {
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
         )
       }
     } else {
-      console.log(`Reattempt requested, generating new flashcard set`)
+      logger.info('Reattempt requested, generating new flashcard set', { documentId, userId: payload.userId })
       // Delete old flashcard set if reattempt is true
       await FlashcardSet.deleteMany({
         userId: payload.userId,
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     )
   } catch (error) {
-    console.error("Generate flashcards error:", error)
+    logger.error('Generate flashcards error', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined })
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
