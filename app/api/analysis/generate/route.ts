@@ -3,6 +3,7 @@ import connectDB from "@/lib/db"
 import Document from "@/lib/models/Document"
 import AnalysisReport from "@/lib/models/AnalysisReport"
 import { verifyToken } from "@/lib/auth"
+import { logger } from "@/lib/logger"
 
 interface QuestionScore {
   questionNumber: number

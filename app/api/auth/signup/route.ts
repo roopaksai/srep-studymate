@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     )
   } catch (error) {
-    console.error("Signup error:", error)
+    logger.error('Signup error', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined })
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

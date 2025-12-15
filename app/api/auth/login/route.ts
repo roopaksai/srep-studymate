@@ -3,6 +3,7 @@ import connectDB from "@/lib/db"
 import User from "@/lib/models/User"
 import { generateToken } from "@/lib/auth"
 import bcryptjs from "bcryptjs"
+import { logger } from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Login error:", error)
+    logger.error('Login error', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined })
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
