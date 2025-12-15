@@ -32,13 +32,13 @@ export async function requireAuth(request: NextRequest): Promise<{ userId: strin
 
   const payload = await verifyToken(token)
   
-  if (!payload) {
+  if (!payload || !payload.userId) {
     logger.warn('Authentication failed: Invalid token')
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
   }
 
   logger.debug('Authentication successful', { userId: payload.userId })
-  return { userId: payload.userId }
+  return { userId: payload.userId as string }
 }
 
 /**
