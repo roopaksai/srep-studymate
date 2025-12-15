@@ -82,11 +82,11 @@ export function exportAnalysisReportToPDF(report: AnalysisReport): void {
     addSection('Question-wise Performance', '#1e40af')
     
     // Calculate stats
-    const correct = report.questionScores.filter(q => q.scoredMarks === q.maxMarks).length
-    const wrong = report.questionScores.filter(q => q.scoredMarks === 0).length
-    const partial = report.questionScores.filter(q => q.scoredMarks > 0 && q.scoredMarks < q.maxMarks).length
+    const correct = report.questionScores.filter(q => q.scoredMarks === q.maxMarks && q.feedback !== "Question skipped").length
+    const wrong = report.questionScores.filter(q => q.scoredMarks === 0 && q.feedback !== "Question skipped").length
+    const skipped = report.questionScores.filter(q => q.feedback === "Question skipped").length
     
-    addText(`Correct: ${correct} | Wrong: ${wrong} | Partial: ${partial}`, 11, true, '#059669')
+    addText(`Correct: ${correct} | Wrong: ${wrong} | Skipped: ${skipped}`, 11, true, '#059669')
     yPosition += 3
     
     report.questionScores.forEach((qs, idx) => {
@@ -95,7 +95,7 @@ export function exportAnalysisReportToPDF(report: AnalysisReport): void {
         yPosition = 20
       }
       
-      const status = qs.scoredMarks === qs.maxMarks ? '✓' : qs.scoredMarks === 0 ? '✗' : '~'
+      const status = qs.feedback === "Question skipped" ? '○' : qs.scoredMarks === qs.maxMarks ? '✓' : '✗'
       addText(`${status} Q${qs.questionNumber}: ${qs.questionText}`, 10, true)
       addText(`   Score: ${qs.scoredMarks}/${qs.maxMarks}`, 9)
       addText(`   ${qs.feedback}`, 9)

@@ -54,6 +54,9 @@ export async function POST(request: NextRequest) {
       if (isCorrect) correctCount++
       if (wasSkipped) skippedCount++
 
+      // Get the correct answer text (not just the option letter)
+      const correctAnswerText = question.options?.[question.correctAnswer] || question.correctAnswer
+
       return {
         questionNumber: index + 1,
         questionText: question.text.substring(0, 100),
@@ -63,7 +66,7 @@ export async function POST(request: NextRequest) {
           ? "Question skipped"
           : isCorrect
             ? "Correct answer!"
-            : `Incorrect. The correct answer was ${question.correctAnswer}.`,
+            : `Incorrect. The correct answer was: ${correctAnswerText}`,
       }
     })
 

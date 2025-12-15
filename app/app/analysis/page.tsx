@@ -235,14 +235,14 @@ export default function AnalysisPage() {
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-medium text-gray-600">Correct</span>
                             <span className="text-sm font-bold text-green-600">
-                              {selectedReport.questionScores.filter(q => q.scoredMarks === q.maxMarks).length}
+                              {selectedReport.questionScores.filter(q => q.scoredMarks === q.maxMarks && q.feedback !== "Question skipped").length}
                             </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-3">
                             <div 
                               className="bg-green-500 h-3 rounded-full"
                               style={{
-                                width: `${(selectedReport.questionScores.filter(q => q.scoredMarks === q.maxMarks).length / selectedReport.questionScores.length) * 100}%`
+                                width: `${(selectedReport.questionScores.filter(q => q.scoredMarks === q.maxMarks && q.feedback !== "Question skipped").length / selectedReport.questionScores.length) * 100}%`
                               }}
                             ></div>
                           </div>
@@ -251,30 +251,30 @@ export default function AnalysisPage() {
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-medium text-gray-600">Wrong</span>
                             <span className="text-sm font-bold text-red-600">
-                              {selectedReport.questionScores.filter(q => q.scoredMarks === 0).length}
+                              {selectedReport.questionScores.filter(q => q.scoredMarks === 0 && q.feedback !== "Question skipped").length}
                             </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-3">
                             <div 
                               className="bg-red-500 h-3 rounded-full"
                               style={{
-                                width: `${(selectedReport.questionScores.filter(q => q.scoredMarks === 0).length / selectedReport.questionScores.length) * 100}%`
+                                width: `${(selectedReport.questionScores.filter(q => q.scoredMarks === 0 && q.feedback !== "Question skipped").length / selectedReport.questionScores.length) * 100}%`
                               }}
                             ></div>
                           </div>
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-600">Partial</span>
-                            <span className="text-sm font-bold text-yellow-600">
-                              {selectedReport.questionScores.filter(q => q.scoredMarks > 0 && q.scoredMarks < q.maxMarks).length}
+                            <span className="text-sm font-medium text-gray-600">Skipped</span>
+                            <span className="text-sm font-bold text-gray-600">
+                              {selectedReport.questionScores.filter(q => q.feedback === "Question skipped").length}
                             </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-3">
                             <div 
-                              className="bg-yellow-500 h-3 rounded-full"
+                              className="bg-gray-400 h-3 rounded-full"
                               style={{
-                                width: `${(selectedReport.questionScores.filter(q => q.scoredMarks > 0 && q.scoredMarks < q.maxMarks).length / selectedReport.questionScores.length) * 100}%`
+                                width: `${(selectedReport.questionScores.filter(q => q.feedback === "Question skipped").length / selectedReport.questionScores.length) * 100}%`
                               }}
                             ></div>
                           </div>
