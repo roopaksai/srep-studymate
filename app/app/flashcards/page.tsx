@@ -8,6 +8,7 @@ import Link from "next/link"
 
 interface FlashcardSet {
   id: string
+  documentId: string
   title: string
   cards: { question: string; answer: string }[]
   createdAt: string
@@ -52,7 +53,7 @@ export default function FlashcardsPage() {
     }
   }
 
-  const generateFlashcards = async (documentId: string) => {
+  const generateFlashcards = async (documentId: string, reattempt = false) => {
     try {
       setGenLoading(true)
       setError("")
@@ -62,7 +63,7 @@ export default function FlashcardsPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ documentId, title: "New Flashcard Set" }),
+        body: JSON.stringify({ documentId, reattempt }),
       })
 
       if (res.ok) {
@@ -80,6 +81,18 @@ export default function FlashcardsPage() {
     } finally {
       setGenLoading(false)
     }
+  }
+
+  const regenerateFlashcards = async () => {
+    if (!selectedSet) return
+    
+    const confirm = window.confirm(
+      "Are you sure you want to regenerate these flashcards? This will delete the current set and create a new one."
+    )
+    if (!confirm) return
+
+    // Use the documentId directly from the selected set
+    await generateFlashcards(selectedSet.documentId, true)
   }
 
   if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
@@ -139,9 +152,19 @@ export default function FlashcardsPage() {
                 <div className="bg-white rounded-2xl shadow-lg p-8">
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-800">{selectedSet.title}</h2>
-                    <span className="text-orange-600 font-semibold">
-                      Card {currentCardIndex + 1} of {selectedSet.cards.length}
-                    </span>
+                    <div className="flex items-center gap-4">
+                      <Button
+                        onClick={regenerateFlashcards}
+                        disabled={genLoading}
+                        variant="outline"
+                        className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                      >
+                        {genLoading ? "Regenerating..." : "🔄 Regenerate"}
+                      </Button>
+                      <span className="text-orange-600 font-semibold">
+                        Card {currentCardIndex + 1} of {selectedSet.cards.length}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Flip Card */}

@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     const transformedSets = flashcardSets.map((set) => ({
       ...set.toObject(),
       id: set._id.toString(),
+      documentId: set.documentId.toString(),
     }))
 
     return NextResponse.json({ flashcardSets: transformedSets })
