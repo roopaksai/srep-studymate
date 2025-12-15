@@ -35,32 +35,22 @@ export async function GET() {
       health.status = "degraded"
     }
 
-    // Check AI API availability
+    // Check AI API configuration (lightweight check)
     try {
-      if (config.ai.apiKey) {
-        const aiCheckStart = Date.now()
-        const response = await fetch("https://openrouter.ai/api/v1/models", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${config.ai.apiKey}`,
-          },
-          signal: AbortSignal.timeout(5000), // 5 second timeout
-        })
-        
+      if (config.ai.apiKey && config.ai.apiKey.length > 0) {
+        // Just check if API key is configured, don't make actual API call
+        // This keeps the health check fast and reliable
         health.checks.aiService = {
-          status: response.ok ? "healthy" : "unhealthy",
-          responseTime: Date.now() - aiCheckStart,
-          statusCode: response.status,
-        }
-
-        if (!response.ok) {
-          health.status = "degraded"
+          status: "configured",
+          message: "AI API key is configured",
+          model: config.ai.model,
         }
       } else {
         health.checks.aiService = {
           status: "unconfigured",
           message: "AI API key not configured",
         }
+        health.status = "degraded"
       }
     } catch (error) {
       health.checks.aiService = {
