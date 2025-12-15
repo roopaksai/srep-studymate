@@ -104,9 +104,12 @@ export function requireFeature(feature: keyof typeof FEATURES) {
   return (handler: Function) => {
     return async (...args: any[]) => {
       if (!FEATURES[feature]) {
-        return Response.json(
-          { error: `Feature '${feature}' is currently disabled` },
-          { status: 503 }
+        return new Response(
+          JSON.stringify({ error: `Feature '${feature}' is currently disabled` }),
+          { 
+            status: 503,
+            headers: { 'Content-Type': 'application/json' }
+          }
         )
       }
       return handler(...args)
