@@ -18,8 +18,15 @@ export async function GET(request: NextRequest) {
     await connectDB()
     const schedules = await Schedule.find({ userId: payload.userId }).sort({ createdAt: -1 })
 
-    // Transform _id to id for frontend compatibility
-    const transformedSchedules = schedules.map((schedule) => ({
+    // Keep only the 5 most recent schedules, delete older ones
+    if (schedules.length > 5) {
+      const schedulesToDelete = schedules.slice(5).map((s) => s._id)
+      await Schedule.deleteMany({ _id: { $in: schedulesToDelete } })
+      console.log(`Deleted ${schedulesToDelete.length} old schedules for user ${payload.userId}`)
+    }
+
+    // Transform _id to id for frontend compatibility (only return top 5)
+    const transformedSchedules = schedules.slice(0, 5).map((schedule) => ({
       ...schedule.toObject(),
       id: schedule._id.toString(),
     }))
