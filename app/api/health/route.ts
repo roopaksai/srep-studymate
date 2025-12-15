@@ -35,6 +35,21 @@ export async function GET() {
       health.status = "degraded"
     }
 
+    // Check cache statistics
+    try {
+      const { getCacheStats } = await import("@/lib/cache")
+      const cacheStats = getCacheStats()
+      health.checks.cache = {
+        status: "operational",
+        ...cacheStats,
+      }
+    } catch (error) {
+      health.checks.cache = {
+        status: "unknown",
+        error: error instanceof Error ? error.message : "Unknown error",
+      }
+    }
+
     // Check AI API configuration (lightweight check)
     try {
       if (config.ai.apiKey && config.ai.apiKey.length > 0) {

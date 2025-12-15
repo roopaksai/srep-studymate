@@ -10,6 +10,7 @@ export interface ApiSuccessResponse<T = any> {
     page?: number
     limit?: number
     total?: number
+    totalPages?: number
   }
 }
 
@@ -68,7 +69,7 @@ export function apiPaginated<T>(
       page,
       limit,
       total,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(total / limit) as number,
     },
   }
 }

@@ -4,6 +4,8 @@
 
 import { config } from "@/lib/config"
 import { ExternalServiceError } from "@/lib/errors"
+import { logger } from "@/lib/logger"
+import { getCached, setCache, generateAICacheKey, cacheTTL } from "@/lib/cache"
 
 interface AIMessage {
   role: "system" | "user" | "assistant"
@@ -21,7 +23,7 @@ interface AIResponse {
 }
 
 /**
- * Call OpenRouter AI API with retry logic
+ * Call OpenRouter AI API with retry logic and caching
  */
 export async function callAI(
   messages: AIMessage[],
@@ -30,6 +32,7 @@ export async function callAI(
     temperature?: number
     maxTokens?: number
     maxRetries?: number
+    useCache?: boolean
   }
 ): Promise<AIResponse> {
   const {
@@ -37,7 +40,18 @@ export async function callAI(
     temperature = config.ai.temperature,
     maxTokens = config.ai.maxTokens,
     maxRetries = config.ai.maxRetries,
+    useCache = true,
   } = options || {}
+
+  // Check cache first if enabled
+  if (useCache) {
+    const cacheKey = generateAICacheKey('ai-call', JSON.stringify(messages), { model, temperature })
+    const cached = getCached<AIResponse>(cacheKey)
+    if (cached) {
+      logger.debug('AI response retrieved from cache', { model })
+      return cached
+    }
+  }
 
   const apiKey = config.ai.apiKey
   if (!apiKey) {
@@ -45,6 +59,7 @@ export async function callAI(
   }
 
   let lastError: Error | null = null
+  const startTime = Date.now()
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -96,7 +111,7 @@ export async function callAI(
         throw new ExternalServiceError("Empty response from AI")
       }
 
-      return {
+      const result: AIResponse = {
         content,
         model: data.model || model,
         usage: data.usage
@@ -107,9 +122,20 @@ export async function callAI(
             }
           : undefined,
       }
+
+      // Cache the response
+      if (useCache) {
+        const cacheKey = generateAICacheKey('ai-call', JSON.stringify(messages), { model, temperature })
+        setCache(cacheKey, result, cacheTTL.aiGeneration)
+      }
+
+      const duration = Date.now() - startTime
+      logger.aiOperation('AI call', model, duration, result.usage?.totalTokens)
+
+      return result
     } catch (error) {
       lastError = error as Error
-      console.error(`AI call attempt ${attempt + 1} failed:`, error)
+      logger.error(`AI call attempt ${attempt + 1} failed`, error)
 
       if (attempt === maxRetries - 1) {
         throw error

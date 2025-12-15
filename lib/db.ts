@@ -22,6 +22,9 @@ if (!global.mongoose) {
   global.mongoose = cached
 }
 
+// Configure mongoose for better performance
+mongoose.set('strictQuery', true)
+
 async function connectDB() {
   if (cached.conn) {
     return cached.conn
@@ -30,6 +33,12 @@ async function connectDB() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      // Connection pool settings for better performance
+      maxPoolSize: 10,
+      minPoolSize: 2,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      maxIdleTimeMS: 60000,
     }
 
     cached.promise = mongoose.connect(MONGODB_URI, opts)
