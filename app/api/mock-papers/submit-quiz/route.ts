@@ -55,7 +55,9 @@ export async function POST(request: NextRequest) {
       if (wasSkipped) skippedCount++
 
       // Get the correct answer text (not just the option letter)
-      const correctAnswerText = question.options?.[question.correctAnswer] || question.correctAnswer
+      // correctAnswer is "A", "B", "C", or "D", options array has indices 0-3
+      const answerIndex = question.correctAnswer === "A" ? 0 : question.correctAnswer === "B" ? 1 : question.correctAnswer === "C" ? 2 : 3
+      const correctAnswerText = question.options?.[answerIndex] || question.correctAnswer
 
       return {
         questionNumber: index + 1,
@@ -94,12 +96,18 @@ export async function POST(request: NextRequest) {
       let topic = questionText
         .split(/[?.!]/)[0] // Get first sentence
         .replace(/^(What|Which|When|Where|Why|How|Who|Is|Are|Does|Do|Can|Will|Should)\s+/i, '') // Remove question words
+        .replace(/\s+(is|are|was|were|be|being|been|have|has|had|do|does|did|can|could|will|would|should|may|might|must)\s+/gi, ' ') // Remove filler words
         .trim()
       
-      // If still too long, take first few meaningful words
-      const words = topic.split(/\s+/)
-      if (words.length > 6) {
-        topic = words.slice(0, 6).join(' ') + '...'
+      // Keep reasonable length - up to 10 words for better understanding
+      const words = topic.split(/\s+/).filter(w => w.length > 0)
+      if (words.length > 10) {
+        topic = words.slice(0, 10).join(' ')
+      }
+      
+      // If empty or too short, use more of the original question
+      if (!topic || topic.length < 10) {
+        topic = questionText.substring(0, 60).trim()
       }
       
       return topic || 'General concept'
