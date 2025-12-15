@@ -6,11 +6,13 @@ const mockPaperSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
     documentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Document",
       required: true,
+      index: true,
     },
     title: {
       type: String,
@@ -20,6 +22,7 @@ const mockPaperSchema = new mongoose.Schema(
       type: String,
       enum: ['mcq', 'descriptive'],
       required: true,
+      index: true,
     },
     questions: [
       {
@@ -59,5 +62,10 @@ const mockPaperSchema = new mongoose.Schema(
   },
   { timestamps: true },
 )
+
+// Compound indexes for common queries
+mockPaperSchema.index({ userId: 1, documentId: 1, paperType: 1 })
+mockPaperSchema.index({ userId: 1, createdAt: -1 })
+mockPaperSchema.index({ documentId: 1, paperType: 1 })
 
 export default mongoose.models.MockPaper || mongoose.model("MockPaper", mockPaperSchema)

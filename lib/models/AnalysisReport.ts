@@ -6,11 +6,13 @@ const analysisReportSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
     answerScriptDocumentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Document",
       required: true,
+      index: true,
     },
     title: {
       type: String,
@@ -47,5 +49,10 @@ const analysisReportSchema = new mongoose.Schema(
   },
   { timestamps: true },
 )
+
+// Compound indexes for common queries
+analysisReportSchema.index({ userId: 1, createdAt: -1 })
+analysisReportSchema.index({ answerScriptDocumentId: 1 })
+analysisReportSchema.index({ grade: 1 })
 
 export default mongoose.models.AnalysisReport || mongoose.model("AnalysisReport", analysisReportSchema)

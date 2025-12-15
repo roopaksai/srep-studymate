@@ -6,6 +6,7 @@ const documentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
     originalFileName: {
       type: String,
@@ -23,9 +24,15 @@ const documentSchema = new mongoose.Schema(
       type: String,
       enum: ["study-material", "answer-script"],
       default: "study-material",
+      index: true,
     },
   },
   { timestamps: true },
 )
+
+// Compound indexes for common queries
+documentSchema.index({ userId: 1, type: 1 })
+documentSchema.index({ userId: 1, createdAt: -1 })
+documentSchema.index({ createdAt: -1 })
 
 export default mongoose.models.Document || mongoose.model("Document", documentSchema)
