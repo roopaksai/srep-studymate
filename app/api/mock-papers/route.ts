@@ -3,6 +3,7 @@ import connectDB from "@/lib/db"
 import MockPaper from "@/lib/models/MockPaper"
 import { verifyToken } from "@/lib/auth"
 import { logger } from "@/lib/logger"
+import { getPaginationParams, paginateResults } from "@/lib/pagination"
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,16 +18,29 @@ export async function GET(request: NextRequest) {
     }
 
     await connectDB()
-    const mockPapers = await MockPaper.find({ userId: payload.userId }).sort({ createdAt: -1 })
+    
+    // Get pagination parameters
+    const { page, limit, skip } = getPaginationParams(request)
+    
+    // Fetch mock papers with pagination
+    const [mockPapers, total] = await Promise.all([
+      MockPaper.find({ userId: payload.userId })
+        .select('title documentId paperType questions createdAt')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      MockPaper.countDocuments({ userId: payload.userId })
+    ])
 
     // Transform _id to id and add totalMarks for frontend compatibility
     const papersWithMarks = mockPapers.map((paper) => ({
-      ...paper.toObject(),
+      ...paper,
       id: paper._id.toString(),
       totalMarks: paper.questions.reduce((sum: number, q: any) => sum + (q.marks || 0), 0),
     }))
 
-    return NextResponse.json({ mockPapers: papersWithMarks })
+    return NextResponse.json(paginateResults(papersWithMarks, { page, limit, total }))
   } catch (error) {
     logger.error('Get mock papers error', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined })
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

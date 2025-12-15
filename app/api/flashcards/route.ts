@@ -3,6 +3,7 @@ import connectDB from "@/lib/db"
 import FlashcardSet from "@/lib/models/FlashcardSet"
 import { verifyToken } from "@/lib/auth"
 import { logger } from "@/lib/logger"
+import { getPaginationParams, paginateResults } from "@/lib/pagination"
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,16 +18,29 @@ export async function GET(request: NextRequest) {
     }
 
     await connectDB()
-    const flashcardSets = await FlashcardSet.find({ userId: payload.userId }).sort({ createdAt: -1 })
+    
+    // Get pagination parameters
+    const { page, limit, skip } = getPaginationParams(request)
+    
+    // Fetch flashcard sets with pagination
+    const [flashcardSets, total] = await Promise.all([
+      FlashcardSet.find({ userId: payload.userId })
+        .select('title documentId cards createdAt')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      FlashcardSet.countDocuments({ userId: payload.userId })
+    ])
 
-    // Transform _id to id for frontend compatibility
-    const transformedSets = flashcardSets.map((set) => ({
-      ...set.toObject(),
+    // Transform _id to id and add documentId for frontend compatibility
+    const transformedFlashcardSets = flashcardSets.map((set) => ({
+      ...set,
       id: set._id.toString(),
       documentId: set.documentId.toString(),
     }))
 
-    return NextResponse.json({ flashcardSets: transformedSets })
+    return NextResponse.json(paginateResults(transformedFlashcardSets, { page, limit, total }))
   } catch (error) {
     logger.error('Get flashcards error', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined })
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

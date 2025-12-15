@@ -1,11 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable gzip compression for better performance
+  compress: true,
+  
   typescript: {
     ignoreBuildErrors: false,
   },
+  
   images: {
     unoptimized: true,
   },
+  
+  // Increase body size limit for file uploads
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
+  
   env: {
     MONGODB_URI: process.env.MONGODB_URI,
     JWT_SECRET: process.env.JWT_SECRET,
