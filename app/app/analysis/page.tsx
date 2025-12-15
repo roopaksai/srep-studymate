@@ -358,7 +358,10 @@ export default function AnalysisPage() {
                     >
                       📄 Download Report
                     </Button>
-                    <Link href="/app/scheduler" className="flex-1">
+                    <Link 
+                      href={`/app/scheduler?weakTopics=${encodeURIComponent(JSON.stringify(selectedReport.weaknesses))}`} 
+                      className="flex-1"
+                    >
                       <Button className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white py-6 text-lg font-semibold shadow-lg">
                         📅 Schedule Timetable
                       </Button>
