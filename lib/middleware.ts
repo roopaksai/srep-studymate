@@ -114,8 +114,8 @@ export async function withErrorHandling<T>(
 /**
  * Combined middleware composer
  */
-export function withMiddleware(
-  handler: (request: NextRequest, context: { userId: string }) => Promise<Response>,
+export function withMiddleware<T extends { userId: string }>(
+  handler: (request: NextRequest, context: T) => Promise<Response>,
   options: {
     auth?: boolean
     rateLimit?: { limit: number; windowMs: number }
@@ -137,7 +137,7 @@ export function withMiddleware(
     }
     
     // Authentication
-    let context = { userId: '' }
+    let context: any = { userId: '' }
     if (options.auth) {
       const authResult = await requireAuth(request)
       if (authResult instanceof NextResponse) {
@@ -147,9 +147,11 @@ export function withMiddleware(
     }
     
     // Execute handler with error handling
-    return withErrorHandling(
-      () => handler(request, context),
+    const result = await withErrorHandling(
+      () => handler(request, context as T),
       'Request handler failed'
-    ) as Promise<Response>
+    )
+    
+    return result instanceof NextResponse ? result : result as Response
   }
 }
