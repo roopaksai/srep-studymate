@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         scoredMarks: isCorrect ? question.marks : 0,
         maxMarks: question.marks,
         feedback: wasSkipped
-          ? "Question skipped"
+          ? `Question skipped. The correct answer was: ${correctAnswerText}`
           : isCorrect
             ? "Correct answer!"
             : `Incorrect. The correct answer was: ${correctAnswerText}`,

@@ -16,7 +16,17 @@ export async function GET(request: NextRequest) {
     }
 
     await connectDB()
-    const reports = await AnalysisReport.find({ userId: payload.userId }).sort({ createdAt: -1 })
+    const allReports = await AnalysisReport.find({ userId: payload.userId }).sort({ createdAt: -1 })
+
+    // Keep only the 5 most recent reports, delete the rest
+    if (allReports.length > 5) {
+      const reportsToDelete = allReports.slice(5) // Get reports after the first 5
+      const idsToDelete = reportsToDelete.map(r => r._id)
+      await AnalysisReport.deleteMany({ _id: { $in: idsToDelete } })
+    }
+
+    // Get the kept reports (top 5)
+    const reports = allReports.slice(0, 5)
 
     // Transform _id to id for frontend compatibility
     const transformedReports = reports.map((report) => ({
