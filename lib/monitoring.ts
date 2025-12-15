@@ -26,7 +26,7 @@
 
 // Example usage in API routes:
 import * as Sentry from '@sentry/nextjs'
-import logger from './logger'
+import { logger } from './logger'
 
 export function captureError(error: Error, context?: Record<string, any>) {
   if (process.env.NODE_ENV === 'production') {
