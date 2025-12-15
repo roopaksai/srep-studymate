@@ -64,23 +64,26 @@ SREP/
 └── package.json
 \`\`\`
 
-## Setup Instructions
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
-- MongoDB (local or [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) - free tier)
+- Node.js v18 or higher
+- MongoDB connection (local or cloud)
+- Git (for cloning)
 
 ### Installation & Running
 
 1. **Clone the repository**
    \`\`\`bash
    git clone <your-repo-url>
-   cd srep
+   cd srep-studymate
    \`\`\`
 
 2. **Install dependencies**
    \`\`\`bash
    npm install
+   # or
+   pnpm install
    \`\`\`
 
 3. **Configure environment variables**
@@ -88,10 +91,10 @@ SREP/
    Create `.env.local` in the root directory:
    \`\`\`bash
    # MongoDB Connection (REQUIRED)
-   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/srep_studymate?retryWrites=true&w=majority
+   MONGODB_URI=mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@cluster.mongodb.net/srep?retryWrites=true&w=majority
 
-   # JWT Secret (REQUIRED - change this to a secure random string)
-   JWT_SECRET=your-super-secret-jwt-key-change-in-production-min-32-chars
+   # JWT Secret (REQUIRED - change this to a secure random string, min 32 chars)
+   JWT_SECRET=change-this-to-random-string-at-least-32-chars-long
 
    # OpenRouter API Key (REQUIRED for AI features)
    OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
@@ -101,17 +104,28 @@ SREP/
    \`\`\`
    
    **Get your API keys:**
-   - MongoDB: Sign up at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) (free tier)
-   - OpenRouter: Get API key at [OpenRouter.ai](https://openrouter.ai/keys) (free tier available)
+   - **MongoDB Atlas** (Recommended): 
+     1. Go to https://www.mongodb.com/cloud/atlas
+     2. Create free account
+     3. Create cluster
+     4. Click "Connect" → "Drivers" → Copy connection string
+     5. Replace `<password>` with your database password
+   - **MongoDB Local**: `mongodb://localhost:27017/srep`
+   - **OpenRouter**: Get API key at [OpenRouter.ai](https://openrouter.ai/keys) (free tier available)
 
 4. **Start development server**
    \`\`\`bash
    npm run dev
    \`\`\`
    
-   The app will be available at `http://localhost:3000`
+   Open http://localhost:3000 in your browser
 
-5. **Build for production**
+5. **Test the app**
+   - **Sign Up**: Click "Signup" → Create account with email/password
+   - **Upload Document**: Drag & drop a .txt, .pdf, or .docx file
+   - **Generate Content**: Try flashcards, mock papers, analysis, or scheduler
+
+6. **Build for production**
    \`\`\`bash
    npm run build
    npm start
@@ -221,22 +235,37 @@ The app can be deployed to any platform that supports Node.js:
 - Export to PDF functionality
 - Community features
 
-## Troubleshooting
+## 🔧 Troubleshooting
 
 ### MongoDB Connection Issues
-- Verify connection string is correct
-- Check MongoDB Atlas network access settings
+- Verify connection string is correct in `.env.local`
+- Check MongoDB Atlas network access settings (IP whitelist)
 - Ensure database user has correct permissions
+- For local MongoDB: Verify MongoDB service is running
 
-### JWT Errors
+### JWT/Auth Errors
 - Clear localStorage and log out/log back in
 - Check JWT_SECRET matches in `.env.local`
 - Verify token is included in API requests
+- Token expires after 7 days (re-login required)
 
 ### File Upload Issues
-- Check file size is under 5MB
+- Check file size is under 10MB limit
 - Verify file type is PDF, TXT, or DOCX
 - Ensure form data is correctly formatted
+- Clear browser cache if issues persist
+
+### API Errors
+- Check browser console (F12) for error details
+- Verify all environment variables are set
+- Restart dev server: Stop (Ctrl+C) and run `npm run dev` again
+- Review `.env.local` configuration
+
+### Performance Tips
+- Keep documents under 5MB for optimal processing
+- Use Firefox/Chrome for best compatibility
+- Clear browser cache if having issues (Ctrl+Shift+Delete)
+- Clear localStorage if auth issues persist
 
 ## License
 
