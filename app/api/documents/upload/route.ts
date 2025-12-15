@@ -131,6 +131,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File is required" }, { status: 400 })
     }
 
+    // Check file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      return NextResponse.json({ 
+        error: `File too large. Maximum size is 10MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB` 
+      }, { status: 400 })
+    }
+
+    console.log(`Processing document: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`)
+
     // Extract text from PDF/DOCX/TXT
     const extractedText = await extractTextFromFile(file)
 

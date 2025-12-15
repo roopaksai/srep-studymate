@@ -201,6 +201,14 @@ export default function MockPapersPage() {
     const file = e.target.files?.[0]
     if (!file || !selectedPaper) return
 
+    // Check file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      setError(`File too large. Maximum size is 10MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
+      e.target.value = '' // Reset file input
+      return
+    }
+
     try {
       setUploadingAnswer(true)
       setError("")
