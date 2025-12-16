@@ -359,12 +359,12 @@ export default function MockPapersPage() {
 
                   {selectedPaper.questions[currentQuestionIndex] && (
                     <div className="space-y-6">
-                      <div className="bg-orange-50 p-6 rounded-xl">
-                        <div className="flex justify-between items-start mb-4">
-                          <h3 className="text-xl font-semibold text-gray-800 flex-1">
+                      <div className="bg-orange-50 p-4 sm:p-6 rounded-xl">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                          <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 flex-1 leading-relaxed">
                             {selectedPaper.questions[currentQuestionIndex].text}
                           </h3>
-                          <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold ml-4">
+                          <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap">
                             {selectedPaper.questions[currentQuestionIndex].marks} marks
                           </span>
                         </div>
@@ -412,10 +412,10 @@ export default function MockPapersPage() {
                 // Paper View (Descriptive or MCQ not started)
                 <div className="bg-white rounded-2xl shadow-lg p-8">
                   <div className="mb-6">
-                    <div className="flex justify-between items-center mb-2">
-                      <h2 className="text-2xl font-bold text-gray-800">{selectedPaper.title}</h2>
-                      <div className="flex gap-2 items-center">
-                        <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-2">
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{selectedPaper.title}</h2>
+                      <div className="flex gap-2 items-center w-full sm:w-auto">
+                        <span className={`px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold ${
                           selectedPaper.paperType === 'mcq' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
                         }`}>
                           {selectedPaper.paperType === 'mcq' ? 'MCQ Quiz' : 'Descriptive'}
@@ -425,10 +425,10 @@ export default function MockPapersPage() {
                             generateMockPaper(selectedPaper.documentId, selectedPaper.paperType, true)
                           }}
                           variant="outline"
-                          className="text-sm"
+                          className="text-xs sm:text-sm flex-1 sm:flex-none"
                           disabled={genLoading}
                         >
-                          {genLoading ? "Regenerating..." : "🔄 Regenerate"}
+                          {genLoading ? "..." : "🔄"}<span className="hidden sm:inline ml-1">{genLoading ? "Regenerating" : "Regenerate"}</span>
                         </Button>
                       </div>
                     </div>

@@ -192,22 +192,22 @@ export default function AnalysisPage() {
 
                   {/* Score, Grade, Percentage Display */}
                   {selectedReport.totalScore !== undefined && (
-                    <div className="grid grid-cols-3 gap-6 mb-8">
-                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 text-center border border-orange-200">
-                        <p className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Score</p>
-                        <p className="text-4xl font-bold text-orange-600">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
+                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 sm:p-6 text-center border border-orange-200">
+                        <p className="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Score</p>
+                        <p className="text-3xl sm:text-4xl font-bold text-orange-600">
                           {selectedReport.totalScore}/{selectedReport.maxScore}
                         </p>
                       </div>
-                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 text-center border border-blue-200">
-                        <p className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Grade</p>
-                        <p className="text-4xl font-bold text-blue-600">
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 sm:p-6 text-center border border-blue-200">
+                        <p className="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Grade</p>
+                        <p className="text-3xl sm:text-4xl font-bold text-blue-600">
                           {selectedReport.grade || 'N/A'}
                         </p>
                       </div>
-                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 text-center border border-purple-200">
-                        <p className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Percentage</p>
-                        <p className="text-4xl font-bold text-purple-600">
+                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 sm:p-6 text-center border border-purple-200">
+                        <p className="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Percentage</p>
+                        <p className="text-3xl sm:text-4xl font-bold text-purple-600">
                           {((selectedReport.totalScore / (selectedReport.maxScore || 1)) * 100).toFixed(1)}%
                         </p>
                       </div>
@@ -338,19 +338,19 @@ export default function AnalysisPage() {
                   </div>
 
                   {/* Bottom Buttons */}
-                  <div className="flex gap-4 pt-6 border-t border-gray-200">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6 border-t border-gray-200">
                     <Button 
                       onClick={() => exportAnalysisReportToPDF(selectedReport)}
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-6 text-lg font-semibold shadow-lg"
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-4 sm:py-6 text-base sm:text-lg font-semibold shadow-lg"
                     >
-                      📄 Download Report
+                      📄 <span className="ml-2">Download Report</span>
                     </Button>
                     <Link 
                       href={`/app/scheduler?weakTopics=${encodeURIComponent(JSON.stringify(selectedReport.weaknesses))}`} 
                       className="flex-1"
                     >
-                      <Button className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white py-6 text-lg font-semibold shadow-lg">
-                        📅 Schedule Timetable
+                      <Button className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white py-4 sm:py-6 text-base sm:text-lg font-semibold shadow-lg">
+                        📅 <span className="ml-2">Schedule Timetable</span>
                       </Button>
                     </Link>
                   </div>

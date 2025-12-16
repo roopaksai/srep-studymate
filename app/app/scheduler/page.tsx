@@ -310,14 +310,14 @@ export default function SchedulerPage() {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0 mb-6">
           <Link href="/app">
-            <Button variant="outline" className="bg-transparent">
-              ← Back to Dashboard
+            <Button variant="outline" className="bg-transparent text-sm sm:text-base">
+              ← <span className="hidden sm:inline">Back to</span> Dashboard
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-800">📅 Smart Study Scheduler</h1>
-          <div className="w-32"></div>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 text-center sm:text-left">📅 Smart Study Scheduler</h1>
+          <div className="hidden sm:block sm:w-32"></div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -545,44 +545,44 @@ export default function SchedulerPage() {
 
             {/* Schedule Display */}
             {selectedSchedule && (
-              <div className="bg-white rounded-2xl shadow-lg p-8">
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-800">{selectedSchedule.title}</h2>
-                    <p className="text-sm text-gray-600 mt-1">
+              <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <div className="flex-1">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 break-words">{selectedSchedule.title}</h2>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
                       {new Date(selectedSchedule.startDate).toLocaleDateString()} -{" "}
                       {new Date(selectedSchedule.endDate).toLocaleDateString()}
                     </p>
                   </div>
                   <Button
                     onClick={handleExportPDF}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm sm:text-base w-full sm:w-auto whitespace-nowrap"
                   >
-                    📄 Download PDF
+                    📄 <span className="ml-1">Download PDF</span>
                   </Button>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full">
+                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                  <table className="w-full min-w-[600px]">
                     <thead>
                       <tr className="border-b-2 border-purple-500">
-                        <th className="text-left py-3 px-4 font-bold text-gray-800">Date</th>
-                        <th className="text-left py-3 px-4 font-bold text-gray-800">Topic</th>
-                        <th className="text-left py-3 px-4 font-bold text-gray-800">Duration</th>
+                        <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-bold text-gray-800 text-xs sm:text-base">Date</th>
+                        <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-bold text-gray-800 text-xs sm:text-base">Topic</th>
+                        <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-bold text-gray-800 text-xs sm:text-base">Duration</th>
                       </tr>
                     </thead>
                     <tbody>
                       {selectedSchedule.slots.map((slot, idx) => (
                         <tr key={idx} className="border-b border-gray-200 hover:bg-purple-50">
-                          <td className="py-3 px-4 text-gray-700">
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-gray-700 text-xs sm:text-sm whitespace-nowrap">
                             {new Date(slot.date).toLocaleDateString("en-US", {
                               weekday: "short",
                               month: "short",
                               day: "numeric",
                             })}
                           </td>
-                          <td className="py-3 px-4 font-semibold text-gray-800">{slot.topic}</td>
-                          <td className="py-3 px-4 text-gray-600">{slot.durationMinutes} min</td>
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 font-semibold text-gray-800 text-xs sm:text-base">{slot.topic}</td>
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-gray-600 text-xs sm:text-sm whitespace-nowrap">{slot.durationMinutes} min</td>
                         </tr>
                       ))}
                     </tbody>

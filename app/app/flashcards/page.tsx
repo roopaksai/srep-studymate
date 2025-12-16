@@ -151,20 +151,20 @@ export default function FlashcardsPage() {
 
             {selectedSet ? (
               <>
-                <div className="bg-white rounded-2xl shadow-lg p-8">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">{selectedSet.title}</h2>
-                    <div className="flex items-center gap-4">
+                <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{selectedSet.title}</h2>
+                    <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
                       <Button
                         onClick={regenerateFlashcards}
                         disabled={genLoading}
                         variant="outline"
-                        className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                        className="text-orange-600 border-orange-600 hover:bg-orange-50 text-sm sm:text-base flex-1 sm:flex-none"
                       >
-                        {genLoading ? "Regenerating..." : "🔄 Regenerate"}
+                        {genLoading ? "Regenerating..." : "🔄"}
                       </Button>
-                      <span className="text-orange-600 font-semibold">
-                        Card {currentCardIndex + 1} of {selectedSet.cards.length}
+                      <span className="text-orange-600 font-semibold text-sm sm:text-base whitespace-nowrap">
+                        Card {currentCardIndex + 1}/{selectedSet.cards.length}
                       </span>
                     </div>
                   </div>
@@ -172,11 +172,11 @@ export default function FlashcardsPage() {
                   {/* Flip Card */}
                   <div
                     onClick={() => setIsFlipped(!isFlipped)}
-                    className="bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl p-12 min-h-96 flex items-center justify-center cursor-pointer transform transition hover:scale-105 shadow-xl"
+                    className="bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl sm:rounded-2xl p-6 sm:p-12 min-h-[300px] sm:min-h-96 flex items-center justify-center cursor-pointer transform transition active:scale-95 sm:hover:scale-105 shadow-xl"
                   >
                     <div className="text-center text-white">
-                      <p className="text-sm font-semibold mb-4">{isFlipped ? "ANSWER" : "QUESTION"}</p>
-                      <p className="text-2xl font-bold">
+                      <p className="text-xs sm:text-sm font-semibold mb-3 sm:mb-4">{isFlipped ? "ANSWER" : "QUESTION"}</p>
+                      <p className="text-base sm:text-xl md:text-2xl font-bold leading-relaxed">
                         {isFlipped
                           ? selectedSet.cards[currentCardIndex].answer
                           : selectedSet.cards[currentCardIndex].question}
@@ -185,24 +185,24 @@ export default function FlashcardsPage() {
                   </div>
 
                   {/* Controls */}
-                  <div className="flex justify-between items-center mt-8">
+                  <div className="flex justify-between items-center mt-6 sm:mt-8 gap-2">
                     <Button
                       onClick={() => setCurrentCardIndex(Math.max(0, currentCardIndex - 1))}
                       disabled={currentCardIndex === 0}
                       variant="outline"
-                      className="px-6 py-2"
+                      className="px-3 sm:px-6 py-2 text-sm sm:text-base"
                     >
-                      ← Previous
+                      ← <span className="hidden sm:inline">Previous</span>
                     </Button>
-                    <span className="text-gray-600">
+                    <span className="text-gray-600 text-sm sm:text-base">
                       {currentCardIndex + 1} / {selectedSet.cards.length}
                     </span>
                     <Button
                       onClick={() => setCurrentCardIndex(Math.min(selectedSet.cards.length - 1, currentCardIndex + 1))}
                       disabled={currentCardIndex === selectedSet.cards.length - 1}
-                      className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2"
+                      className="bg-orange-500 hover:bg-orange-600 text-white px-3 sm:px-6 py-2 text-sm sm:text-base"
                     >
-                      Next →
+                      <span className="hidden sm:inline">Next</span> →
                     </Button>
                   </div>
                 </div>
