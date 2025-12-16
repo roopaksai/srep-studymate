@@ -184,4 +184,116 @@
   .input-field {
     @apply px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent;
   }
+
+  /* Logo animations */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes gradient-shift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  @keyframes dust-float {
+    0% {
+      transform: translateY(100vh) translateX(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-100px) translateX(100px) rotate(360deg);
+      opacity: 0;
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 1s ease-out forwards;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 4s ease-in-out infinite;
+  }
+
+  .animate-gradient-shift {
+    background-size: 400% 400%;
+    animation: gradient-shift 15s ease infinite;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  /* Dust particle effect */
+  .dust-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .dust-particle {
+    position: absolute;
+    bottom: -50px;
+    width: 3px;
+    height: 3px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.4), rgba(79, 70, 229, 0.3), rgba(249, 115, 22, 0.2));
+    border-radius: 50%;
+    animation: dust-float linear infinite;
+    filter: blur(1px);
+    box-shadow: 0 0 10px rgba(37, 99, 235, 0.3);
+  }
+
+  .dust-particle:nth-child(2n) {
+    background: radial-gradient(circle, rgba(22, 163, 74, 0.4), rgba(79, 70, 229, 0.3), rgba(249, 115, 22, 0.2));
+    box-shadow: 0 0 10px rgba(22, 163, 74, 0.3);
+  }
+
+  .dust-particle:nth-child(3n) {
+    background: radial-gradient(circle, rgba(79, 70, 229, 0.4), rgba(249, 115, 22, 0.3), rgba(37, 99, 235, 0.2));
+    box-shadow: 0 0 10px rgba(79, 70, 229, 0.3);
+  }
+
+  .dust-particle:nth-child(4n) {
+    background: radial-gradient(circle, rgba(249, 115, 22, 0.4), rgba(37, 99, 235, 0.3), rgba(22, 163, 74, 0.2));
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.3);
+  }
 }

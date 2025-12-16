@@ -254,11 +254,11 @@ export default function MockPapersPage() {
   if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      <nav className="bg-white border-b border-[#E2E8F0]">
+    <div className="min-h-screen bg-[#DEEEEE]">
+      <nav className="bg-[#4F46E5] border-b border-[#4338ca]">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/app">
-            <span className="text-2xl font-bold text-[#0F172A] cursor-pointer">SREP StudyMate</span>
+            <span className="text-2xl font-bold text-white cursor-pointer">SREP StudyMate</span>
           </Link>
           <NavigationDropdown />
         </div>

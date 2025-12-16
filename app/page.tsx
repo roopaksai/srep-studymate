@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-[#DEEEEE]">
       {/* Navbar */}
       <nav className="bg-white border-b border-[#E2E8F0] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
@@ -24,18 +24,35 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[calc(100vh-80px)]">
-        <h1 className="text-6xl font-bold text-[#0F172A] text-center mb-4">SREP</h1>
-        <p className="text-2xl text-[#64748B] text-center mb-12">your studymate to score in exams.</p>
+      <div className="relative max-w-7xl mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[calc(100vh-80px)] overflow-hidden">
+        {/* Dust particles effect */}
+        <div className="dust-container">
+          <div className="dust-particle" style={{ left: '10%', animationDelay: '0s', animationDuration: '15s' }}></div>
+          <div className="dust-particle" style={{ left: '20%', animationDelay: '2s', animationDuration: '18s' }}></div>
+          <div className="dust-particle" style={{ left: '30%', animationDelay: '4s', animationDuration: '20s' }}></div>
+          <div className="dust-particle" style={{ left: '40%', animationDelay: '1s', animationDuration: '17s' }}></div>
+          <div className="dust-particle" style={{ left: '50%', animationDelay: '3s', animationDuration: '19s' }}></div>
+          <div className="dust-particle" style={{ left: '60%', animationDelay: '5s', animationDuration: '16s' }}></div>
+          <div className="dust-particle" style={{ left: '70%', animationDelay: '2.5s', animationDuration: '21s' }}></div>
+          <div className="dust-particle" style={{ left: '80%', animationDelay: '4.5s', animationDuration: '18s' }}></div>
+          <div className="dust-particle" style={{ left: '90%', animationDelay: '1.5s', animationDuration: '22s' }}></div>
+        </div>
 
-        {/* Upload Area */}
-        <div className="w-full max-w-2xl mb-12 p-8 bg-white rounded-3xl border-2 border-dashed border-[#E2E8F0] text-center shadow-lg">
-          <div className="text-5xl mb-4">📄</div>
-          <p className="text-[#64748B] text-lg">Login to upload your document</p>
+        {/* Logo and Tagline */}
+        <div className="relative z-10 flex flex-col items-center mb-16">
+          <img 
+            src="/srep-logo.png" 
+            alt="SREP Logo" 
+            className="w-auto h-64 md:h-80 mb-3 object-contain animate-fade-in-up"
+            style={{ mixBlendMode: 'multiply' }}
+          />
+          <p className="text-xl md:text-2xl text-[#64748B] text-center font-medium animate-fade-in-up">
+            A studymate for you. use it and save your time
+          </p>
         </div>
 
         {/* Features */}
-        <div className="text-center mb-8">
+        <div className="relative z-10 text-center mb-8">
           <h2 className="text-2xl font-bold text-[#0F172A] mb-6">Available Features:</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link href="/login">
@@ -44,18 +61,18 @@ export default function Home() {
               </Button>
             </Link>
             <Link href="/login">
-              <Button className="w-full bg-[#16A34A] hover:bg-[#15803d] text-white rounded-full py-6 text-lg font-semibold">
-                Prioritised Topics
+              <Button className="w-full bg-[#4F46E5] hover:bg-[#4338ca] text-white rounded-full py-6 text-lg font-semibold">
+                Mock Papers
               </Button>
             </Link>
             <Link href="/login">
-              <Button className="w-full bg-[#4F46E5] hover:bg-[#4338ca] text-white rounded-full py-6 text-lg font-semibold">
-                Mock Paper
+              <Button className="w-full bg-[#16A34A] hover:bg-[#15803d] text-white rounded-full py-6 text-lg font-semibold">
+                Reports & Analysis
               </Button>
             </Link>
             <Link href="/login">
               <Button className="w-full bg-[#F97316] hover:bg-[#ea580c] text-white rounded-full py-6 text-lg font-semibold">
-                Scheduler
+                Study Scheduler
               </Button>
             </Link>
           </div>
