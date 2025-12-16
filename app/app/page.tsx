@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import NavigationDropdown from "@/components/NavigationDropdown"
 
 interface Document {
   _id: string
@@ -114,21 +115,7 @@ export default function DashboardPage() {
       <nav className="bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <span className="text-2xl font-bold text-white">SREP</span>
-          <div className="flex items-center gap-4">
-            <span className="text-white">{user.name}</span>
-            <Link href="/login">
-              <Button
-                onClick={() => {
-                  localStorage.removeItem("authToken")
-                  router.push("/")
-                }}
-                variant="outline"
-                className="bg-white text-orange-600 hover:bg-gray-100"
-              >
-                Logout
-              </Button>
-            </Link>
-          </div>
+          <NavigationDropdown />
         </div>
       </nav>
 

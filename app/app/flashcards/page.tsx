@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import NavigationDropdown from "@/components/NavigationDropdown"
 
 interface FlashcardSet {
   id: string
@@ -106,7 +107,7 @@ export default function FlashcardsPage() {
           <Link href="/app">
             <span className="text-2xl font-bold text-white cursor-pointer">SREP</span>
           </Link>
-          <span className="text-white">{user?.name}</span>
+          <NavigationDropdown />
         </div>
       </nav>
 

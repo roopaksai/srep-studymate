@@ -8,6 +8,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { exportAnalysisReportToPDF } from "@/lib/pdfExport"
+import NavigationDropdown from "@/components/NavigationDropdown"
 
 interface AnalysisReport {
   id: string
@@ -139,7 +140,7 @@ export default function AnalysisPage() {
           <Link href="/app">
             <span className="text-2xl font-bold text-white cursor-pointer">SREP</span>
           </Link>
-          <span className="text-white">{user?.name}</span>
+          <NavigationDropdown />
         </div>
       </nav>
 
