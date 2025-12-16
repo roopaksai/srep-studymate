@@ -83,7 +83,11 @@ export default function DashboardPage() {
       if (res.ok) {
         const data = await res.json()
         setSelectedDocument(data.document.id)
-        fetchDocuments()
+        await fetchDocuments()
+        // Scroll to features section after upload
+        setTimeout(() => {
+          document.getElementById('quick-actions')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        }, 500)
       } else {
         const error = await res.json()
         setError(error.error || "Upload failed")
@@ -217,7 +221,7 @@ export default function DashboardPage() {
 
           {/* Quick Actions */}
           {selectedDocument && (
-            <div className="bg-white rounded-2xl shadow-lg p-8">
+            <div id="quick-actions" className="bg-white rounded-2xl shadow-lg p-8">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Quick Actions</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Link href={`/app/flashcards?doc=${selectedDocument}`}>

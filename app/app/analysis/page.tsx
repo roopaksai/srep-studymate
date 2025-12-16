@@ -154,22 +154,7 @@ export default function AnalysisPage() {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
-              <div>
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Upload Answer Script</h3>
-                <label className="cursor-pointer">
-                  <div className="border-2 border-dashed border-orange-300 rounded-lg p-4 text-center hover:border-orange-500 hover:bg-orange-50 transition">
-                    <p className="text-sm font-semibold text-gray-700">📤 Upload</p>
-                  </div>
-                  <input
-                    type="file"
-                    onChange={handleFileUpload}
-                    disabled={uploadLoading}
-                    accept=".pdf,.txt,.doc,.docx"
-                    className="hidden"
-                  />
-                </label>
-                {uploadLoading && <p className="text-orange-600 text-sm mt-2">Uploading...</p>}
-              </div>
+              {/* Upload removed - users upload answer scripts in Mock Papers page */}
 
               <div>
                 <h3 className="text-lg font-bold text-gray-800 mb-3">Reports</h3>

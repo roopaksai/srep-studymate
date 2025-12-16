@@ -53,6 +53,7 @@ export default function SchedulerPage() {
   useEffect(() => {
     if (token) {
       fetchSchedules()
+      fetchAllTopics()
       
       // Check if weak topics are passed from analysis report
       const weakTopicsParam = searchParams.get("weakTopics")
@@ -73,6 +74,33 @@ export default function SchedulerPage() {
       }
     }
   }, [token, searchParams])
+
+  const fetchAllTopics = async () => {
+    try {
+      const res = await fetch("/api/documents", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        const documents = data.data || data.documents || []
+        // Extract all unique topics from documents
+        const allTopics = documents
+          .filter((doc: any) => doc.topics && doc.topics.length > 0)
+          .flatMap((doc: any) => doc.topics)
+          .filter((topic: string, index: number, self: string[]) => self.indexOf(topic) === index)
+        
+        // Only set if no weak topics from report and topics field is empty
+        if (!searchParams.get("weakTopics") && formData.topics === "") {
+          setFormData((prev) => ({
+            ...prev,
+            topics: allTopics.join(", "),
+          }))
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch topics:", err)
+    }
+  }
 
   const fetchSchedules = async () => {
     try {
