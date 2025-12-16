@@ -131,73 +131,79 @@ export default function AnalysisPage() {
     }
   }
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
+  if (loading) return <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC]">Loading...</div>
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100">
-      <nav className="bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg">
+    <div className="min-h-screen bg-[#F8FAFC]">
+      <nav className="bg-white border-b border-[#E2E8F0]">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/app">
-            <span className="text-2xl font-bold text-white cursor-pointer">SREP</span>
+            <span className="text-2xl font-bold text-[#0F172A] cursor-pointer">SREP StudyMate</span>
           </Link>
           <NavigationDropdown />
         </div>
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <Link href="/app">
-          <Button variant="outline" className="mb-6 bg-transparent">
-            ← Back to Dashboard
-          </Button>
-        </Link>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-[#0F172A] mb-1">Reports & Analysis</h1>
+            <p className="text-[#64748B]">Review your performance and insights</p>
+          </div>
+          <Link href="/app">
+            <Button variant="outline" className="border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9]">
+              ← Dashboard
+            </Button>
+          </Link>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
-              {/* Upload removed - users upload answer scripts in Mock Papers page */}
-
-              <div>
-                <h3 className="text-lg font-bold text-gray-800 mb-3">Reports</h3>
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {reports.map((report, idx) => (
+            <div className="bg-white rounded-lg border border-[#E2E8F0] p-5">
+              <h3 className="text-sm font-semibold text-[#0F172A] mb-3 uppercase tracking-wide">Your Reports</h3>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {reports.length === 0 ? (
+                  <p className="text-sm text-[#64748B] text-center py-4">No reports yet</p>
+                ) : (
+                  reports.map((report, idx) => (
                     <div
                       key={report.id}
                       onClick={() => setSelectedReport(report)}
-                      className={`p-3 rounded-lg cursor-pointer transition text-sm ${
+                      className={`p-3 rounded-lg cursor-pointer transition border ${
                         selectedReport?.id === report.id
-                          ? "bg-orange-100 border-2 border-orange-500"
-                          : "bg-gray-50 border-2 border-gray-200 hover:border-orange-300"
+                          ? "bg-green-50 border-[#16A34A] text-[#16A34A]"
+                          : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC]"
                       }`}
                     >
-                      <p className="font-semibold text-gray-800">Report {idx + 1}</p>
-                      <p className="text-xs text-gray-600">{new Date(report.createdAt).toLocaleDateString()}</p>
+                      <p className="font-medium text-sm">Report {idx + 1}</p>
+                      <p className="text-xs text-[#64748B] mt-0.5">{new Date(report.createdAt).toLocaleDateString()}</p>
                     </div>
-                  ))}
-                </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
-            {error && <div className="bg-red-100 text-red-700 p-4 rounded-lg">{error}</div>}
+          <div className="lg:col-span-3">
+            {error && <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6 border border-red-200">{error}</div>}
 
             {selectedReport ? (
-              <>
+              <div className="bg-white rounded-lg border border-[#E2E8F0] p-6 sm:p-8 space-y-6">
                 {/* Title */}
-                <div className="bg-white rounded-2xl shadow-lg p-8">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center uppercase tracking-wide">
-                    Answers Report
-                  </h1>
+                <div className="text-center border-b border-[#E2E8F0] pb-6">
+                  <h2 className="text-2xl font-bold text-[#0F172A]">Performance Analysis</h2>
+                  <p className="text-sm text-[#64748B] mt-1">Detailed breakdown of your results</p>
+                </div>
 
-                  {/* Score, Grade, Percentage Display */}
-                  {selectedReport.totalScore !== undefined && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
-                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 sm:p-6 text-center border border-orange-200">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Score</p>
-                        <p className="text-3xl sm:text-4xl font-bold text-orange-600">
-                          {selectedReport.totalScore}/{selectedReport.maxScore}
+                {/* Score, Grade, Percentage Display */}
+                {selectedReport.totalScore !== undefined && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="bg-green-50 rounded-lg p-5 text-center border border-[#E2E8F0]">
+                      <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wide mb-2">Score</p>
+                      <p className="text-3xl font-bold text-[#16A34A]">
+                        {selectedReport.totalScore}/{selectedReport.maxScore}
                         </p>
                       </div>
                       <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 sm:p-6 text-center border border-blue-200">
@@ -339,31 +345,33 @@ export default function AnalysisPage() {
                   </div>
 
                   {/* Bottom Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6 border-t border-gray-200">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-[#E2E8F0]">
                     <Button 
                       onClick={() => exportAnalysisReportToPDF(selectedReport)}
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-4 sm:py-6 text-base sm:text-lg font-semibold shadow-lg"
+                      className="flex-1 bg-[#0F172A] hover:bg-[#1e293b] text-white py-4 font-semibold"
                     >
-                      📄 <span className="ml-2">Download Report</span>
+                      Download PDF Report
                     </Button>
                     <Link 
                       href={`/app/scheduler?weakTopics=${encodeURIComponent(JSON.stringify(selectedReport.weaknesses))}`} 
                       className="flex-1"
                     >
-                      <Button className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white py-4 sm:py-6 text-base sm:text-lg font-semibold shadow-lg">
-                        📅 <span className="ml-2">Schedule Timetable</span>
+                      <Button className="w-full bg-[#F97316] hover:bg-[#ea580c] text-white py-4 font-semibold">
+                        Create Study Schedule
                       </Button>
                     </Link>
                   </div>
-                </div>
-              </>
+              </div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-                <p className="text-gray-600 mb-4">No analysis reports yet</p>
+              <div className="bg-white rounded-lg border border-[#E2E8F0] p-12 text-center">
+                <svg className="w-16 h-16 mx-auto mb-4 text-[#CBD5E1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <p className="text-[#334155] font-medium mb-2">No analysis reports yet</p>
                 {genLoading ? (
-                  <p className="text-orange-600">Generating analysis...</p>
+                  <p className="text-[#16A34A]">Generating analysis...</p>
                 ) : (
-                  <p className="text-gray-500">Upload an answer script to get started</p>
+                  <p className="text-[#64748B] text-sm">Upload an answer script to get started</p>
                 )}
               </div>
             )}

@@ -295,40 +295,42 @@ export default function SchedulerPage() {
     }
   }
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
+  if (loading) return <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC]">Loading...</div>
 
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100">
-      <nav className="bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg">
+    <div className="min-h-screen bg-[#F8FAFC]">
+      <nav className="bg-white border-b border-[#E2E8F0]">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/app">
-            <span className="text-2xl font-bold text-white cursor-pointer">SREP</span>
+            <span className="text-2xl font-bold text-[#0F172A] cursor-pointer">SREP StudyMate</span>
           </Link>
           <NavigationDropdown />
         </div>
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0 mb-6">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-[#0F172A] mb-1">Study Scheduler</h1>
+            <p className="text-[#64748B]">Plan your study sessions with AI assistance</p>
+          </div>
           <Link href="/app">
-            <Button variant="outline" className="bg-transparent text-sm sm:text-base">
-              ← <span className="hidden sm:inline">Back to</span> Dashboard
+            <Button variant="outline" className="border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9]">
+              ← Dashboard
             </Button>
           </Link>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 text-center sm:text-left">📅 Smart Study Scheduler</h1>
-          <div className="hidden sm:block sm:w-32"></div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-4">
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">📚 Your Schedules</h3>
+            <div className="bg-white rounded-lg border border-[#E2E8F0] p-5">
+              <h3 className="text-sm font-semibold text-[#0F172A] mb-3 uppercase tracking-wide">Your Schedules</h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {schedules.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-4">No schedules yet</p>
+                  <p className="text-sm text-[#64748B] text-center py-4">No schedules yet</p>
                 ) : (
                   schedules.map((schedule) => {
                     const stats = getStats(schedule)
@@ -336,16 +338,16 @@ export default function SchedulerPage() {
                       <div
                         key={schedule.id}
                         onClick={() => setSelectedSchedule(schedule)}
-                        className={`p-3 rounded-lg cursor-pointer transition ${
+                        className={`p-3 rounded-lg cursor-pointer transition border ${
                           selectedSchedule?.id === schedule.id
-                            ? "bg-purple-100 border-2 border-purple-500"
-                            : "bg-gray-50 border-2 border-gray-200 hover:border-purple-300"
+                            ? "bg-orange-50 border-[#F97316] text-[#F97316]"
+                            : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC]"
                         }`}
                       >
-                        <p className="font-semibold text-sm text-gray-800 truncate">
+                        <p className="font-medium text-sm truncate">
                           {schedule.title}
                         </p>
-                        <div className="flex items-center justify-between mt-1 text-xs text-gray-600">
+                        <div className="flex items-center justify-between mt-0.5 text-xs text-[#64748B]">
                           <span>{stats.totalSessions} sessions</span>
                           <span>{stats.totalHours}h total</span>
                         </div>
@@ -522,8 +524,8 @@ export default function SchedulerPage() {
                             onClick={() => toggleRestDay(idx)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                               formData.restDays.includes(idx)
-                                ? "bg-purple-600 text-white"
-                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                ? "bg-[#F97316] text-white"
+                                : "bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0]"
                             }`}
                           >
                             {day}
@@ -537,9 +539,9 @@ export default function SchedulerPage() {
                 <Button
                   type="submit"
                   disabled={genLoading}
-                  className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white py-3 rounded-lg font-semibold text-lg shadow-lg"
+                  className="w-full bg-[#F97316] hover:bg-[#ea580c] text-white py-3 rounded-lg font-semibold"
                 >
-                  {genLoading ? "🔄 Generating Schedule..." : "✨ Generate Smart Schedule"}
+                  {genLoading ? "Generating Schedule..." : "Generate Smart Schedule"}
                 </Button>
               </form>
             </div>
@@ -557,9 +559,9 @@ export default function SchedulerPage() {
                   </div>
                   <Button
                     onClick={handleExportPDF}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm sm:text-base w-full sm:w-auto whitespace-nowrap"
+                    className="bg-[#F97316] hover:bg-[#ea580c] text-white text-sm sm:text-base w-full sm:w-auto whitespace-nowrap"
                   >
-                    📄 <span className="ml-1">Download PDF</span>
+                    Download PDF
                   </Button>
                 </div>
 
@@ -574,7 +576,7 @@ export default function SchedulerPage() {
                     </thead>
                     <tbody>
                       {selectedSchedule.slots.map((slot, idx) => (
-                        <tr key={idx} className="border-b border-gray-200 hover:bg-purple-50">
+                        <tr key={idx} className="border-b border-[#E2E8F0] hover:bg-orange-50">
                           <td className="py-2 sm:py-3 px-2 sm:px-4 text-gray-700 text-xs sm:text-sm whitespace-nowrap">
                             {new Date(slot.date).toLocaleDateString("en-US", {
                               weekday: "short",

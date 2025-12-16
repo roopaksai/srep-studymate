@@ -98,123 +98,135 @@ export default function FlashcardsPage() {
     await generateFlashcards(selectedSet.documentId, true)
   }
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
+  if (loading) return <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC]">Loading...</div>
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100">
-      <nav className="bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg">
+    <div className="min-h-screen bg-[#F8FAFC]">
+      <nav className="bg-white border-b border-[#E2E8F0]">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/app">
-            <span className="text-2xl font-bold text-white cursor-pointer">SREP</span>
+            <span className="text-2xl font-bold text-[#0F172A] cursor-pointer">SREP StudyMate</span>
           </Link>
           <NavigationDropdown />
         </div>
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <Link href="/app">
-          <Button variant="outline" className="mb-6 bg-transparent">
-            ← Back to Dashboard
-          </Button>
-        </Link>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-[#0F172A] mb-1">Flashcards</h1>
+            <p className="text-[#64748B]">Study with AI-generated flashcards</p>
+          </div>
+          <Link href="/app">
+            <Button variant="outline" className="border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9]">
+              ← Dashboard
+            </Button>
+          </Link>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Your Sets</h3>
+            <div className="bg-white rounded-lg border border-[#E2E8F0] p-5">
+              <h3 className="text-sm font-semibold text-[#0F172A] mb-3 uppercase tracking-wide">Your Sets</h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {flashcardSets.map((set) => (
-                  <div
-                    key={set.id}
-                    onClick={() => {
-                      setSelectedSet(set)
-                      setCurrentCardIndex(0)
-                      setIsFlipped(false)
-                    }}
-                    className={`p-3 rounded-lg cursor-pointer transition ${
-                      selectedSet?.id === set.id
-                        ? "bg-orange-100 border-2 border-orange-500"
-                        : "bg-gray-50 border-2 border-gray-200 hover:border-orange-300"
-                    }`}
-                  >
-                    <p className="font-semibold text-sm text-gray-800">{set.title}</p>
-                    <p className="text-xs text-gray-600">{set.cards.length} cards</p>
-                  </div>
-                ))}
+                {flashcardSets.length === 0 ? (
+                  <p className="text-sm text-[#64748B] text-center py-4">No sets yet</p>
+                ) : (
+                  flashcardSets.map((set) => (
+                    <div
+                      key={set.id}
+                      onClick={() => {
+                        setSelectedSet(set)
+                        setCurrentCardIndex(0)
+                        setIsFlipped(false)
+                      }}
+                      className={`p-3 rounded-lg cursor-pointer transition border ${
+                        selectedSet?.id === set.id
+                          ? "bg-blue-50 border-[#2563EB] text-[#2563EB]"
+                          : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC]"
+                      }`}
+                    >
+                      <p className="font-medium text-sm truncate">{set.title}</p>
+                      <p className="text-xs text-[#64748B] mt-0.5">{set.cards.length} cards</p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
-            {error && <div className="bg-red-100 text-red-700 p-4 rounded-lg">{error}</div>}
+          <div className="lg:col-span-3">
+            {error && <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6 border border-red-200">{error}</div>}
 
             {selectedSet ? (
-              <>
-                <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{selectedSet.title}</h2>
-                    <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
-                      <Button
-                        onClick={regenerateFlashcards}
-                        disabled={genLoading}
-                        variant="outline"
-                        className="text-orange-600 border-orange-600 hover:bg-orange-50 text-sm sm:text-base flex-1 sm:flex-none"
-                      >
-                        {genLoading ? "Regenerating..." : "🔄"}
-                      </Button>
-                      <span className="text-orange-600 font-semibold text-sm sm:text-base whitespace-nowrap">
-                        Card {currentCardIndex + 1}/{selectedSet.cards.length}
-                      </span>
-                    </div>
+              <div className="bg-white rounded-lg border border-[#E2E8F0] p-6 sm:p-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-[#0F172A]">{selectedSet.title}</h2>
+                    <p className="text-sm text-[#64748B] mt-1">
+                      Card {currentCardIndex + 1} of {selectedSet.cards.length}
+                    </p>
                   </div>
-
-                  {/* Flip Card */}
-                  <div
-                    onClick={() => setIsFlipped(!isFlipped)}
-                    className="bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl sm:rounded-2xl p-6 sm:p-12 min-h-[300px] sm:min-h-96 flex items-center justify-center cursor-pointer transform transition active:scale-95 sm:hover:scale-105 shadow-xl"
+                  <Button
+                    onClick={regenerateFlashcards}
+                    disabled={genLoading}
+                    variant="outline"
+                    className="border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9]"
                   >
-                    <div className="text-center text-white">
-                      <p className="text-xs sm:text-sm font-semibold mb-3 sm:mb-4">{isFlipped ? "ANSWER" : "QUESTION"}</p>
-                      <p className="text-base sm:text-xl md:text-2xl font-bold leading-relaxed">
-                        {isFlipped
-                          ? selectedSet.cards[currentCardIndex].answer
-                          : selectedSet.cards[currentCardIndex].question}
-                      </p>
-                    </div>
-                  </div>
+                    {genLoading ? "Regenerating..." : "↻ Regenerate"}
+                  </Button>
+                </div>
 
-                  {/* Controls */}
-                  <div className="flex justify-between items-center mt-6 sm:mt-8 gap-2">
-                    <Button
-                      onClick={() => setCurrentCardIndex(Math.max(0, currentCardIndex - 1))}
-                      disabled={currentCardIndex === 0}
-                      variant="outline"
-                      className="px-3 sm:px-6 py-2 text-sm sm:text-base"
-                    >
-                      ← <span className="hidden sm:inline">Previous</span>
-                    </Button>
-                    <span className="text-gray-600 text-sm sm:text-base">
-                      {currentCardIndex + 1} / {selectedSet.cards.length}
-                    </span>
-                    <Button
-                      onClick={() => setCurrentCardIndex(Math.min(selectedSet.cards.length - 1, currentCardIndex + 1))}
-                      disabled={currentCardIndex === selectedSet.cards.length - 1}
-                      className="bg-orange-500 hover:bg-orange-600 text-white px-3 sm:px-6 py-2 text-sm sm:text-base"
-                    >
-                      <span className="hidden sm:inline">Next</span> →
-                    </Button>
+                {/* Flip Card */}
+                <div
+                  onClick={() => setIsFlipped(!isFlipped)}
+                  className="bg-[#2563EB] rounded-lg p-8 sm:p-12 min-h-[320px] sm:min-h-96 flex items-center justify-center cursor-pointer transform transition hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                >
+                  <div className="text-center text-white">
+                    <p className="text-xs font-semibold mb-4 uppercase tracking-wider opacity-90">{isFlipped ? "Answer" : "Question"}</p>
+                    <p className="text-xl sm:text-2xl md:text-3xl font-semibold leading-relaxed">
+                      {isFlipped
+                        ? selectedSet.cards[currentCardIndex].answer
+                        : selectedSet.cards[currentCardIndex].question}
+                    </p>
+                    <p className="text-sm opacity-75 mt-6">Tap to flip</p>
                   </div>
                 </div>
-              </>
+
+                {/* Controls */}
+                <div className="flex justify-between items-center mt-6 gap-4">
+                  <Button
+                    onClick={() => setCurrentCardIndex(Math.max(0, currentCardIndex - 1))}
+                    disabled={currentCardIndex === 0}
+                    variant="outline"
+                    className="border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9] disabled:opacity-40"
+                  >
+                    ← Previous
+                  </Button>
+                  <span className="text-sm text-[#64748B] font-medium">
+                    {currentCardIndex + 1} / {selectedSet.cards.length}
+                  </span>
+                  <Button
+                    onClick={() => setCurrentCardIndex(Math.min(selectedSet.cards.length - 1, currentCardIndex + 1))}
+                    disabled={currentCardIndex === selectedSet.cards.length - 1}
+                    className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white disabled:opacity-40"
+                  >
+                    Next →
+                  </Button>
+                </div>
+              </div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-                <p className="text-gray-600 mb-4">No flashcard sets yet</p>
+              <div className="bg-white rounded-lg border border-[#E2E8F0] p-12 text-center">
+                <svg className="w-16 h-16 mx-auto mb-4 text-[#CBD5E1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                </svg>
+                <p className="text-[#334155] font-medium mb-2">No flashcard sets yet</p>
                 {genLoading ? (
-                  <p className="text-orange-600">Generating flashcards...</p>
+                  <p className="text-[#2563EB]">Generating flashcards...</p>
                 ) : (
-                  <p className="text-gray-500">Upload a document and click "Generate Flashcards" to get started</p>
+                  <p className="text-[#64748B] text-sm">Upload a document and generate flashcards to get started</p>
                 )}
               </div>
             )}

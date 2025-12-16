@@ -254,52 +254,62 @@ export default function MockPapersPage() {
   if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100">
-      <nav className="bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg">
+    <div className="min-h-screen bg-[#F8FAFC]">
+      <nav className="bg-white border-b border-[#E2E8F0]">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/app">
-            <span className="text-2xl font-bold text-white cursor-pointer">SREP</span>
+            <span className="text-2xl font-bold text-[#0F172A] cursor-pointer">SREP StudyMate</span>
           </Link>
           <NavigationDropdown />
         </div>
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <Link href="/app">
-          <Button variant="outline" className="mb-6 bg-transparent">
-            ← Back to Dashboard
-          </Button>
-        </Link>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-[#0F172A] mb-1">Mock Papers</h1>
+            <p className="text-[#64748B]">Practice with AI-generated question papers</p>
+          </div>
+          <Link href="/app">
+            <Button variant="outline" className="border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9]">
+              ← Dashboard
+            </Button>
+          </Link>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Mock Papers</h3>
+            <div className="bg-white rounded-lg border border-[#E2E8F0] p-5">
+              <h3 className="text-sm font-semibold text-[#0F172A] mb-3 uppercase tracking-wide">Your Papers</h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {mockPapers.map((paper) => (
-                  <div
-                    key={paper.id}
-                    onClick={() => handlePaperSelection(paper)}
-                    className={`p-3 rounded-lg cursor-pointer transition ${
-                      selectedPaper?.id === paper.id
-                        ? "bg-orange-100 border-2 border-orange-500"
-                        : "bg-gray-50 border-2 border-gray-200 hover:border-orange-300"
-                    }`}
-                  >
-                    <p className="font-semibold text-sm text-gray-800">{paper.title}</p>
-                    <p className="text-xs text-gray-600">
-                      {paper.questions.length} questions • {paper.totalMarks} marks
-                    </p>
-                  </div>
-                ))}
+                {mockPapers.length === 0 ? (
+                  <p className="text-sm text-[#64748B] text-center py-4">No papers yet</p>
+                ) : (
+                  mockPapers.map((paper) => (
+                    <div
+                      key={paper.id}
+                      onClick={() => handlePaperSelection(paper)}
+                      className={`p-3 rounded-lg cursor-pointer transition border ${
+                        selectedPaper?.id === paper.id
+                          ? "bg-indigo-50 border-[#4F46E5] text-[#4F46E5]"
+                          : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC]"
+                      }`}
+                    >
+                      <p className="font-medium text-sm truncate">{paper.title}</p>
+                      <p className="text-xs text-[#64748B] mt-0.5">
+                        {paper.questions.length} questions • {paper.totalMarks} marks
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {error && <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-6">{error}</div>}
+            {error && <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6 border border-red-200">{error}</div>}
 
             {/* Question Type Selector Modal */}
             {showTypeSelector && pendingDocId && (
@@ -311,7 +321,7 @@ export default function MockPapersPage() {
                   <div className="space-y-3">
                     <button
                       onClick={() => generateMockPaper(pendingDocId, 'mcq')}
-                      className="w-full p-4 bg-orange-50 hover:bg-orange-100 border-2 border-orange-300 rounded-xl text-left transition"
+                      className="w-full p-4 bg-indigo-50 hover:bg-indigo-100 border-2 border-[#4F46E5] rounded-lg text-left transition"
                     >
                       <div className="font-semibold text-gray-800">MCQ (Multiple Choice)</div>
                       <div className="text-sm text-gray-600">10 questions • 4 marks each</div>
@@ -319,7 +329,7 @@ export default function MockPapersPage() {
                     
                     <button
                       onClick={() => generateMockPaper(pendingDocId, 'descriptive')}
-                      className="w-full p-4 bg-orange-50 hover:bg-orange-100 border-2 border-orange-300 rounded-xl text-left transition"
+                      className="w-full p-4 bg-indigo-50 hover:bg-indigo-100 border-2 border-[#4F46E5] rounded-lg text-left transition"
                     >
                       <div className="font-semibold text-gray-800">Descriptive (Long Answer)</div>
                       <div className="text-sm text-gray-600">8 questions • 8-15 marks each</div>
@@ -346,13 +356,13 @@ export default function MockPapersPage() {
                   <div className="mb-6">
                     <div className="flex justify-between items-center mb-4">
                       <h2 className="text-2xl font-bold text-gray-800">{selectedPaper.title}</h2>
-                      <span className="bg-orange-100 text-orange-700 px-4 py-2 rounded-full font-semibold">
+                      <span className="bg-indigo-50 text-[#4F46E5] px-4 py-2 rounded-full font-semibold">
                         Question {currentQuestionIndex + 1} / {selectedPaper.questions.length}
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-[#E2E8F0] h-2 rounded-full">
                       <div
-                        className="bg-orange-500 h-2 rounded-full transition-all"
+                        className="bg-[#4F46E5] h-2 rounded-full transition-all"
                         style={{ width: `${((currentQuestionIndex + 1) / selectedPaper.questions.length) * 100}%` }}
                       />
                     </div>
@@ -360,12 +370,12 @@ export default function MockPapersPage() {
 
                   {selectedPaper.questions[currentQuestionIndex] && (
                     <div className="space-y-6">
-                      <div className="bg-orange-50 p-4 sm:p-6 rounded-xl">
+                      <div className="bg-indigo-50 p-4 sm:p-6 rounded-lg border border-[#E2E8F0]">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                          <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 flex-1 leading-relaxed">
+                          <h3 className="text-base sm:text-lg md:text-xl font-semibold text-[#0F172A] flex-1 leading-relaxed">
                             {selectedPaper.questions[currentQuestionIndex].text}
                           </h3>
-                          <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap">
+                          <span className="bg-[#4F46E5] text-white px-3 py-1 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap">
                             {selectedPaper.questions[currentQuestionIndex].marks} marks
                           </span>
                         </div>
@@ -378,8 +388,8 @@ export default function MockPapersPage() {
                             onClick={() => handleAnswerSelect(String.fromCharCode(65 + idx))}
                             className={`w-full p-4 rounded-xl text-left transition border-2 ${
                               selectedOption === String.fromCharCode(65 + idx)
-                                ? "bg-orange-100 border-orange-500"
-                                : "bg-gray-50 border-gray-200 hover:border-orange-300"
+                                ? "bg-indigo-100 border-[#4F46E5]"
+                                : "bg-white border-[#CBD5E1] hover:border-[#4F46E5]"
                             }`}
                           >
                             <div className="flex items-start gap-3">
@@ -401,7 +411,7 @@ export default function MockPapersPage() {
                         <Button
                           onClick={handleNext}
                           disabled={!selectedOption}
-                          className="flex-1 bg-orange-500 hover:bg-orange-600 py-6 text-lg"
+                          className="flex-1 bg-[#4F46E5] hover:bg-[#4338ca] py-6 text-lg"
                         >
                           {currentQuestionIndex < selectedPaper.questions.length - 1 ? "Next" : "Submit Quiz"}
                         </Button>
@@ -448,7 +458,7 @@ export default function MockPapersPage() {
                       </p>
                       <Button
                         onClick={startQuiz}
-                        className="bg-orange-500 hover:bg-orange-600 px-8 py-6 text-lg"
+                        className="bg-[#16A34A] hover:bg-[#15803d] px-8 py-6 text-lg"
                       >
                         Start Quiz
                       </Button>

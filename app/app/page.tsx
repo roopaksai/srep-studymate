@@ -110,130 +110,127 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100">
+    <div className="min-h-screen bg-[#F8FAFC]">
       {/* Navbar */}
-      <nav className="bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg">
+      <nav className="bg-white border-b border-[#E2E8F0]">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <span className="text-2xl font-bold text-white">SREP</span>
+          <span className="text-2xl font-bold text-[#0F172A]">SREP StudyMate</span>
           <NavigationDropdown />
         </div>
       </nav>
 
-      {/* Sidebar Navigation */}
-      <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-2xl shadow-lg p-6 space-y-3">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Features</h3>
-            <Link href="/app">
-              <Button className="w-full justify-start bg-orange-500 hover:bg-orange-600 text-white">Dashboard</Button>
-            </Link>
-            <Link href="/app/flashcards">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                Flashcards
-              </Button>
-            </Link>
-            <Link href="/app/mock-papers">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                Mock Papers
-              </Button>
-            </Link>
-            <Link href="/app/analysis">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                Analysis
-              </Button>
-            </Link>
-            <Link href="/app/scheduler">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                Scheduler
-              </Button>
-            </Link>
-          </div>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-[#0F172A] mb-2">Dashboard</h1>
+          <p className="text-[#64748B]">Upload documents and access your study tools</p>
         </div>
 
-        {/* Main Content */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Upload Section */}
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Upload Your Document</h2>
-            <label className="cursor-pointer">
-              <div className="border-2 border-dashed border-orange-300 rounded-2xl p-12 text-center hover:border-orange-500 hover:bg-orange-50 transition">
-                <div className="text-5xl mb-4">📄</div>
-                <p className="text-lg font-semibold text-gray-700">
-                  {uploadLoading ? "Uploading..." : "Click to upload or drag your document"}
-                </p>
-                <p className="text-sm text-gray-500">PDF, TXT, or DOCX files accepted</p>
-              </div>
-              <input
-                type="file"
-                onChange={handleFileUpload}
-                disabled={uploadLoading}
-                accept=".pdf,.txt,.doc,.docx"
-                className="hidden"
-              />
-            </label>
-            {error && <p className="text-red-600 mt-4">{error}</p>}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-lg border border-[#E2E8F0] p-6">
+              <h2 className="text-lg font-semibold text-[#0F172A] mb-4">Upload Document</h2>
+              <label className="cursor-pointer">
+                <div className="border-2 border-dashed border-[#CBD5E1] rounded-lg p-8 text-center hover:border-[#0F172A] hover:bg-[#F8FAFC] transition">
+                  <svg className="w-12 h-12 mx-auto mb-4 text-[#64748B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <p className="text-base font-medium text-[#0F172A] mb-1">
+                    {uploadLoading ? "Uploading..." : "Click to upload or drag document"}
+                  </p>
+                  <p className="text-sm text-[#64748B]">PDF, TXT, or DOCX • Max 10MB</p>
+                </div>
+                <input
+                  type="file"
+                  onChange={handleFileUpload}
+                  disabled={uploadLoading}
+                  accept=".pdf,.txt,.doc,.docx"
+                  className="hidden"
+                />
+              </label>
+              {error && <p className="text-red-600 mt-3 text-sm">{error}</p>}
+            </div>
+
+            {/* Documents List */}
+            <div className="bg-white rounded-lg border border-[#E2E8F0] p-6">
+              <h2 className="text-lg font-semibold text-[#0F172A] mb-4">Your Documents</h2>
+              {docLoading ? (
+                <p className="text-[#64748B]">Loading documents...</p>
+              ) : documents.length === 0 ? (
+                <p className="text-[#64748B]">No documents uploaded yet</p>
+              ) : (
+                <div className="space-y-2">
+                  {documents.filter(doc => doc.type !== 'answer-script').map((doc) => (
+                    <div
+                      key={doc._id}
+                      onClick={() => setSelectedDocument(doc._id)}
+                      className={`p-4 rounded-lg cursor-pointer transition border ${
+                        selectedDocument === doc._id
+                          ? "bg-[#F1F5F9] border-[#0F172A]"
+                          : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC]"
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-[#0F172A] truncate">{doc.originalFileName}</p>
+                          <p className="text-sm text-[#64748B]">{new Date(doc.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <span className="text-xs bg-[#F1F5F9] text-[#334155] px-3 py-1 rounded-full ml-3">{doc.type}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Documents List */}
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Your Documents</h2>
-            {docLoading ? (
-              <p className="text-gray-600">Loading documents...</p>
-            ) : documents.length === 0 ? (
-              <p className="text-gray-600">No documents uploaded yet</p>
+          {/* Quick Actions Sidebar */}
+          <div className="lg:col-span-1">
+            {selectedDocument ? (
+              <div id="quick-actions" className="bg-white rounded-lg border border-[#E2E8F0] p-6">
+                <h3 className="text-lg font-semibold text-[#0F172A] mb-4">Quick Actions</h3>
+                <div className="space-y-3">
+                  <Link href={`/app/flashcards?doc=${selectedDocument}`}>
+                    <Button className="w-full bg-[#2563EB] hover:bg-[#1d4ed8] text-white justify-start">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                      </svg>
+                      Flashcards
+                    </Button>
+                  </Link>
+                  <Link href={`/app/mock-papers?doc=${selectedDocument}`}>
+                    <Button className="w-full bg-[#4F46E5] hover:bg-[#4338ca] text-white justify-start">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Mock Papers
+                    </Button>
+                  </Link>
+                  <Link href={`/app/analysis?doc=${selectedDocument}`}>
+                    <Button className="w-full bg-[#16A34A] hover:bg-[#15803d] text-white justify-start">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      Reports
+                    </Button>
+                  </Link>
+                  <Link href="/app/scheduler">
+                    <Button className="w-full bg-[#F97316] hover:bg-[#ea580c] text-white justify-start">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Scheduler
+                    </Button>
+                  </Link>
+                </div>
+              </div>
             ) : (
-              <div className="space-y-3">
-                {documents.filter(doc => doc.type !== 'answer-script').map((doc) => (
-                  <div
-                    key={doc._id}
-                    onClick={() => setSelectedDocument(doc._id)}
-                    className={`p-4 rounded-lg cursor-pointer transition ${
-                      selectedDocument === doc._id
-                        ? "bg-orange-100 border-2 border-orange-500"
-                        : "bg-gray-50 border-2 border-gray-200 hover:border-orange-300"
-                    }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold text-gray-800">{doc.originalFileName}</p>
-                        <p className="text-sm text-gray-600">{new Date(doc.createdAt).toLocaleDateString()}</p>
-                      </div>
-                      <span className="text-sm bg-orange-100 text-orange-700 px-3 py-1 rounded-full">{doc.type}</span>
-                    </div>
-                  </div>
-                ))}
+              <div className="bg-[#F1F5F9] rounded-lg border border-[#E2E8F0] p-6">
+                <p className="text-[#64748B] text-sm">Select a document to access quick actions</p>
               </div>
             )}
           </div>
-
-          {/* Quick Actions */}
-          {selectedDocument && (
-            <div id="quick-actions" className="bg-white rounded-2xl shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">Quick Actions</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Link href={`/app/flashcards?doc=${selectedDocument}`}>
-                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-6 text-lg font-semibold rounded-xl">
-                    Generate Flashcards
-                  </Button>
-                </Link>
-                <Link href={`/app/mock-papers?doc=${selectedDocument}`}>
-                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-6 text-lg font-semibold rounded-xl">
-                    Generate Mock Paper
-                  </Button>
-                </Link>
-                <Link href={`/app/analysis?doc=${selectedDocument}`}>
-                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-6 text-lg font-semibold rounded-xl">
-                    Analyse Answer
-                  </Button>
-                </Link>
-                <Link href="/app/scheduler">
-                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-6 text-lg font-semibold rounded-xl">
-                    Create Schedule
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
