@@ -75,7 +75,7 @@ export default function NavigationDropdown() {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-2 w-64 bg-gray-500/90 backdrop-blur-xl rounded-lg shadow-2xl border border-white/20 overflow-hidden z-50">
+          <div className="absolute right-0 mt-2 w-56 sm:w-64 bg-gray-500/90 backdrop-blur-xl rounded-lg shadow-2xl border border-white/20 overflow-hidden z-50">
             {/* User Info */}
             <div className="px-4 py-3 bg-white/10 backdrop-blur-md border-b border-white/20">
               <div className="flex items-center gap-3">

@@ -42,8 +42,8 @@ export default function LoginPage() {
       </nav>
 
       <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-          <h1 className="text-3xl font-bold text-[#0F172A] mb-2">Welcome Back</h1>
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] mb-2">Welcome Back</h1>
           <p className="text-gray-600 mb-6">Sign in to your account</p>
 
           {error && <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">{error}</div>}

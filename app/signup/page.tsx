@@ -39,18 +39,18 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100 flex flex-col">
-      <nav className="bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg">
+    <div className="min-h-screen bg-[#DEEEEE] flex flex-col">
+      <nav className="bg-white border-b border-[#E2E8F0] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <Link href="/">
-            <span className="text-2xl font-bold text-white cursor-pointer">SREP</span>
+            <span className="text-2xl font-bold text-[#0F172A] cursor-pointer">SREP</span>
           </Link>
         </div>
       </nav>
 
       <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-          <h1 className="text-3xl font-bold text-orange-600 mb-2">Create Account</h1>
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] mb-2">Create Account</h1>
           <p className="text-gray-600 mb-6">Join SREP to start studying</p>
 
           {error && <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">{error}</div>}

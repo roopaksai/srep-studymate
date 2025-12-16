@@ -6,18 +6,18 @@ export default function Home() {
     <div className="min-h-screen bg-[#DEEEEE]">
       {/* Navbar */}
       <nav className="bg-white border-b border-[#E2E8F0] shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-[#0F172A]">SREP</span>
+            <span className="text-xl sm:text-2xl font-bold text-[#0F172A]">SREP</span>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <Link href="/login">
-              <Button variant="outline" className="bg-white text-[#0F172A] border-[#CBD5E1] hover:bg-[#F1F5F9]">
+              <Button variant="outline" className="bg-white text-[#0F172A] border-[#CBD5E1] hover:bg-[#F1F5F9] text-sm sm:text-base px-3 sm:px-4">
                 Login
               </Button>
             </Link>
             <Link href="/signup">
-              <Button className="bg-[#0F172A] text-white hover:bg-[#1e293b]">Signup</Button>
+              <Button className="bg-[#0F172A] text-white hover:bg-[#1e293b] text-sm sm:text-base px-3 sm:px-4">Signup</Button>
             </Link>
           </div>
         </div>
@@ -52,26 +52,26 @@ export default function Home() {
         </div>
 
         {/* Features */}
-        <div className="relative z-10 text-center mb-8">
-          <h2 className="text-2xl font-bold text-[#0F172A] mb-6">Available Features:</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link href="/login">
-              <Button className="w-full bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full py-6 text-lg font-semibold">
+        <div className="relative z-10 text-center mb-8 w-full max-w-5xl mx-auto px-4">
+          <h2 className="text-xl md:text-2xl font-bold text-[#0F172A] mb-4 md:mb-6">Available Features:</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            <Link href="/login" className="w-full">
+              <Button className="w-full bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full py-5 md:py-6 text-base md:text-lg font-semibold">
                 Flashcards
               </Button>
             </Link>
-            <Link href="/login">
-              <Button className="w-full bg-[#4F46E5] hover:bg-[#4338ca] text-white rounded-full py-6 text-lg font-semibold">
+            <Link href="/login" className="w-full">
+              <Button className="w-full bg-[#4F46E5] hover:bg-[#4338ca] text-white rounded-full py-5 md:py-6 text-base md:text-lg font-semibold">
                 Mock Papers
               </Button>
             </Link>
-            <Link href="/login">
-              <Button className="w-full bg-[#16A34A] hover:bg-[#15803d] text-white rounded-full py-6 text-lg font-semibold">
+            <Link href="/login" className="w-full">
+              <Button className="w-full bg-[#16A34A] hover:bg-[#15803d] text-white rounded-full py-5 md:py-6 text-base md:text-lg font-semibold">
                 Reports & Analysis
               </Button>
             </Link>
-            <Link href="/login">
-              <Button className="w-full bg-[#F97316] hover:bg-[#ea580c] text-white rounded-full py-6 text-lg font-semibold">
+            <Link href="/login" className="w-full">
+              <Button className="w-full bg-[#F97316] hover:bg-[#ea580c] text-white rounded-full py-5 md:py-6 text-base md:text-lg font-semibold">
                 Study Scheduler
               </Button>
             </Link>

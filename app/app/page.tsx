@@ -113,17 +113,17 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#DEEEEE]">
       {/* Navbar */}
       <nav className="bg-[#0F172A] border-b border-[#1e293b]">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <span className="text-2xl font-bold text-white">SREP StudyMate</span>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center">
+          <span className="text-lg sm:text-2xl font-bold text-white">SREP StudyMate</span>
           <NavigationDropdown />
         </div>
       </nav>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#0F172A] mb-2">Dashboard</h1>
-          <p className="text-[#64748B]">Upload documents and access your study tools</p>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] mb-2">Dashboard</h1>
+          <p className="text-sm sm:text-base text-[#64748B]">Upload documents and access your study tools</p>
         </div>
 
         <div className="space-y-6">
@@ -149,38 +149,6 @@ export default function DashboardPage() {
               />
             </label>
             {error && <p className="text-red-600 mt-3 text-sm">{error}</p>}
-          </div>
-
-          {/* Documents List - Row */}
-          <div className="bg-white rounded-lg border border-[#E2E8F0] p-6">
-            <h2 className="text-lg font-semibold text-[#0F172A] mb-4">Your Documents</h2>
-            {docLoading ? (
-              <p className="text-[#64748B]">Loading documents...</p>
-            ) : documents.length === 0 ? (
-              <p className="text-[#64748B]">No documents uploaded yet</p>
-            ) : (
-              <div className="space-y-2">
-                {documents.filter(doc => doc.type !== 'answer-script').map((doc) => (
-                  <div
-                    key={doc._id}
-                    onClick={() => setSelectedDocument(doc._id)}
-                    className={`p-4 rounded-lg cursor-pointer transition border ${
-                      selectedDocument === doc._id
-                        ? "bg-[#F1F5F9] border-[#0F172A]"
-                        : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC]"
-                    }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-[#0F172A] truncate">{doc.originalFileName}</p>
-                        <p className="text-sm text-[#64748B]">{new Date(doc.createdAt).toLocaleDateString()}</p>
-                      </div>
-                      <span className="text-xs bg-[#F1F5F9] text-[#334155] px-3 py-1 rounded-full ml-3">{doc.type}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Quick Actions - Row */}
@@ -223,6 +191,38 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
+
+          {/* Documents List - Row */}
+          <div className="bg-white rounded-lg border border-[#E2E8F0] p-6">
+            <h2 className="text-lg font-semibold text-[#0F172A] mb-4">Your Documents</h2>
+            {docLoading ? (
+              <p className="text-[#64748B]">Loading documents...</p>
+            ) : documents.length === 0 ? (
+              <p className="text-[#64748B]">No documents uploaded yet</p>
+            ) : (
+              <div className="space-y-2">
+                {documents.filter(doc => doc.type !== 'answer-script').map((doc) => (
+                  <div
+                    key={doc._id}
+                    onClick={() => setSelectedDocument(doc._id)}
+                    className={`p-3 sm:p-4 rounded-lg cursor-pointer transition border ${
+                      selectedDocument === doc._id
+                        ? "bg-[#F1F5F9] border-[#0F172A]"
+                        : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC]"
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm sm:text-base text-[#0F172A] truncate">{doc.originalFileName}</p>
+                        <p className="text-xs sm:text-sm text-[#64748B]">{new Date(doc.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <span className="text-xs bg-[#F1F5F9] text-[#334155] px-2 sm:px-3 py-1 rounded-full self-start sm:ml-3 whitespace-nowrap">{doc.type}</span>
+                    </div>
+                  </div>
+                ))}  
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

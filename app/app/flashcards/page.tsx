@@ -112,16 +112,9 @@ export default function FlashcardsPage() {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-[#0F172A] mb-1">Flashcards</h1>
-            <p className="text-[#64748B]">Study with AI-generated flashcards</p>
-          </div>
-          <Link href="/app">
-            <Button variant="outline" className="border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9]">
-              ← Dashboard
-            </Button>
-          </Link>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-[#0F172A] mb-1">Flashcards</h1>
+          <p className="text-[#64748B]">Study with AI-generated flashcards</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
