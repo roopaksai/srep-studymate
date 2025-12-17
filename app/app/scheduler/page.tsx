@@ -8,6 +8,9 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import NavigationDropdown from "@/components/NavigationDropdown"
+import BottomNavigation from "@/components/BottomNavigation"
+import { ContentSkeleton } from "@/components/SkeletonLoaders"
+import toast from "react-hot-toast"
 
 interface ScheduleSlot {
   date: string
@@ -119,10 +122,8 @@ export default function SchedulerPage() {
 
   const handleGenerateSchedule = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-
     if (!formData.startDate || !formData.endDate || !formData.topics) {
-      setError("All fields are required")
+      toast.error("All fields are required")
       return
     }
 
@@ -166,6 +167,7 @@ export default function SchedulerPage() {
 
       if (res.ok) {
         const data = await res.json()
+        toast.success('Schedule generated successfully!')
         fetchSchedules()
         setSelectedSchedule(data.schedule)
         setFormData({
@@ -179,10 +181,10 @@ export default function SchedulerPage() {
         })
       } else {
         const err = await res.json()
-        setError(err.error || "Generation failed")
+        toast.error(err.error || "Generation failed")
       }
     } catch (err) {
-      setError("Generation failed")
+      toast.error("Generation failed. Please try again.")
     } finally {
       setGenLoading(false)
     }
@@ -267,9 +269,10 @@ export default function SchedulerPage() {
       // Save PDF
       const filename = `${(selectedSchedule.title || "schedule").replace(/\s+/g, "-").toLowerCase()}.pdf`
       doc.save(filename)
+      toast.success('Schedule exported to PDF successfully!')
     } catch (error) {
       console.error("PDF export failed:", error)
-      setError("Failed to export PDF. Please try again.")
+      toast.error("Failed to export PDF. Please try again.")
     }
   }
 
@@ -295,7 +298,20 @@ export default function SchedulerPage() {
     }
   }
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen bg-[#DEEEEE]">Loading...</div>
+  if (loading) return (
+    <div className="min-h-screen bg-[#DEEEEE]">
+      <nav className="bg-[#F97316] border-b border-[#ea580c]">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
+          <Link href="/app">
+            <span className="text-lg sm:text-xl font-bold text-white cursor-pointer">SREP StudyMate</span>
+          </Link>
+          <NavigationDropdown />
+        </div>
+      </nav>
+      <ContentSkeleton />
+      <BottomNavigation />
+    </div>
+  )
 
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
@@ -384,11 +400,6 @@ export default function SchedulerPage() {
 
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
 
             {/* Form */}
             <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-8">
@@ -589,6 +600,7 @@ export default function SchedulerPage() {
           </div>
         </div>
       </div>
+      <BottomNavigation />
     </div>
   )
 }

@@ -6,6 +6,9 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import NavigationDropdown from "@/components/NavigationDropdown"
+import BottomNavigation from "@/components/BottomNavigation"
+import { ContentSkeleton, ListItemSkeleton } from "@/components/SkeletonLoaders"
+import toast from "react-hot-toast"
 
 interface Question {
   text: string
@@ -113,14 +116,16 @@ export default function MockPapersPage() {
         
         // Show message if existing paper was returned
         if (isExisting && !reattempt) {
-          setError(`Using existing ${questionType} paper for this document. Click "Regenerate" to create a new one.`)
+          toast.success(`Using existing ${questionType} paper for this document. Click "Regenerate" to create a new one.`, { duration: 4000 })
+        } else {
+          toast.success('Mock paper generated successfully!')
         }
       } else {
         const err = await res.json()
-        setError(err.error || "Generation failed")
+        toast.error(err.error || "Generation failed")
       }
     } catch (err) {
-      setError("Generation failed")
+      toast.error("Generation failed. Please try again.")
     } finally {
       setGenLoading(false)
     }
@@ -189,14 +194,15 @@ export default function MockPapersPage() {
 
       if (res.ok) {
         const data = await res.json()
+        toast.success('Quiz submitted successfully!')
         setQuizMode(false)
         router.push(`/app/analysis?report=${data.analysisReportId}`)
       } else {
         const err = await res.json()
-        setError(err.error || "Quiz submission failed")
+        toast.error(err.error || "Quiz submission failed")
       }
     } catch (err) {
-      setError("Quiz submission failed")
+      toast.error("Quiz submission failed. Please try again.")
     }
   }
 
@@ -207,7 +213,7 @@ export default function MockPapersPage() {
     // Check file size (max 10MB)
     const maxSize = 10 * 1024 * 1024 // 10MB
     if (file.size > maxSize) {
-      setError(`File too large. Maximum size is 10MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
+      toast.error(`File too large. Maximum size is 10MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
       e.target.value = '' // Reset file input
       return
     }
@@ -230,13 +236,14 @@ export default function MockPapersPage() {
 
       if (res.ok) {
         const data = await res.json()
+        toast.success('Answer uploaded successfully!')
         router.push(`/app/analysis?report=${data.analysisReportId}`)
       } else {
         const err = await res.json()
-        setError(err.error || "Upload failed")
+        toast.error(err.error || "Upload failed")
       }
     } catch (err) {
-      setError("Upload failed")
+      toast.error("Upload failed. Please try again.")
     } finally {
       setUploadingAnswer(false)
     }
@@ -251,7 +258,20 @@ export default function MockPapersPage() {
     setSelectedOption(null)
   }
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
+  if (loading) return (
+    <div className="min-h-screen bg-[#DEEEEE]">
+      <nav className="bg-[#4F46E5] border-b border-[#4338ca]">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
+          <Link href="/app">
+            <span className="text-lg sm:text-xl font-bold text-white cursor-pointer">SREP StudyMate</span>
+          </Link>
+          <NavigationDropdown />
+        </div>
+      </nav>
+      <ContentSkeleton />
+      <BottomNavigation />
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-[#DEEEEE]">
@@ -302,7 +322,6 @@ export default function MockPapersPage() {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {error && <div className="bg-red-50 text-red-700 p-2 sm:p-3 rounded-lg mb-3 sm:mb-4 border border-red-200 text-xs sm:text-sm">{error}</div>}
 
             {/* Question Type Selector Modal */}
             {showTypeSelector && pendingDocId && (
@@ -531,6 +550,7 @@ export default function MockPapersPage() {
           </div>
         </div>
       </div>
+      <BottomNavigation />
     </div>
   )
 }
