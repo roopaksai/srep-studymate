@@ -160,13 +160,13 @@ export default function DashboardPage() {
               className="bg-white dark:bg-gray-800 rounded-lg border border-[#E2E8F0] dark:border-gray-700 p-6 shadow-md hover:shadow-lg transition-all duration-300"
             >
               <h2 className="text-lg font-semibold text-[#0F172A] dark:text-white mb-4">Upload Document</h2>
-            <FileUploadZone
-              onUpload={handleFileUpload}
-              loading={uploadLoading}
-              accept=".pdf,.txt,.doc,.docx"
-              maxSize={10}
-            />
-          </div>
+              <FileUploadZone
+                onUpload={handleFileUpload}
+                loading={uploadLoading}
+                accept=".pdf,.txt,.doc,.docx"
+                maxSize={10}
+              />
+            </motion.div>
 
             {/* Quick Actions - Row */}
             {selectedDocument && (
@@ -211,8 +211,8 @@ export default function DashboardPage() {
                   </Button>
                 </Link>
               </div>
-            </div>
-          )}
+              </motion.div>
+            )}
 
             {/* Documents List - Row */}
             <motion.div 
