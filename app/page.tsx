@@ -53,25 +53,25 @@ export default function Home() {
 
         {/* Features */}
         <div className="relative z-10 text-center mb-8 w-full max-w-5xl mx-auto px-4">
-          <h2 className="text-xl md:text-2xl font-bold text-[#0F172A] mb-4 md:mb-6">Available Features:</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <h2 className="text-xl md:text-2xl font-bold text-[#0F172A] mb-4 md:mb-6 animate-fade-in-up">Available Features:</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 animate-fade-in-up">
             <Link href="/login" className="w-full">
-              <Button className="w-full bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full py-5 md:py-6 text-base md:text-lg font-semibold">
+              <Button className="w-full bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full py-5 md:py-6 text-base md:text-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
                 Flashcards
               </Button>
             </Link>
             <Link href="/login" className="w-full">
-              <Button className="w-full bg-[#4F46E5] hover:bg-[#4338ca] text-white rounded-full py-5 md:py-6 text-base md:text-lg font-semibold">
+              <Button className="w-full bg-[#4F46E5] hover:bg-[#4338ca] text-white rounded-full py-5 md:py-6 text-base md:text-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
                 Mock Papers
               </Button>
             </Link>
             <Link href="/login" className="w-full">
-              <Button className="w-full bg-[#16A34A] hover:bg-[#15803d] text-white rounded-full py-5 md:py-6 text-base md:text-lg font-semibold">
+              <Button className="w-full bg-[#16A34A] hover:bg-[#15803d] text-white rounded-full py-5 md:py-6 text-base md:text-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
                 Reports & Analysis
               </Button>
             </Link>
             <Link href="/login" className="w-full">
-              <Button className="w-full bg-[#F97316] hover:bg-[#ea580c] text-white rounded-full py-5 md:py-6 text-base md:text-lg font-semibold">
+              <Button className="w-full bg-[#F97316] hover:bg-[#ea580c] text-white rounded-full py-5 md:py-6 text-base md:text-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
                 Study Scheduler
               </Button>
             </Link>

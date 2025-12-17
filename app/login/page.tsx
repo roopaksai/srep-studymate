@@ -42,7 +42,7 @@ export default function LoginPage() {
       </nav>
 
       <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] transition-shadow duration-300 p-6 sm:p-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] mb-2">Welcome Back</h1>
           <p className="text-gray-600 mb-6">Sign in to your account</p>
 
