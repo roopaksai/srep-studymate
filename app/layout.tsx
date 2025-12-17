@@ -5,7 +5,10 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 
 import { AuthProvider } from "@/app/context/AuthContext"
+import { ThemeProvider } from "@/app/context/ThemeContext"
 import ToastProvider from "@/components/ToastProvider"
+import OfflineIndicator from "@/components/OfflineIndicator"
+import PageTransition from "@/components/PageTransition"
 
 import { Geist_Mono, Geist as V0_Font_Geist, Geist_Mono as V0_Font_Geist_Mono, Source_Serif_4 as V0_Font_Source_Serif_4 } from 'next/font/google'
 
@@ -46,11 +49,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${_geist.className} font-sans antialiased`} suppressHydrationWarning>
-        <AuthProvider>
-          {children}
-          <ToastProvider />
-        </AuthProvider>
+      <body className={`${_geist.className} font-sans antialiased bg-[#DEEEEE] dark:bg-gray-900 transition-colors duration-300`} suppressHydrationWarning>
+        <ThemeProvider>
+          <AuthProvider>
+            <OfflineIndicator />
+            <PageTransition>
+              {children}
+            </PageTransition>
+            <ToastProvider />
+          </AuthProvider>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

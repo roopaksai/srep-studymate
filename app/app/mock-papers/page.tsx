@@ -8,6 +8,10 @@ import Link from "next/link"
 import NavigationDropdown from "@/components/NavigationDropdown"
 import BottomNavigation from "@/components/BottomNavigation"
 import { ContentSkeleton, ListItemSkeleton } from "@/components/SkeletonLoaders"
+import QuizProgress from "@/components/QuizProgress"
+import Celebration from "@/components/Celebration"
+import { motion } from "framer-motion"
+import { Loader2 } from "lucide-react"
 import toast from "react-hot-toast"
 
 interface Question {
@@ -46,6 +50,8 @@ export default function MockPapersPage() {
   const [userAnswers, setUserAnswers] = useState<{ questionIndex: number; selectedAnswer: string; skipped: boolean }[]>([])
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [uploadingAnswer, setUploadingAnswer] = useState(false)
+  const [showCelebration, setShowCelebration] = useState(false)
+  const [quizScore, setQuizScore] = useState<number | undefined>(undefined)
 
   useEffect(() => {
     if (!loading && !user) router.push("/login")
@@ -194,9 +200,22 @@ export default function MockPapersPage() {
 
       if (res.ok) {
         const data = await res.json()
-        toast.success('Quiz submitted successfully!')
-        setQuizMode(false)
-        router.push(`/app/analysis?report=${data.analysisReportId}`)
+        // Calculate score
+        const correctAnswers = answers.filter((a, idx) => 
+          !a.skipped && selectedPaper?.questions[idx]?.correctAnswer === a.selectedAnswer
+        ).length
+        const scorePercent = Math.round((correctAnswers / (selectedPaper?.questions.length || 1)) * 100)
+        
+        setQuizScore(scorePercent)
+        setShowCelebration(true)
+        
+        // Hide celebration and navigate after 3 seconds
+        setTimeout(() => {
+          setShowCelebration(false)
+          toast.success('Quiz submitted successfully!')
+          setQuizMode(false)
+          router.push(`/app/analysis?report=${data.analysisReportId}`)
+        }, 3000)
       } else {
         const err = await res.json()
         toast.error(err.error || "Quiz submission failed")
@@ -364,21 +383,15 @@ export default function MockPapersPage() {
             {selectedPaper ? (
               quizMode && selectedPaper.paperType === 'mcq' ? (
                 // MCQ Quiz Interface
-                <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-8">
-                  <div className="mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-2xl font-bold text-gray-800">{selectedPaper.title}</h2>
-                      <span className="bg-indigo-50 text-[#4F46E5] px-4 py-2 rounded-full font-semibold">
-                        Question {currentQuestionIndex + 1} / {selectedPaper.questions.length}
-                      </span>
-                    </div>
-                    <div className="w-full bg-[#E2E8F0] h-2 rounded-full">
-                      <div
-                        className="bg-[#4F46E5] h-2 rounded-full transition-all"
-                        style={{ width: `${((currentQuestionIndex + 1) / selectedPaper.questions.length) * 100}%` }}
-                      />
-                    </div>
-                  </div>
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-8">
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">{selectedPaper.title}</h2>
+                  
+                  {/* Enhanced Quiz Progress */}
+                  <QuizProgress 
+                    current={currentQuestionIndex}
+                    total={selectedPaper.questions.length}
+                    answered={userAnswers.filter(a => !a.skipped).length}
+                  />
 
                   {selectedPaper.questions[currentQuestionIndex] && (
                     <div className="space-y-6">
@@ -451,7 +464,11 @@ export default function MockPapersPage() {
                           className="text-xs sm:text-sm flex-1 sm:flex-none"
                           disabled={genLoading}
                         >
-                          {genLoading ? "..." : "🔄"}<span className="hidden sm:inline ml-1">{genLoading ? "Regenerating" : "Regenerate"}</span>
+                          {genLoading ? (
+                            <><Loader2 className="w-4 h-4 animate-spin" /><span className="hidden sm:inline ml-1">Regenerating...</span></>
+                          ) : (
+                            <>🔄<span className="hidden sm:inline ml-1">Regenerate</span></>
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -551,6 +568,7 @@ export default function MockPapersPage() {
         </div>
       </div>
       <BottomNavigation />
+      <Celebration show={showCelebration} score={quizScore} />
     </div>
   )
 }

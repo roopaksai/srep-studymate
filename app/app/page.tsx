@@ -11,7 +11,11 @@ import NavigationDropdown from "@/components/NavigationDropdown"
 import BottomNavigation from "@/components/BottomNavigation"
 import { DashboardSkeleton, DocumentSkeleton } from "@/components/SkeletonLoaders"
 import FileUploadZone from "@/components/FileUploadZone"
+import EmptyState from "@/components/EmptyState"
+import PullToRefresh from "@/components/PullToRefresh"
+import ThemeToggle from "@/components/ThemeToggle"
 import toast from "react-hot-toast"
+import { motion } from "framer-motion"
 
 interface Document {
   _id: string
@@ -123,27 +127,39 @@ export default function DashboardPage() {
     return null
   }
 
+  const handleRefresh = async () => {
+    await fetchDocuments()
+    toast.success('Documents refreshed!')
+  }
+
   return (
-    <div className="min-h-screen bg-[#DEEEEE]">
+    <div className="min-h-screen bg-[#DEEEEE] dark:bg-gray-900">
       {/* Navbar */}
-      <nav className="bg-[#0F172A] border-b border-[#1e293b]">
+      <nav className="bg-[#0F172A] dark:bg-gray-800 border-b border-[#1e293b] dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center">
           <span className="text-lg sm:text-2xl font-bold text-white">SREP StudyMate</span>
-          <NavigationDropdown />
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <NavigationDropdown />
+          </div>
         </div>
       </nav>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] mb-2">Dashboard</h1>
-          <p className="text-sm sm:text-base text-[#64748B]">Upload documents and access your study tools</p>
-        </div>
+      {/* Main Content with Pull to Refresh */}
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24">
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] dark:text-white mb-2">Dashboard</h1>
+            <p className="text-sm sm:text-base text-[#64748B] dark:text-gray-400">Upload documents and access your study tools</p>
+          </div>
 
-        <div className="space-y-6">
-          {/* Upload Section - Row */}
-          <div className="bg-white rounded-lg border border-[#E2E8F0] p-6 shadow-md hover:shadow-lg transition-shadow duration-300">
-            <h2 className="text-lg font-semibold text-[#0F172A] mb-4">Upload Document</h2>
+          <div className="space-y-6">
+            {/* Upload Section - Row */}
+            <motion.div 
+              whileHover={{ scale: 1.01 }}
+              className="bg-white dark:bg-gray-800 rounded-lg border border-[#E2E8F0] dark:border-gray-700 p-6 shadow-md hover:shadow-lg transition-all duration-300"
+            >
+              <h2 className="text-lg font-semibold text-[#0F172A] dark:text-white mb-4">Upload Document</h2>
             <FileUploadZone
               onUpload={handleFileUpload}
               loading={uploadLoading}
@@ -152,10 +168,15 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* Quick Actions - Row */}
-          {selectedDocument && (
-            <div id="quick-actions" className="bg-white rounded-lg border border-[#E2E8F0] p-6 shadow-md hover:shadow-lg transition-shadow duration-300">
-              <h3 className="text-lg font-semibold text-[#0F172A] mb-4">Quick Actions</h3>
+            {/* Quick Actions - Row */}
+            {selectedDocument && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                id="quick-actions" 
+                className="bg-white dark:bg-gray-800 rounded-lg border border-[#E2E8F0] dark:border-gray-700 p-6 shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                <h3 className="text-lg font-semibold text-[#0F172A] dark:text-white mb-4">Quick Actions</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <Link href={`/app/flashcards?doc=${selectedDocument}`}>
                   <Button className="w-full bg-[#2563EB] hover:bg-[#1d4ed8] text-white justify-start shadow-sm hover:shadow-md transition-shadow">
@@ -193,43 +214,49 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Documents List - Row */}
-          <div className="bg-white rounded-lg border border-[#E2E8F0] p-6 shadow-md hover:shadow-lg transition-shadow duration-300">
-            <h2 className="text-lg font-semibold text-[#0F172A] mb-4">Your Documents</h2>
-            {docLoading ? (
-              <div className="space-y-2">
-                <DocumentSkeleton />
-                <DocumentSkeleton />
-                <DocumentSkeleton />
-              </div>
-            ) : documents.length === 0 ? (
-              <p className="text-[#64748B]">No documents uploaded yet</p>
-            ) : (
-              <div className="space-y-2">
-                {documents.filter(doc => doc.type !== 'answer-script').map((doc) => (
-                  <div
-                    key={doc._id}
-                    onClick={() => setSelectedDocument(doc._id)}
-                    className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all duration-200 border ${
-                      selectedDocument === doc._id
-                        ? "bg-[#F1F5F9] border-[#0F172A] shadow-md"
-                        : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC] hover:shadow-sm"
-                    }`}
-                  >
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm sm:text-base text-[#0F172A] truncate">{doc.originalFileName}</p>
-                        <p className="text-xs sm:text-sm text-[#64748B]">{new Date(doc.createdAt).toLocaleDateString()}</p>
+            {/* Documents List - Row */}
+            <motion.div 
+              whileHover={{ scale: 1.01 }}
+              className="bg-white dark:bg-gray-800 rounded-lg border border-[#E2E8F0] dark:border-gray-700 p-6 shadow-md hover:shadow-lg transition-all duration-300"
+            >
+              <h2 className="text-lg font-semibold text-[#0F172A] dark:text-white mb-4">Your Documents</h2>
+              {docLoading ? (
+                <div className="space-y-2">
+                  <DocumentSkeleton />
+                  <DocumentSkeleton />
+                  <DocumentSkeleton />
+                </div>
+              ) : documents.length === 0 ? (
+                <EmptyState type="documents" />
+              ) : (
+                <div className="space-y-2">
+                  {documents.filter(doc => doc.type !== 'answer-script').map((doc) => (
+                    <motion.div
+                      key={doc._id}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSelectedDocument(doc._id)}
+                      className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all duration-200 border ${
+                        selectedDocument === doc._id
+                          ? "bg-[#F1F5F9] dark:bg-gray-700 border-[#0F172A] dark:border-blue-500 shadow-md"
+                          : "border-[#E2E8F0] dark:border-gray-600 hover:border-[#CBD5E1] dark:hover:border-gray-500 hover:bg-[#F8FAFC] dark:hover:bg-gray-700 hover:shadow-sm"
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm sm:text-base text-[#0F172A] dark:text-white truncate">{doc.originalFileName}</p>
+                          <p className="text-xs sm:text-sm text-[#64748B] dark:text-gray-400">{new Date(doc.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <span className="text-xs bg-[#F1F5F9] dark:bg-gray-700 text-[#334155] dark:text-gray-300 px-2 sm:px-3 py-1 rounded-full self-start sm:ml-3 whitespace-nowrap">{doc.type}</span>
                       </div>
-                      <span className="text-xs bg-[#F1F5F9] text-[#334155] px-2 sm:px-3 py-1 rounded-full self-start sm:ml-3 whitespace-nowrap">{doc.type}</span>
-                    </div>
-                  </div>
-                ))}  
-              </div>
-            )}
+                    </motion.div>
+                  ))}  
+                </div>
+              )}
+            </motion.div>
           </div>
         </div>
-      </div>
+      </PullToRefresh>
       <BottomNavigation />
     </div>
   )
