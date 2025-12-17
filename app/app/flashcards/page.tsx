@@ -46,7 +46,7 @@ export default function FlashcardsPage() {
 
   const fetchFlashcards = async () => {
     try {
-      const res = await fetch("/api/flashcards", {
+      const res = await fetch("/api/flashcards?limit=5", {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (res.ok) {
@@ -116,7 +116,7 @@ export default function FlashcardsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#DEEEEE]">
-        <nav className="bg-[#2563EB] border-b border-[#1d4ed8]">
+        <nav className="bg-gradient-to-r from-blue-500 to-blue-700 border-b border-blue-400">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
             <span className="text-lg sm:text-xl font-bold text-white">SREP StudyMate</span>
           </div>
@@ -130,7 +130,7 @@ export default function FlashcardsPage() {
 
   return (
     <div className="min-h-screen bg-[#DEEEEE] dark:bg-gray-900">
-      <nav className="bg-[#2563EB] dark:bg-blue-800 border-b border-[#1d4ed8] dark:border-blue-900">
+      <nav className="bg-gradient-to-r from-blue-500 to-blue-700 dark:from-blue-700 dark:to-blue-900 border-b border-blue-400 dark:border-blue-900">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
           <Link href="/app">
             <span className="text-lg sm:text-xl font-bold text-white cursor-pointer">SREP StudyMate</span>

@@ -279,7 +279,7 @@ export default function MockPapersPage() {
 
   if (loading) return (
     <div className="min-h-screen bg-[#DEEEEE]">
-      <nav className="bg-[#4F46E5] border-b border-[#4338ca]">
+      <nav className="bg-gradient-to-r from-indigo-500 to-indigo-700 border-b border-indigo-400">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
           <Link href="/app">
             <span className="text-lg sm:text-xl font-bold text-white cursor-pointer">SREP StudyMate</span>
@@ -294,7 +294,7 @@ export default function MockPapersPage() {
 
   return (
     <div className="min-h-screen bg-[#DEEEEE] dark:bg-gray-900">
-      <nav className="bg-[#4F46E5] dark:bg-indigo-800 border-b border-[#4338ca] dark:border-indigo-900">
+      <nav className="bg-gradient-to-r from-indigo-500 to-indigo-700 dark:from-indigo-700 dark:to-indigo-900 border-b border-indigo-400 dark:border-indigo-900">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
           <Link href="/app">
             <span className="text-lg sm:text-xl font-bold text-white cursor-pointer">SREP StudyMate</span>

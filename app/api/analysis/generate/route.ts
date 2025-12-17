@@ -173,9 +173,14 @@ export async function POST(request: NextRequest) {
 
     const analysis = await generateAnalysisWithAI(document.extractedText)
 
+    // Generate title: "doc name Analysis" (strip file extension from originalFileName)
+    const docNameWithoutExt = document.originalFileName.replace(/\.(pdf|docx|doc|txt)$/i, '')
+    const reportTitle = `${docNameWithoutExt} Analysis`
+
     const report = new AnalysisReport({
       userId: payload.userId,
       answerScriptDocumentId,
+      title: reportTitle,
       ...analysis,
     })
 
@@ -185,6 +190,7 @@ export async function POST(request: NextRequest) {
       {
         report: {
           id: report._id,
+          title: report.title,
           summary: report.summary,
           strengths: report.strengths,
           weaknesses: report.weaknesses,

@@ -300,7 +300,7 @@ export default function SchedulerPage() {
 
   if (loading) return (
     <div className="min-h-screen bg-[#DEEEEE]">
-      <nav className="bg-[#F97316] border-b border-[#ea580c]">
+      <nav className="bg-gradient-to-r from-orange-500 to-orange-700 border-b border-orange-400">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
           <Link href="/app">
             <span className="text-lg sm:text-xl font-bold text-white cursor-pointer">SREP StudyMate</span>
@@ -317,7 +317,7 @@ export default function SchedulerPage() {
 
   return (
     <div className="min-h-screen bg-[#DEEEEE] dark:bg-gray-900">
-      <nav className="bg-[#F97316] dark:bg-orange-700 border-b border-[#ea580c] dark:border-orange-800">
+      <nav className="bg-gradient-to-r from-orange-500 to-orange-700 dark:from-orange-600 dark:to-orange-800 border-b border-orange-400 dark:border-orange-800">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
           <Link href="/app">
             <span className="text-lg sm:text-xl font-bold text-white cursor-pointer">SREP StudyMate</span>
