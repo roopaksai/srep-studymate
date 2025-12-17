@@ -302,24 +302,24 @@ export default function SchedulerPage() {
   return (
     <div className="min-h-screen bg-[#DEEEEE]">
       <nav className="bg-[#F97316] border-b border-[#ea580c]">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
           <Link href="/app">
-            <span className="text-2xl font-bold text-white cursor-pointer">SREP StudyMate</span>
+            <span className="text-lg sm:text-xl font-bold text-white cursor-pointer">SREP StudyMate</span>
           </Link>
           <NavigationDropdown />
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-[#0F172A] mb-1">Study Scheduler</h1>
-          <p className="text-[#64748B]">Create a personalized study schedule</p>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] mb-1">Study Scheduler</h1>
+          <p className="text-sm sm:text-base text-[#64748B]">Generate personalized study schedules</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-4">
-            <div className="bg-white rounded-lg border border-[#E2E8F0] p-5">
+            <div className="bg-white rounded-lg border border-[#E2E8F0] p-5 shadow-md hover:shadow-lg transition-shadow duration-300">
               <h3 className="text-sm font-semibold text-[#0F172A] mb-3 uppercase tracking-wide">Your Schedules</h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {schedules.length === 0 ? (
@@ -331,10 +331,10 @@ export default function SchedulerPage() {
                       <div
                         key={schedule.id}
                         onClick={() => setSelectedSchedule(schedule)}
-                        className={`p-3 rounded-lg cursor-pointer transition border ${
+                        className={`p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
                           selectedSchedule?.id === schedule.id
-                            ? "bg-orange-50 border-[#F97316] text-[#F97316]"
-                            : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC]"
+                            ? "bg-orange-50 border-[#F97316] text-[#F97316] shadow-md"
+                            : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC] hover:shadow-sm"
                         }`}
                       >
                         <p className="font-medium text-sm truncate">
@@ -353,7 +353,7 @@ export default function SchedulerPage() {
 
             {/* Quick Stats for Selected Schedule */}
             {selectedSchedule && (
-              <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">📊 Statistics</h3>
                 {(() => {
                   const stats = getStats(selectedSchedule)
@@ -391,7 +391,7 @@ export default function SchedulerPage() {
             )}
 
             {/* Form */}
-            <div className="bg-white rounded-2xl shadow-lg p-8">
+            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-8">
               <h2 className="text-2xl font-bold text-gray-800 mb-2">✨ Create Study Schedule</h2>
               <p className="text-gray-600 mb-6 text-sm">
                 AI-powered scheduling with smart prioritization

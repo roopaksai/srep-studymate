@@ -135,24 +135,24 @@ export default function AnalysisPage() {
   return (
     <div className="min-h-screen bg-[#DEEEEE]">
       <nav className="bg-[#16A34A] border-b border-[#15803d]">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
           <Link href="/app">
-            <span className="text-2xl font-bold text-white cursor-pointer">SREP StudyMate</span>
+            <span className="text-lg sm:text-xl font-bold text-white cursor-pointer">SREP StudyMate</span>
           </Link>
           <NavigationDropdown />
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-[#0F172A] mb-1">Reports & Analysis</h1>
-          <p className="text-[#64748B]">Upload answer scripts for AI-powered analysis</p>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] mb-1">Reports & Analysis</h1>
+          <p className="text-sm sm:text-base text-[#64748B]">Upload answer scripts and get detailed analysis</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg border border-[#E2E8F0] p-5">
+            <div className="bg-white rounded-lg border border-[#E2E8F0] p-5 shadow-md hover:shadow-lg transition-shadow duration-300">
               <h3 className="text-sm font-semibold text-[#0F172A] mb-3 uppercase tracking-wide">Your Reports</h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {reports.length === 0 ? (
@@ -162,10 +162,10 @@ export default function AnalysisPage() {
                     <div
                       key={report.id}
                       onClick={() => setSelectedReport(report)}
-                      className={`p-3 rounded-lg cursor-pointer transition border ${
+                      className={`p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
                         selectedReport?.id === report.id
-                          ? "bg-green-50 border-[#16A34A] text-[#16A34A]"
-                          : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC]"
+                          ? "bg-green-50 border-[#16A34A] text-[#16A34A] shadow-md"
+                          : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC] hover:shadow-sm"
                       }`}
                     >
                       <p className="font-medium text-sm">Report {idx + 1}</p>
@@ -179,10 +179,10 @@ export default function AnalysisPage() {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {error && <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6 border border-red-200">{error}</div>}
+            {error && <div className="bg-red-50 text-red-700 p-2 sm:p-3 rounded-lg mb-3 sm:mb-4 border border-red-200 text-xs sm:text-sm">{error}</div>}
 
             {selectedReport ? (
-              <div className="bg-white rounded-lg border border-[#E2E8F0] p-6 sm:p-8 space-y-6">
+              <div className="bg-white rounded-lg border border-[#E2E8F0] p-6 sm:p-8 space-y-6 shadow-md hover:shadow-lg transition-shadow duration-300">
                 {/* Title */}
                 <div className="text-center border-b border-[#E2E8F0] pb-6">
                   <h2 className="text-2xl font-bold text-[#0F172A]">Performance Analysis</h2>
@@ -355,7 +355,7 @@ export default function AnalysisPage() {
                   </div>
               </div>
             ) : (
-              <div className="bg-white rounded-lg border border-[#E2E8F0] p-12 text-center">
+              <div className="bg-white rounded-lg border border-[#E2E8F0] p-12 text-center shadow-md">
                 <svg className="w-16 h-16 mx-auto mb-4 text-[#CBD5E1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>

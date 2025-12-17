@@ -256,24 +256,24 @@ export default function MockPapersPage() {
   return (
     <div className="min-h-screen bg-[#DEEEEE]">
       <nav className="bg-[#4F46E5] border-b border-[#4338ca]">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
           <Link href="/app">
-            <span className="text-2xl font-bold text-white cursor-pointer">SREP StudyMate</span>
+            <span className="text-lg sm:text-xl font-bold text-white cursor-pointer">SREP StudyMate</span>
           </Link>
           <NavigationDropdown />
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-[#0F172A] mb-1">Mock Papers</h1>
-          <p className="text-[#64748B]">Generate and practice with mock papers</p>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] mb-1">Mock Papers</h1>
+          <p className="text-sm sm:text-base text-[#64748B]">Generate and practice with mock papers</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg border border-[#E2E8F0] p-5">
+            <div className="bg-white rounded-lg border border-[#E2E8F0] p-5 shadow-md hover:shadow-lg transition-shadow duration-300">
               <h3 className="text-sm font-semibold text-[#0F172A] mb-3 uppercase tracking-wide">Your Papers</h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {mockPapers.length === 0 ? (
@@ -283,10 +283,10 @@ export default function MockPapersPage() {
                     <div
                       key={paper.id}
                       onClick={() => handlePaperSelection(paper)}
-                      className={`p-3 rounded-lg cursor-pointer transition border ${
+                      className={`p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
                         selectedPaper?.id === paper.id
-                          ? "bg-indigo-50 border-[#4F46E5] text-[#4F46E5]"
-                          : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC]"
+                          ? "bg-indigo-50 border-[#4F46E5] text-[#4F46E5] shadow-md"
+                          : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC] hover:shadow-sm"
                       }`}
                     >
                       <p className="font-medium text-sm truncate">{paper.title}</p>
@@ -302,7 +302,7 @@ export default function MockPapersPage() {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {error && <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6 border border-red-200">{error}</div>}
+            {error && <div className="bg-red-50 text-red-700 p-2 sm:p-3 rounded-lg mb-3 sm:mb-4 border border-red-200 text-xs sm:text-sm">{error}</div>}
 
             {/* Question Type Selector Modal */}
             {showTypeSelector && pendingDocId && (
@@ -345,7 +345,7 @@ export default function MockPapersPage() {
             {selectedPaper ? (
               quizMode && selectedPaper.paperType === 'mcq' ? (
                 // MCQ Quiz Interface
-                <div className="bg-white rounded-2xl shadow-lg p-8">
+                <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-8">
                   <div className="mb-6">
                     <div className="flex justify-between items-center mb-4">
                       <h2 className="text-2xl font-bold text-gray-800">{selectedPaper.title}</h2>
@@ -414,7 +414,7 @@ export default function MockPapersPage() {
                 </div>
               ) : (
                 // Paper View (Descriptive or MCQ not started)
-                <div className="bg-white rounded-2xl shadow-lg p-8">
+                <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-8">
                   <div className="mb-6">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-2">
                       <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{selectedPaper.title}</h2>

@@ -6,6 +6,10 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import NavigationDropdown from "@/components/NavigationDropdown"
+import BottomNavigation from "@/components/BottomNavigation"
+import { FlashcardSkeleton, ListItemSkeleton } from "@/components/SkeletonLoaders"
+import toast from "react-hot-toast"
+import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion"
 
 interface FlashcardSet {
   id: string
@@ -71,16 +75,17 @@ export default function FlashcardsPage() {
 
       if (res.ok) {
         const data = await res.json()
+        toast.success('Flashcards generated successfully!')
         fetchFlashcards()
         setSelectedSet(data.flashcardSet)
         setCurrentCardIndex(0)
         setIsFlipped(false)
       } else {
         const err = await res.json()
-        setError(err.error || "Generation failed")
+        toast.error(err.error || 'Generation failed')
       }
     } catch (err) {
-      setError("Generation failed")
+      toast.error('Generation failed. Please try again.')
     } finally {
       setGenLoading(false)
     }
@@ -98,29 +103,52 @@ export default function FlashcardsPage() {
     await generateFlashcards(selectedSet.documentId, true)
   }
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen bg-[#DEEEEE]">Loading...</div>
+  const handleSwipe = (direction: 'left' | 'right') => {
+    if (direction === 'right' && currentCardIndex > 0) {
+      setCurrentCardIndex(currentCardIndex - 1)
+      setIsFlipped(false)
+    } else if (direction === 'left' && currentCardIndex < selectedSet!.cards.length - 1) {
+      setCurrentCardIndex(currentCardIndex + 1)
+      setIsFlipped(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#DEEEEE]">
+        <nav className="bg-[#2563EB] border-b border-[#1d4ed8]">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
+            <span className="text-lg sm:text-xl font-bold text-white">SREP StudyMate</span>
+          </div>
+        </nav>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+          <FlashcardSkeleton />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#DEEEEE]">
       <nav className="bg-[#2563EB] border-b border-[#1d4ed8]">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
           <Link href="/app">
-            <span className="text-2xl font-bold text-white cursor-pointer">SREP StudyMate</span>
+            <span className="text-lg sm:text-xl font-bold text-white cursor-pointer">SREP StudyMate</span>
           </Link>
           <NavigationDropdown />
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-[#0F172A] mb-1">Flashcards</h1>
-          <p className="text-[#64748B]">Study with AI-generated flashcards</p>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] mb-1">Flashcards</h1>
+          <p className="text-sm sm:text-base text-[#64748B]">Study with AI-generated flashcards</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg border border-[#E2E8F0] p-5">
+            <div className="bg-white rounded-lg border border-[#E2E8F0] p-5 shadow-md hover:shadow-lg transition-shadow duration-300">
               <h3 className="text-sm font-semibold text-[#0F172A] mb-3 uppercase tracking-wide">Your Sets</h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {flashcardSets.length === 0 ? (
@@ -134,10 +162,10 @@ export default function FlashcardsPage() {
                         setCurrentCardIndex(0)
                         setIsFlipped(false)
                       }}
-                      className={`p-3 rounded-lg cursor-pointer transition border ${
+                      className={`p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
                         selectedSet?.id === set.id
-                          ? "bg-blue-50 border-[#2563EB] text-[#2563EB]"
-                          : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC]"
+                          ? "bg-blue-50 border-[#2563EB] text-[#2563EB] shadow-md"
+                          : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-[#F8FAFC] hover:shadow-sm"
                       }`}
                     >
                       <p className="font-medium text-sm truncate">{set.title}</p>
@@ -151,10 +179,8 @@ export default function FlashcardsPage() {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {error && <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6 border border-red-200">{error}</div>}
-
             {selectedSet ? (
-              <div className="bg-white rounded-lg border border-[#E2E8F0] p-6 sm:p-8">
+              <div className="bg-white rounded-lg border border-[#E2E8F0] p-6 sm:p-8 shadow-md hover:shadow-lg transition-shadow duration-300">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
                   <div>
                     <h2 className="text-2xl font-bold text-[#0F172A]">{selectedSet.title}</h2>
@@ -172,21 +198,40 @@ export default function FlashcardsPage() {
                   </Button>
                 </div>
 
-                {/* Flip Card */}
-                <div
+                {/* Flip Card with Swipe Gestures */}
+                <motion.div
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.7}
+                  onDragEnd={(e, info: PanInfo) => {
+                    if (Math.abs(info.offset.x) > 100) {
+                      handleSwipe(info.offset.x > 0 ? 'right' : 'left')
+                    }
+                  }}
                   onClick={() => setIsFlipped(!isFlipped)}
-                  className="bg-[#2563EB] rounded-lg p-8 sm:p-12 min-h-[320px] sm:min-h-96 flex items-center justify-center cursor-pointer transform transition hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                  className="bg-[#2563EB] rounded-lg p-8 sm:p-12 min-h-[320px] sm:min-h-96 flex items-center justify-center cursor-pointer shadow-2xl hover:shadow-[0_25px_50px_-12px_rgba(37,99,235,0.4)] touch-none"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <div className="text-center text-white">
-                    <p className="text-xs font-semibold mb-4 uppercase tracking-wider opacity-90">{isFlipped ? "Answer" : "Question"}</p>
-                    <p className="text-xl sm:text-2xl md:text-3xl font-semibold leading-relaxed">
-                      {isFlipped
-                        ? selectedSet.cards[currentCardIndex].answer
-                        : selectedSet.cards[currentCardIndex].question}
-                    </p>
-                    <p className="text-sm opacity-75 mt-6">Tap to flip</p>
-                  </div>
-                </div>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={isFlipped ? 'answer' : 'question'}
+                      initial={{ rotateY: 90, opacity: 0 }}
+                      animate={{ rotateY: 0, opacity: 1 }}
+                      exit={{ rotateY: -90, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="text-center text-white"
+                    >
+                      <p className="text-xs font-semibold mb-4 uppercase tracking-wider opacity-90">{isFlipped ? "Answer" : "Question"}</p>
+                      <p className="text-xl sm:text-2xl md:text-3xl font-semibold leading-relaxed">
+                        {isFlipped
+                          ? selectedSet.cards[currentCardIndex].answer
+                          : selectedSet.cards[currentCardIndex].question}
+                      </p>
+                      <p className="text-sm opacity-75 mt-6">Tap to flip • Swipe to navigate</p>
+                    </motion.div>
+                  </AnimatePresence>
+                </motion.div>
 
                 {/* Controls */}
                 <div className="flex justify-between items-center mt-6 gap-4">
@@ -211,7 +256,7 @@ export default function FlashcardsPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-lg border border-[#E2E8F0] p-12 text-center">
+              <div className="bg-white rounded-lg border border-[#E2E8F0] p-12 text-center shadow-md">
                 <svg className="w-16 h-16 mx-auto mb-4 text-[#CBD5E1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
                 </svg>
@@ -226,6 +271,7 @@ export default function FlashcardsPage() {
           </div>
         </div>
       </div>
+      <BottomNavigation />
     </div>
   )
 }
