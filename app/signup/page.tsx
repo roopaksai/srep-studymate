@@ -39,52 +39,52 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#DEEEEE] flex flex-col">
-      <nav className="bg-white border-b border-[#E2E8F0] shadow-sm">
+    <div className="min-h-screen bg-[#DEEEEE] dark:bg-gray-900 flex flex-col">
+      <nav className="bg-white dark:bg-gray-800 border-b border-[#E2E8F0] dark:border-gray-700 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <Link href="/">
-            <span className="text-2xl font-bold text-[#0F172A] cursor-pointer">SREP</span>
+            <span className="text-2xl font-bold text-[#0F172A] dark:text-white cursor-pointer">SREP</span>
           </Link>
         </div>
       </nav>
 
       <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] transition-shadow duration-300 p-6 sm:p-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] mb-2">Create Account</h1>
-          <p className="text-gray-600 mb-6">Join SREP to start studying</p>
+        <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] transition-shadow duration-300 p-6 sm:p-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] dark:text-white mb-2">Create Account</h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">Join SREP to start studying</p>
 
           {error && <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">{error}</div>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 required
               />
             </div>
@@ -98,9 +98,9 @@ export default function SignupPage() {
             </Button>
           </form>
 
-          <p className="text-center mt-6 text-gray-600">
+          <p className="text-center mt-6 text-gray-600 dark:text-gray-300">
             Already have an account?{" "}
-            <Link href="/login" className="text-orange-600 font-semibold hover:underline">
+            <Link href="/login" className="text-orange-600 dark:text-orange-400 font-semibold hover:underline">
               Sign in
             </Link>
           </p>
