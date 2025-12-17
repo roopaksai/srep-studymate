@@ -152,8 +152,8 @@ export default function AnalysisPage() {
   )
 
   return (
-    <div className="min-h-screen bg-[#DEEEEE]">
-      <nav className="bg-[#16A34A] border-b border-[#15803d]">
+    <div className="min-h-screen bg-[#DEEEEE] dark:bg-gray-900">
+      <nav className="bg-[#16A34A] dark:bg-green-800 border-b border-[#15803d] dark:border-green-900">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
           <Link href="/app">
             <span className="text-lg sm:text-xl font-bold text-white cursor-pointer">SREP StudyMate</span>
@@ -164,15 +164,15 @@ export default function AnalysisPage() {
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-24">
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] mb-1">Reports & Analysis</h1>
-          <p className="text-sm sm:text-base text-[#64748B]">Upload answer scripts and get detailed analysis</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] dark:text-white mb-1">Reports & Analysis</h1>
+          <p className="text-sm sm:text-base text-[#64748B] dark:text-gray-400">Upload answer scripts and get detailed analysis</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg border border-[#E2E8F0] p-5 shadow-md hover:shadow-lg transition-shadow duration-300">
-              <h3 className="text-sm font-semibold text-[#0F172A] mb-3 uppercase tracking-wide">Your Reports</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-[#E2E8F0] dark:border-gray-700 p-5 shadow-md hover:shadow-lg transition-shadow duration-300">
+              <h3 className="text-sm font-semibold text-[#0F172A] dark:text-white mb-3 uppercase tracking-wide">Your Reports</h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {reports.length === 0 ? (
                   <p className="text-sm text-[#64748B] text-center py-4">No reports yet</p>
