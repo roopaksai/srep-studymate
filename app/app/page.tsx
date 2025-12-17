@@ -134,7 +134,7 @@ export default function DashboardPage() {
       </nav>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] mb-2">Dashboard</h1>
           <p className="text-sm sm:text-base text-[#64748B]">Upload documents and access your study tools</p>

@@ -326,7 +326,7 @@ export default function SchedulerPage() {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-24">
         <div className="mb-4 sm:mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] mb-1">Study Scheduler</h1>
           <p className="text-sm sm:text-base text-[#64748B]">Generate personalized study schedules</p>
