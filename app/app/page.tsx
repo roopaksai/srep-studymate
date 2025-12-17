@@ -226,36 +226,21 @@ export default function DashboardPage() {
 
       {/* Main Content with Pull to Refresh */}
       <PullToRefresh onRefresh={handleRefresh}>
-        <div className="max-w-7xl mx-auto px-4 py-5 pb-24">
-          <div className="mb-6">
-            <h1 className="text-3xl font-extrabold text-[#0F172A] dark:text-white mb-2 tracking-tight leading-tight">Dashboard</h1>
-            <p className="text-base text-[#64748B] dark:text-gray-400">Track your progress and study materials</p>
+        <div className="max-w-7xl mx-auto px-4 py-4 pb-24">
+          <div className="mb-4">
+            <h1 className="text-2xl font-extrabold text-[#0F172A] dark:text-white mb-1 tracking-tight leading-tight">Dashboard</h1>
+            <p className="text-sm text-[#64748B] dark:text-gray-400">Track your progress and study materials</p>
           </div>
 
-          {/* Quick Stats */}
-          <div className="mb-6">
-            <QuickStats 
-              documentsCount={documents.filter(d => d.type !== 'answer-script').length}
-              flashcardsCount={flashcardsCount}
-              papersCount={papersCount}
-            />
-          </div>
-
-          {/* Activity and Goals Row */}
-          <div className="space-y-6 mb-6">
-            <RecentActivity activities={activities} />
-            <ProgressTracking goals={goals} />
-          </div>
-
-          <div className="space-y-6">
-            {/* Upload Section - Row */}
+          <div className="space-y-4">
+            {/* Upload Section - First Priority */}
             <motion.div 
               whileTap={{ scale: 0.99 }}
-              className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-[#E2E8F0]/50 dark:border-gray-700/50 p-6 shadow-lg active:shadow-xl transition-all duration-300 overflow-hidden"
+              className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-[#E2E8F0]/50 dark:border-gray-700/50 p-5 shadow-lg active:shadow-xl transition-all duration-300 overflow-hidden"
             >
               {/* Glass Shine */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-              <h2 className="relative text-xl font-bold text-[#0F172A] dark:text-white mb-6 tracking-tight leading-tight">Upload Document</h2>
+              <h2 className="relative text-lg font-bold text-[#0F172A] dark:text-white mb-4 tracking-tight leading-tight">Upload Document</h2>
               <div className="relative">
                 <FileUploadZone
                   onUpload={handleFileUpload}
@@ -266,31 +251,31 @@ export default function DashboardPage() {
               </div>
             </motion.div>
 
-            {/* Quick Actions - Row */}
+            {/* Quick Actions */}
             {selectedDocument && (
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 id="quick-actions" 
-                className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-[#E2E8F0]/50 dark:border-gray-700/50 p-6 shadow-lg active:shadow-xl transition-all duration-300 overflow-hidden"
+                className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-[#E2E8F0]/50 dark:border-gray-700/50 p-5 shadow-lg active:shadow-xl transition-all duration-300 overflow-hidden"
               >
                 {/* Glass Shine */}
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-                <h3 className="relative text-xl font-bold text-[#0F172A] dark:text-white mb-6 tracking-tight leading-tight">Quick Actions</h3>
-              <div className="grid grid-cols-1 gap-4">
+                <h3 className="relative text-lg font-bold text-[#0F172A] dark:text-white mb-4 tracking-tight leading-tight">Quick Actions</h3>
+              <div className="grid grid-cols-1 gap-3">
                 <Link href={`/app/flashcards?doc=${selectedDocument}`}>
                   <motion.div
                     whileTap={{ scale: 0.98 }}
-                    className="relative overflow-hidden rounded-2xl cursor-pointer group active:scale-95 transition-transform"
+                    className="relative overflow-hidden rounded-xl cursor-pointer group active:scale-95 transition-transform"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-700 opacity-100" />
-                    <div className="relative p-6 text-white min-h-[120px] flex flex-col justify-between">
-                      <svg className="w-10 h-10 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="relative p-4 text-white min-h-[90px] flex flex-col justify-between">
+                      <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
                       </svg>
                       <div>
-                        <h4 className="text-xl font-bold tracking-tight mb-1">Flashcards</h4>
-                        <p className="text-base opacity-90">Generate study cards</p>
+                        <h4 className="text-lg font-bold tracking-tight mb-0.5">Flashcards</h4>
+                        <p className="text-sm opacity-90">Generate study cards</p>
                       </div>
                     </div>
                   </motion.div>
@@ -298,16 +283,16 @@ export default function DashboardPage() {
                 <Link href={`/app/mock-papers?doc=${selectedDocument}`}>
                   <motion.div
                     whileTap={{ scale: 0.98 }}
-                    className="relative overflow-hidden rounded-2xl cursor-pointer group active:scale-95 transition-transform"
+                    className="relative overflow-hidden rounded-xl cursor-pointer group active:scale-95 transition-transform"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-indigo-700 opacity-100" />
-                    <div className="relative p-6 text-white min-h-[120px] flex flex-col justify-between">
-                      <svg className="w-10 h-10 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="relative p-4 text-white min-h-[90px] flex flex-col justify-between">
+                      <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       <div>
-                        <h4 className="text-xl font-bold tracking-tight mb-1">Mock Papers</h4>
-                        <p className="text-base opacity-90">Practice tests</p>
+                        <h4 className="text-lg font-bold tracking-tight mb-0.5">Mock Papers</h4>
+                        <p className="text-sm opacity-90">Practice tests</p>
                       </div>
                     </div>
                   </motion.div>
@@ -315,16 +300,16 @@ export default function DashboardPage() {
                 <Link href={`/app/analysis?doc=${selectedDocument}`}>
                   <motion.div
                     whileTap={{ scale: 0.98 }}
-                    className="relative overflow-hidden rounded-2xl cursor-pointer group active:scale-95 transition-transform"
+                    className="relative overflow-hidden rounded-xl cursor-pointer group active:scale-95 transition-transform"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-700 opacity-100" />
-                    <div className="relative p-6 text-white min-h-[120px] flex flex-col justify-between">
-                      <svg className="w-10 h-10 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="relative p-4 text-white min-h-[90px] flex flex-col justify-between">
+                      <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
                       <div>
-                        <h4 className="text-xl font-bold tracking-tight mb-1">Reports</h4>
-                        <p className="text-base opacity-90">Performance analysis</p>
+                        <h4 className="text-lg font-bold tracking-tight mb-0.5">Reports</h4>
+                        <p className="text-sm opacity-90">Performance analysis</p>
                       </div>
                     </div>
                   </motion.div>
@@ -332,16 +317,16 @@ export default function DashboardPage() {
                 <Link href="/app/scheduler">
                   <motion.div
                     whileTap={{ scale: 0.98 }}
-                    className="relative overflow-hidden rounded-2xl cursor-pointer group active:scale-95 transition-transform"
+                    className="relative overflow-hidden rounded-xl cursor-pointer group active:scale-95 transition-transform"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-orange-700 opacity-100" />
-                    <div className="relative p-6 text-white min-h-[120px] flex flex-col justify-between">
-                      <svg className="w-10 h-10 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="relative p-4 text-white min-h-[90px] flex flex-col justify-between">
+                      <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       <div>
-                        <h4 className="text-xl font-bold tracking-tight mb-1">Scheduler</h4>
-                        <p className="text-base opacity-90">Plan your study</p>
+                        <h4 className="text-lg font-bold tracking-tight mb-0.5">Scheduler</h4>
+                        <p className="text-sm opacity-90">Plan your study</p>
                       </div>
                     </div>
                   </motion.div>
@@ -350,37 +335,37 @@ export default function DashboardPage() {
               </motion.div>
             )}
 
-            {/* Documents List - Row */}
+            {/* Documents List */}
             <motion.div 
               whileTap={{ scale: 0.99 }}
-              className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-[#E2E8F0]/50 dark:border-gray-700/50 p-6 shadow-lg active:shadow-xl transition-all duration-300 overflow-hidden"
+              className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-[#E2E8F0]/50 dark:border-gray-700/50 p-5 shadow-lg active:shadow-xl transition-all duration-300 overflow-hidden"
             >
               {/* Glass Shine */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-              <div className="relative flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-[#0F172A] dark:text-white tracking-tight leading-tight">Your Documents</h2>
+              <div className="relative flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-[#0F172A] dark:text-white tracking-tight leading-tight">Your Documents</h2>
                 <div className="flex items-center gap-2 bg-gray-100/80 dark:bg-gray-700/80 backdrop-blur-md rounded-xl p-1.5 border border-gray-200/30 dark:border-gray-600/30">
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`p-3 rounded-lg transition-all duration-200 ${
+                    className={`p-2.5 rounded-lg transition-all duration-200 ${
                       viewMode === "list"
                         ? "bg-white/90 dark:bg-gray-600/90 backdrop-blur-sm text-gray-900 dark:text-white shadow-sm"
                         : "text-gray-500 dark:text-gray-400 active:text-gray-700 dark:active:text-gray-300"
                     }`}
                     title="List view"
                   >
-                    <List className="w-5 h-5" />
+                    <List className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`p-3 rounded-lg transition-all duration-200 ${
+                    className={`p-2.5 rounded-lg transition-all duration-200 ${
                       viewMode === "grid"
                         ? "bg-white/90 dark:bg-gray-600/90 backdrop-blur-sm text-gray-900 dark:text-white shadow-sm"
                         : "text-gray-500 dark:text-gray-400 active:text-gray-700 dark:active:text-gray-300"
                     }`}
                     title="Grid view"
                   >
-                    <LayoutGrid className="w-5 h-5" />
+                    <LayoutGrid className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -393,13 +378,13 @@ export default function DashboardPage() {
               ) : documents.length === 0 ? (
                 <EmptyState type="documents" />
               ) : viewMode === "list" ? (
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {documents.filter(doc => doc.type !== 'answer-script').map((doc) => (
                     <motion.div
                       key={doc._id}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedDocument(doc._id)}
-                      className={`p-5 rounded-2xl cursor-pointer transition-all duration-200 border backdrop-blur-md ${
+                      className={`p-4 rounded-xl cursor-pointer transition-all duration-200 border backdrop-blur-md ${
                         selectedDocument === doc._id
                           ? "bg-[#F1F5F9]/90 dark:bg-gray-700/90 border-[#0F172A] dark:border-blue-500 shadow-md"
                           : "bg-white/60 dark:bg-gray-800/60 border-[#E2E8F0]/50 dark:border-gray-600/50 active:bg-[#F8FAFC]/80 dark:active:bg-gray-700/80 active:shadow-sm"
@@ -407,22 +392,22 @@ export default function DashboardPage() {
                     >
                       <div className="flex justify-between items-start gap-3">
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-base text-[#0F172A] dark:text-white mb-1.5 leading-snug">{doc.originalFileName}</p>
-                          <p className="text-sm text-[#64748B] dark:text-gray-400 font-medium">{new Date(doc.createdAt).toLocaleDateString()}</p>
+                          <p className="font-bold text-sm text-[#0F172A] dark:text-white mb-1 leading-snug">{doc.originalFileName}</p>
+                          <p className="text-xs text-[#64748B] dark:text-gray-400 font-medium">{new Date(doc.createdAt).toLocaleDateString()}</p>
                         </div>
-                        <span className="text-xs bg-[#F1F5F9] dark:bg-gray-700 text-[#334155] dark:text-gray-300 px-3 py-1.5 rounded-full whitespace-nowrap font-semibold flex-shrink-0">{doc.type}</span>
+                        <span className="text-xs bg-[#F1F5F9] dark:bg-gray-700 text-[#334155] dark:text-gray-300 px-2.5 py-1 rounded-full whitespace-nowrap font-semibold flex-shrink-0">{doc.type}</span>
                       </div>
                     </motion.div>
                   ))}  
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-3">
                   {documents.filter(doc => doc.type !== 'answer-script').map((doc) => (
                     <motion.div
                       key={doc._id}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedDocument(doc._id)}
-                      className={`p-6 rounded-2xl cursor-pointer transition-all duration-200 border relative overflow-hidden min-h-[140px] backdrop-blur-md ${
+                      className={`p-4 rounded-xl cursor-pointer transition-all duration-200 border relative overflow-hidden min-h-[100px] backdrop-blur-md ${
                         selectedDocument === doc._id
                           ? "bg-gradient-to-br from-slate-50/90 to-slate-100/90 dark:from-gray-700/90 dark:to-gray-800/90 border-[#0F172A] dark:border-blue-500 shadow-lg"
                           : "bg-white/60 dark:bg-gray-800/60 border-[#E2E8F0]/50 dark:border-gray-600/50 active:shadow-md"
@@ -431,11 +416,11 @@ export default function DashboardPage() {
                       {/* Gradient overlay */}
                       <div className={`absolute inset-0 bg-gradient-to-br from-slate-500/5 to-slate-700/5 ${selectedDocument === doc._id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`} />
                       
-                      <div className="relative flex items-start gap-4">
+                      <div className="relative flex items-start gap-3">
                         {/* Icon */}
                         <div className="flex-shrink-0">
-                          <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-                            <svg className="w-7 h-7 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                            <svg className="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                           </div>
@@ -443,10 +428,10 @@ export default function DashboardPage() {
                         
                         {/* Content */}
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-lg text-[#0F172A] dark:text-white mb-3 line-clamp-2 leading-tight">{doc.originalFileName}</p>
+                          <p className="font-bold text-sm text-[#0F172A] dark:text-white mb-2 line-clamp-2 leading-tight">{doc.originalFileName}</p>
                           <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm text-[#64748B] dark:text-gray-400 font-medium">{new Date(doc.createdAt).toLocaleDateString()}</p>
-                            <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap">{doc.type}</span>
+                            <p className="text-xs text-[#64748B] dark:text-gray-400 font-medium">{new Date(doc.createdAt).toLocaleDateString()}</p>
+                            <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded-lg font-semibold whitespace-nowrap">{doc.type}</span>
                           </div>
                         </div>
                       </div>
@@ -455,6 +440,23 @@ export default function DashboardPage() {
                 </div>
               )}
             </motion.div>
+
+            {/* Quick Stats - Compact */}
+            <div>
+              <QuickStats 
+                documentsCount={documents.filter(d => d.type !== 'answer-script').length}
+                flashcardsCount={flashcardsCount}
+                papersCount={papersCount}
+              />
+            </div>
+
+            {/* Activity and Goals - Compact */}
+            <div className="space-y-3">
+              <RecentActivity activities={activities} />
+              <ProgressTracking goals={goals} />
+            </div>
+
+
           </div>
         </div>
       </PullToRefresh>

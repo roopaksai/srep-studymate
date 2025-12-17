@@ -70,10 +70,10 @@ export default function RecentActivity({ activities }: RecentActivityProps) {
   }
 
   return (
-    <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg active:shadow-xl transition-shadow duration-300 p-6 overflow-hidden">
+    <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg active:shadow-xl transition-shadow duration-300 p-4 overflow-hidden">
       {/* Glass Shine */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-      <div className="relative flex items-center justify-between mb-6">
+      <div className="relative flex items-center justify-between mb-3">
         <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Recent Activity</h3>
         <Clock className="w-6 h-6 text-gray-400" />
       </div>
