@@ -275,6 +275,16 @@ export default function MockPapersPage() {
     setCurrentQuestionIndex(0)
     setUserAnswers([])
     setSelectedOption(null)
+    
+    // Scroll to paper content on mobile
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        const paperContent = document.getElementById('paper-content')
+        if (paperContent) {
+          paperContent.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    }
   }
 
   if (loading) return (
@@ -340,7 +350,7 @@ export default function MockPapersPage() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3">
+          <div id="paper-content" className="lg:col-span-3">
 
             {/* Question Type Selector Modal */}
             {showTypeSelector && pendingDocId && (

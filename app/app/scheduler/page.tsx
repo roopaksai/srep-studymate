@@ -346,7 +346,18 @@ export default function SchedulerPage() {
                     return (
                       <div
                         key={schedule.id}
-                        onClick={() => setSelectedSchedule(schedule)}
+                        onClick={() => {
+                          setSelectedSchedule(schedule)
+                          // Scroll to schedule content on mobile
+                          if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                            setTimeout(() => {
+                              const scheduleContent = document.getElementById('schedule-content')
+                              if (scheduleContent) {
+                                scheduleContent.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                              }
+                            }, 100)
+                          }
+                        }}
                         className={`p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
                           selectedSchedule?.id === schedule.id
                             ? "bg-orange-50 border-[#F97316] text-[#F97316] shadow-md"
@@ -552,7 +563,7 @@ export default function SchedulerPage() {
 
             {/* Schedule Display */}
             {selectedSchedule && (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-8">
+              <div id="schedule-content" className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-8">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                   <div className="flex-1">
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white break-words">{selectedSchedule.title}</h2>

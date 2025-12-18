@@ -180,7 +180,18 @@ export default function AnalysisPage() {
                   reports.map((report, idx) => (
                     <div
                       key={report.id}
-                      onClick={() => setSelectedReport(report)}
+                      onClick={() => {
+                        setSelectedReport(report)
+                        // Scroll to analysis content on mobile
+                        if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                          setTimeout(() => {
+                            const analysisContent = document.getElementById('analysis-content')
+                            if (analysisContent) {
+                              analysisContent.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                            }
+                          }, 100)
+                        }
+                      }}
                       className={`p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
                         selectedReport?.id === report.id
                           ? "bg-green-50 border-[#16A34A] text-[#16A34A] shadow-md"
@@ -197,7 +208,7 @@ export default function AnalysisPage() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3">
+          <div id="analysis-content" className="lg:col-span-3">
 
             {selectedReport ? (
               <div className="bg-white rounded-lg border border-[#E2E8F0] p-6 sm:p-8 space-y-6 shadow-md hover:shadow-lg transition-shadow duration-300">
