@@ -186,6 +186,15 @@ export default function FlashcardsPage() {
                         setSelectedSet(set)
                         setCurrentCardIndex(0)
                         setIsFlipped(false)
+                        // Scroll to flashcard content on mobile
+                        if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                          setTimeout(() => {
+                            const flashcardContent = document.getElementById('flashcard-content')
+                            if (flashcardContent) {
+                              flashcardContent.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                            }
+                          }, 100)
+                        }
                       }}
                       className={`p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
                         selectedSet?.id === set.id
@@ -203,7 +212,7 @@ export default function FlashcardsPage() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3">
+          <div id="flashcard-content" className="lg:col-span-3">
             {selectedSet ? (
               <div className="bg-white dark:bg-gray-800 rounded-lg border border-[#E2E8F0] dark:border-gray-700 p-6 sm:p-8 shadow-md hover:shadow-lg transition-shadow duration-300">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
