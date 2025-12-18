@@ -346,8 +346,8 @@ export default function MockPapersPage() {
             {showTypeSelector && pendingDocId && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                 <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
-                  <h3 className="text-2xl font-bold text-gray-800 mb-4">Select Question Type</h3>
-                  <p className="text-gray-600 mb-6">Choose the type of questions for your mock paper:</p>
+                  <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Select Question Type</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">Choose the type of questions for your mock paper:</p>
                   
                   <div className="space-y-3">
                     <button
@@ -372,7 +372,7 @@ export default function MockPapersPage() {
                       setShowTypeSelector(false)
                       setPendingDocId(null)
                     }}
-                    className="w-full mt-4 p-3 bg-gray-200 hover:bg-gray-300 rounded-xl font-semibold text-gray-700 transition"
+                    className="w-full mt-4 p-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-xl font-semibold text-gray-700 dark:text-gray-300 transition"
                   >
                     Cancel
                   </button>
@@ -419,7 +419,7 @@ export default function MockPapersPage() {
                           >
                             <div className="flex items-start gap-3">
                               <span className="font-bold text-orange-600 text-lg">{String.fromCharCode(65 + idx)}.</span>
-                              <span className="text-gray-800">{option}</span>
+                              <span className="text-gray-800 dark:text-white">{option}</span>
                             </div>
                           </button>
                         ))}
@@ -449,7 +449,7 @@ export default function MockPapersPage() {
                 <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-8">
                   <div className="mb-6">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-2">
-                      <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{selectedPaper.title}</h2>
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">{selectedPaper.title}</h2>
                       <div className="flex gap-2 items-center w-full sm:w-auto">
                         <span className={`px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold ${
                           selectedPaper.paperType === 'mcq' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
@@ -472,7 +472,7 @@ export default function MockPapersPage() {
                         </Button>
                       </div>
                     </div>
-                    <div className="flex gap-4 text-gray-600">
+                    <div className="flex gap-4 text-gray-600 dark:text-gray-400">
                       <span>Questions: {selectedPaper.questions.length}</span>
                       <span>Total Marks: {selectedPaper.totalMarks}</span>
                     </div>
@@ -480,8 +480,8 @@ export default function MockPapersPage() {
 
                   {selectedPaper.paperType === 'mcq' && !selectedPaper.quizCompleted ? (
                     <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-8 rounded-xl text-center mb-6">
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">Ready to Start Quiz?</h3>
-                      <p className="text-gray-600 mb-6">
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Ready to Start Quiz?</h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-6">
                         This quiz has {selectedPaper.questions.length} multiple choice questions. 
                         You can select an answer or skip each question. Your score will be calculated automatically.
                       </p>
@@ -494,14 +494,14 @@ export default function MockPapersPage() {
                     </div>
                   ) : selectedPaper.paperType === 'descriptive' && !selectedPaper.analysisReportId ? (
                     <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-8 rounded-xl mb-6">
-                      <h3 className="text-xl font-bold text-gray-800 mb-4">Upload Your Answer Script</h3>
-                      <p className="text-gray-600 mb-6">
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Upload Your Answer Script</h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-6">
                         After completing the questions, upload your answer script (PDF/DOCX/TXT) for AI-powered analysis and scoring.
                       </p>
                       <label className="cursor-pointer">
                         <div className="border-2 border-dashed border-purple-300 rounded-xl p-8 text-center hover:border-purple-500 hover:bg-purple-50 transition">
                           <div className="text-4xl mb-3">📄</div>
-                          <p className="text-lg font-semibold text-gray-700 mb-2">
+                          <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
                             {uploadingAnswer ? "Analyzing..." : "Click to upload answer script"}
                           </p>
                           <p className="text-sm text-gray-500">PDF, DOCX, or TXT files</p>
@@ -530,11 +530,11 @@ export default function MockPapersPage() {
                   {selectedPaper.paperType === 'descriptive' && (
                     <>
                       <div className="space-y-4">
-                        <h3 className="text-lg font-bold text-gray-800">Questions:</h3>
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-white">Questions:</h3>
                         {selectedPaper.questions.map((question, idx) => (
                           <div key={idx} className="border-l-4 border-orange-500 pl-4 py-3 bg-gray-50 rounded">
                             <div className="flex justify-between items-start">
-                              <p className="font-semibold text-gray-800 flex-1">
+                              <p className="font-semibold text-gray-800 dark:text-white flex-1">
                                 Q{idx + 1}. {question.text}
                               </p>
                               <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-semibold ml-4">

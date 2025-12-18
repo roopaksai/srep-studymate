@@ -369,26 +369,26 @@ export default function SchedulerPage() {
 
             {/* Quick Stats for Selected Schedule */}
             {selectedSchedule && (
-              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">📊 Statistics</h3>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6">
+                <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">📊 Statistics</h3>
                 {(() => {
                   const stats = getStats(selectedSchedule)
                   return (
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Total Hours</span>
-                        <span className="font-bold text-purple-600">{stats.totalHours}h</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Total Hours</span>
+                        <span className="font-bold text-purple-600 dark:text-purple-400">{stats.totalHours}h</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Sessions</span>
-                        <span className="font-bold text-purple-600">{stats.totalSessions}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Sessions</span>
+                        <span className="font-bold text-purple-600 dark:text-purple-400">{stats.totalSessions}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Topics</span>
-                        <span className="font-bold text-purple-600">{stats.uniqueTopics}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Topics</span>
+                        <span className="font-bold text-purple-600 dark:text-purple-400">{stats.uniqueTopics}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">High Priority</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">High Priority</span>
                         <span className="font-bold text-red-600">{stats.highPriority}</span>
                       </div>
                     </div>
@@ -402,15 +402,15 @@ export default function SchedulerPage() {
           <div className="lg:col-span-3 space-y-6">
 
             {/* Form */}
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">✨ Create Study Schedule</h2>
-              <p className="text-gray-600 mb-6 text-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-8">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">✨ Create Study Schedule</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
                 AI-powered scheduling with smart prioritization
               </p>
 
               <form onSubmit={handleGenerateSchedule} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Schedule Title
                   </label>
                   <input
@@ -418,50 +418,50 @@ export default function SchedulerPage() {
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     placeholder="e.g., Exam Preparation Schedule"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       📅 Start Date
                     </label>
                     <input
                       type="date"
                       value={formData.startDate}
                       onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       📅 End Date
                     </label>
                     <input
                       type="date"
                       value={formData.endDate}
                       onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     📚 Topics (comma-separated)
                   </label>
                   <textarea
                     value={formData.topics}
                     onChange={(e) => setFormData({ ...formData, topics: e.target.value })}
                     placeholder="e.g., Data Structures (High Priority), Algorithms, Databases (Low Priority)"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent h-24 resize-none"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent h-24 resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     💡 Tip: Add (High Priority), (Medium Priority), or (Low Priority) after topics
                   </p>
                 </div>
@@ -481,7 +481,7 @@ export default function SchedulerPage() {
                   <div className="space-y-4 border-t pt-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           ⏰ Study Hours Per Day
                         </label>
                         <input
@@ -492,12 +492,12 @@ export default function SchedulerPage() {
                           onChange={(e) =>
                             setFormData({ ...formData, studyHoursPerDay: e.target.value })
                           }
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           🤖 Use AI Scheduling
                         </label>
                         <div className="flex items-center gap-3 mt-3">
@@ -509,7 +509,7 @@ export default function SchedulerPage() {
                             }
                             className="w-5 h-5 text-purple-600"
                           />
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
                             Smart prioritization & distribution
                           </span>
                         </div>
@@ -517,7 +517,7 @@ export default function SchedulerPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                         🛌 Rest Days
                       </label>
                       <div className="flex flex-wrap gap-2">
@@ -552,11 +552,11 @@ export default function SchedulerPage() {
 
             {/* Schedule Display */}
             {selectedSchedule && (
-              <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-8">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                   <div className="flex-1">
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 break-words">{selectedSchedule.title}</h2>
-                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white break-words">{selectedSchedule.title}</h2>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
                       {new Date(selectedSchedule.startDate).toLocaleDateString()} -{" "}
                       {new Date(selectedSchedule.endDate).toLocaleDateString()}
                     </p>
@@ -572,24 +572,24 @@ export default function SchedulerPage() {
                 <div className="overflow-x-auto -mx-4 sm:mx-0">
                   <table className="w-full min-w-[600px]">
                     <thead>
-                      <tr className="border-b-2 border-purple-500">
-                        <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-bold text-gray-800 text-xs sm:text-base">Date</th>
-                        <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-bold text-gray-800 text-xs sm:text-base">Topic</th>
-                        <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-bold text-gray-800 text-xs sm:text-base">Duration</th>
+                      <tr className="border-b-2 border-purple-500 dark:border-purple-400">
+                        <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-bold text-gray-800 dark:text-white text-xs sm:text-base">Date</th>
+                        <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-bold text-gray-800 dark:text-white text-xs sm:text-base">Topic</th>
+                        <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-bold text-gray-800 dark:text-white text-xs sm:text-base">Duration</th>
                       </tr>
                     </thead>
                     <tbody>
                       {selectedSchedule.slots.map((slot, idx) => (
-                        <tr key={idx} className="border-b border-[#E2E8F0] hover:bg-orange-50">
-                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-gray-700 text-xs sm:text-sm whitespace-nowrap">
+                        <tr key={idx} className="border-b border-[#E2E8F0] dark:border-gray-700 hover:bg-orange-50 dark:hover:bg-gray-700">
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-gray-700 dark:text-gray-300 text-xs sm:text-sm whitespace-nowrap">
                             {new Date(slot.date).toLocaleDateString("en-US", {
                               weekday: "short",
                               month: "short",
                               day: "numeric",
                             })}
                           </td>
-                          <td className="py-2 sm:py-3 px-2 sm:px-4 font-semibold text-gray-800 text-xs sm:text-base">{slot.topic}</td>
-                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-gray-600 text-xs sm:text-sm whitespace-nowrap">{slot.durationMinutes} min</td>
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 font-semibold text-gray-800 dark:text-white text-xs sm:text-base">{slot.topic}</td>
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-gray-600 dark:text-gray-400 text-xs sm:text-sm whitespace-nowrap">{slot.durationMinutes} min</td>
                         </tr>
                       ))}
                     </tbody>

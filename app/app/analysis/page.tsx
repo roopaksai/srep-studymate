@@ -217,13 +217,13 @@ export default function AnalysisPage() {
                         </p>
                       </div>
                       <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 sm:p-6 text-center border border-blue-200">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Grade</p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">Grade</p>
                         <p className="text-3xl sm:text-4xl font-bold text-blue-600">
                           {selectedReport.grade || 'N/A'}
                         </p>
                       </div>
                       <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 sm:p-6 text-center border border-purple-200">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Percentage</p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">Percentage</p>
                         <p className="text-3xl sm:text-4xl font-bold text-purple-600">
                           {((selectedReport.totalScore / (selectedReport.maxScore || 1)) * 100).toFixed(1)}%
                         </p>
@@ -237,7 +237,7 @@ export default function AnalysisPage() {
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-600">Correct</span>
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Correct</span>
                             <span className="text-sm font-bold text-green-600">
                               {selectedReport.questionScores.filter(q => q.scoredMarks === q.maxMarks && q.feedback !== "Question skipped").length}
                             </span>
@@ -330,7 +330,7 @@ export default function AnalysisPage() {
                             </span>
                           ))
                         ) : (
-                          <p className="text-gray-600">No specific strengths identified</p>
+                          <p className="text-gray-600 dark:text-gray-400">No specific strengths identified</p>
                         )}
                       </div>
                     </div>
@@ -348,7 +348,7 @@ export default function AnalysisPage() {
                             </span>
                           ))
                         ) : (
-                          <p className="text-gray-600">No specific areas to improve identified</p>
+                          <p className="text-gray-600 dark:text-gray-400">No specific areas to improve identified</p>
                         )}
                       </div>
                     </div>
