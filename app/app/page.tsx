@@ -15,7 +15,6 @@ import EmptyState from "@/components/EmptyState"
 import PullToRefresh from "@/components/PullToRefresh"
 import ThemeToggle from "@/components/ThemeToggle"
 import QuickStats from "@/components/QuickStats"
-import RecentActivity from "@/components/RecentActivity"
 import ProgressTracking from "@/components/ProgressTracking"
 import toast from "react-hot-toast"
 import { motion } from "framer-motion"
@@ -450,13 +449,8 @@ export default function DashboardPage() {
               />
             </div>
 
-            {/* Activity and Goals - Compact */}
-            <div className="space-y-3">
-              <RecentActivity activities={activities} />
-              <ProgressTracking goals={goals} />
-            </div>
-
-
+            {/* Study Goals */}
+            <ProgressTracking goals={goals} />
           </div>
         </div>
       </PullToRefresh>

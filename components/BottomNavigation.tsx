@@ -18,8 +18,8 @@ export default function BottomNavigation() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E2E8F0] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:hidden z-50">
-      <div className="flex justify-around items-center h-16 px-2">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-[#E2E8F0] dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:hidden z-50">
+      <div className="flex justify-around items-center h-14 px-2">
         {navItems.map((item) => {
           const Icon = item.icon
           const active = isActive(item.href)
@@ -37,14 +37,15 @@ export default function BottomNavigation() {
                 }`}
               >
                 <Icon
-                  size={24}
+                  size={20}
+                  className={active ? "" : "dark:text-gray-400"}
                   style={{ 
                     color: active ? item.color : "#64748B",
                     strokeWidth: active ? 2.5 : 2
                   }}
                 />
                 <span
-                  className={`text-xs mt-1 font-medium transition-all duration-200 ${
+                  className={`text-[10px] mt-0.5 font-medium transition-all duration-200 dark:text-gray-300 ${
                     active ? "opacity-100" : "opacity-0"
                   }`}
                   style={{ color: active ? item.color : "#64748B" }}

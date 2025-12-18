@@ -30,6 +30,7 @@ export default function FlashcardsPage() {
   const [isFlipped, setIsFlipped] = useState(false)
   const [genLoading, setGenLoading] = useState(false)
   const [error, setError] = useState("")
+  const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     if (!loading && !user) router.push("/login")
@@ -43,6 +44,30 @@ export default function FlashcardsPage() {
       }
     }
   }, [token, docId])
+
+  // Auto-advance timer - when answer is shown, auto-move to next card after 6 seconds
+  useEffect(() => {
+    // Clear any existing timer
+    if (autoAdvanceTimer) {
+      clearTimeout(autoAdvanceTimer)
+    }
+
+    // Only start timer if card is flipped (showing answer)
+    if (isFlipped && selectedSet && currentCardIndex < selectedSet.cards.length - 1) {
+      const timer = setTimeout(() => {
+        setCurrentCardIndex(currentCardIndex + 1)
+        setIsFlipped(false)
+      }, 6000) // 6 seconds
+      setAutoAdvanceTimer(timer)
+    }
+
+    // Cleanup timer on unmount or when dependencies change
+    return () => {
+      if (autoAdvanceTimer) {
+        clearTimeout(autoAdvanceTimer)
+      }
+    }
+  }, [isFlipped, currentCardIndex, selectedSet])
 
   const fetchFlashcards = async () => {
     try {
@@ -247,7 +272,10 @@ export default function FlashcardsPage() {
                     {currentCardIndex + 1} / {selectedSet.cards.length}
                   </span>
                   <Button
-                    onClick={() => setCurrentCardIndex(Math.min(selectedSet.cards.length - 1, currentCardIndex + 1))}
+                    onClick={() => {
+                      setCurrentCardIndex(Math.min(selectedSet.cards.length - 1, currentCardIndex + 1))
+                      setIsFlipped(false)
+                    }}
                     disabled={currentCardIndex === selectedSet.cards.length - 1}
                     className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white disabled:opacity-40"
                   >
