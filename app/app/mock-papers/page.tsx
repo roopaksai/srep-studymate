@@ -423,8 +423,8 @@ export default function MockPapersPage() {
                             onClick={() => handleAnswerSelect(String.fromCharCode(65 + idx))}
                             className={`w-full p-4 rounded-xl text-left transition border-2 ${
                               selectedOption === String.fromCharCode(65 + idx)
-                                ? "bg-indigo-100 border-[#4F46E5]"
-                                : "bg-white border-[#CBD5E1] hover:border-[#4F46E5]"
+                                ? "bg-indigo-100 dark:bg-indigo-900 border-[#4F46E5] dark:border-indigo-400"
+                                : "bg-white dark:bg-gray-700 border-[#CBD5E1] dark:border-gray-600 hover:border-[#4F46E5] dark:hover:border-indigo-400"
                             }`}
                           >
                             <div className="flex items-start gap-3">
