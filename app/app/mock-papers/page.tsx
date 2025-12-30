@@ -229,10 +229,10 @@ export default function MockPapersPage() {
     const file = e.target.files?.[0]
     if (!file || !selectedPaper) return
 
-    // Check file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024 // 10MB
-    if (file.size > maxSize) {
-      toast.error(`File too large. Maximum size is 10MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
+    // Check file size (max 30MB)
+    const maxSize = 30 * 1024 * 1024 // 30MB
+    if (file.size > maxSize) {  
+      toast.error(`File too large. Maximum size is 30MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
       e.target.value = '' // Reset file input
       return
     }

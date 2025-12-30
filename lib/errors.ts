@@ -98,6 +98,6 @@ export const errorMessages = {
   DOCUMENT_NOT_FOUND: "Document not found.",
   FILE_REQUIRED: "File is required.",
   INVALID_FILE_TYPE: "Invalid file type. Please upload PDF, TXT, or DOCX.",
-  FILE_TOO_LARGE: "File is too large. Maximum size is 10MB.",
+  FILE_TOO_LARGE: "File is too large. Maximum size is 30MB.",
   INTERNAL_ERROR: "Internal server error.",
 }

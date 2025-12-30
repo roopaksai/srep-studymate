@@ -71,7 +71,7 @@ This release represents a complete overhaul of the codebase with 25+ improvement
   compress: true,
   experimental: {
     serverActions: {
-      bodySizeLimit: '10mb'
+      bodySizeLimit: '30mb'
     }
   }
   ```

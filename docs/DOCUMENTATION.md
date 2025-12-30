@@ -51,7 +51,7 @@ Upload Document → Flashcards → Mock Paper → Take Test → Analysis Report 
 #### Detailed Steps:
 
 **1. Document Upload** (`/app` page)
-- Upload PDF/DOCX/TXT document (max 10MB)
+- Upload PDF/DOCX/TXT document (max 30MB)
 - Document processed and stored in MongoDB
 - AI extracts key concepts and topics
 

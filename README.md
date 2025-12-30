@@ -273,7 +273,7 @@ The app can be deployed to any platform that supports Node.js:
 - Token expires after 7 days (re-login required)
 
 ### File Upload Issues
-- Check file size is under 10MB limit
+- Check file size is under 30MB limit
 - Verify file type is PDF, TXT, or DOCX
 - Ensure form data is correctly formatted
 - Clear browser cache if issues persist

@@ -204,7 +204,7 @@ describe('POST /api/auth/signup', () => {
  * 
  * 2. Document Upload
  *    - ✅ Upload valid PDF/DOCX/TXT
- *    - ✅ Reject oversized files (>10MB)
+ *    - ✅ Reject oversized files (>30MB)
  *    - ✅ Reject invalid file types
  *    - ✅ Text extraction validation
  * 

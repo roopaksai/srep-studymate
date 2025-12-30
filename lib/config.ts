@@ -16,7 +16,7 @@ export const config = {
 
   // File Upload Configuration
   files: {
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 30 * 1024 * 1024, // 30MB
     allowedTypes: [".pdf", ".docx", ".doc", ".txt"],
     allowedMimeTypes: [
       "application/pdf",

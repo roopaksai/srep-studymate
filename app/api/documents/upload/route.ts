@@ -131,11 +131,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File is required" }, { status: 400 })
     }
 
-    // Check file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024 // 10MB
+    // Check file size (max 30MB)
+    const maxSize = 30 * 1024 * 1024 // 30MB
     if (file.size > maxSize) {
       return NextResponse.json({ 
-        error: `File too large. Maximum size is 10MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB` 
+        error: `File too large. Maximum size is 30MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB` 
       }, { status: 400 })
     }
 

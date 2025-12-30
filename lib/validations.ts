@@ -19,7 +19,7 @@ export const uploadDocumentSchema = z.object({
 
 export const documentFileSchema = z.object({
   name: z.string().min(1).max(255),
-  size: z.number().max(10 * 1024 * 1024, 'File size must not exceed 10MB'),
+  size: z.number().max(10 * 1024 * 1024, 'File size must not exceed 30MB'),
   type: z.string().refine(
     (type) => [
       'application/pdf',

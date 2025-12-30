@@ -83,14 +83,14 @@ userSchema.index({ createdAt: -1 })
 ### 3. File Size Validation ✅
 **Impact:** Prevents server crashes from large file uploads
 
-**Status:** Already implemented (10MB limit)
+**Status:** Already implemented (30MB limit)
 
 **Location:** app/api/documents/upload/route.ts
 ```typescript
-const maxSize = 10 * 1024 * 1024 // 10MB
+const maxSize = 30 * 1024 * 1024 // 30MB
 if (file.size > maxSize) {
   return NextResponse.json({ 
-    error: `File too large. Maximum size is 10MB.` 
+    error: `File too large. Maximum size is 30MB.` 
   }, { status: 400 })
 }
 ```
