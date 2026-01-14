@@ -248,7 +248,7 @@ export default function DashboardPage() {
                   onUpload={handleFileUpload}
                   loading={uploadLoading}
                   accept=".pdf,.txt,.doc,.docx"
-                  maxSize={10}
+                  maxSize={30}
                 />
               </div>
             </motion.div>

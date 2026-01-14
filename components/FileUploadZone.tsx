@@ -11,7 +11,7 @@ interface FileUploadProps {
   maxSize?: number
 }
 
-export default function FileUploadZone({ onUpload, loading, accept = ".pdf,.txt,.doc,.docx", maxSize = 10 }: FileUploadProps) {
+export default function FileUploadZone({ onUpload, loading, accept = ".pdf,.txt,.doc,.docx", maxSize = 30 }: FileUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false)
   const [previewFile, setPreviewFile] = useState<File | null>(null)
 

@@ -82,6 +82,13 @@ export default function AnalysisPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Check file size (max 30MB)
+    const maxSize = 30 * 1024 * 1024 // 30MB
+    if (file.size > maxSize) {
+      toast.error(`File too large. Maximum size is 30MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
+      return
+    }
+
     try {
       setUploadLoading(true)
       setError("")
