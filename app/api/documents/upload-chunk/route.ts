@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { verifyToken } from "@/lib/auth"
+import { secureRoute, addSecurityHeaders } from "@/lib/security"
+import { rateLimitConfigs } from "@/lib/rateLimit"
 import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
 import { tmpdir } from "os"
@@ -10,14 +11,16 @@ import { tmpdir } from "os"
  */
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "")
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    // Apply security middleware with chunk upload rate limiting
+    const security = await secureRoute(request, {
+      requireAuth: true,
+      rateLimit: { limit: 100, windowMs: 60 * 60 * 1000 }, // 100 chunks per hour
+      allowedMethods: ['POST'],
+    })
+    
+    if (security.error) return addSecurityHeaders(security.error)
+    if (!security.userId) {
+      return addSecurityHeaders(NextResponse.json({ error: "Unauthorized" }, { status: 401 }))
     }
 
     const formData = await request.formData()
@@ -42,14 +45,14 @@ export async function POST(request: NextRequest) {
 
     console.log(`Chunk ${chunkIndex + 1}/${totalChunks} saved for upload ${uploadId}`)
 
-    return NextResponse.json({
+    return addSecurityHeaders(NextResponse.json({
       success: true,
       chunkIndex,
       totalChunks,
       uploadId,
-    })
+    }))
   } catch (error) {
     console.error("Chunk upload error:", error)
-    return NextResponse.json({ error: "Failed to upload chunk" }, { status: 500 })
+    return addSecurityHeaders(NextResponse.json({ error: "Failed to upload chunk" }, { status: 500 }))
   }
 }

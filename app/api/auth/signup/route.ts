@@ -4,11 +4,34 @@ import User from "@/lib/models/User"
 import { generateToken } from "@/lib/auth"
 import bcryptjs from "bcryptjs"
 import { logger } from "@/lib/logger"
+import { secureRoute, addSecurityHeaders } from "@/lib/security"
+import { validateRequest, userSignupSchema, sanitizeMongoQuery } from "@/lib/validation"
+import { rateLimitConfigs } from "@/lib/rateLimit"
 
 export async function POST(request: NextRequest) {
   try {
+    // Apply security middleware with very strict rate limiting
+    const security = await secureRoute(request, {
+      requireAuth: false,
+      rateLimit: { limit: 3, windowMs: 60 * 60 * 1000 }, // 3 signups per hour
+      allowedMethods: ['POST'],
+    })
+    
+    if (security.error) return addSecurityHeaders(security.error)
+
     await connectDB()
-    const { email, password, name } = await request.json()
+    const body = await request.json()
+    
+    // Validate input with strong password requirements
+    const validation = await validateRequest(userSignupSchema, body)
+    if (!validation.success) {
+      return addSecurityHeaders(NextResponse.json(
+        { error: 'Validation failed', details: validation.errors },
+        { status: 400 }
+      ))
+    }
+    
+    const { name, email, password } = sanitizeMongoQuery(validation.data)
 
     if (!email || !password || !name) {
       return NextResponse.json({ error: "Email, password, and name are required" }, { status: 400 })

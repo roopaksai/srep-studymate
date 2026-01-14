@@ -4,38 +4,61 @@ import User from "@/lib/models/User"
 import { generateToken } from "@/lib/auth"
 import bcryptjs from "bcryptjs"
 import { logger } from "@/lib/logger"
+import { secureRoute, addSecurityHeaders } from "@/lib/security"
+import { validateRequest, userLoginSchema, sanitizeMongoQuery } from "@/lib/validation"
+import { rateLimitConfigs } from "@/lib/rateLimit"
 
 export async function POST(request: NextRequest) {
   try {
-    await connectDB()
-    const { email, password } = await request.json()
+    // Apply security middleware with strict rate limiting
+    const security = await secureRoute(request, {
+      requireAuth: false,
+      rateLimit: rateLimitConfigs.auth,
+      allowedMethods: ['POST'],
+    })
+    
+    if (security.error) return addSecurityHeaders(security.error)
 
-    if (!email || !password) {
-      return NextResponse.json({ error: "Email and password are required" }, { status: 400 })
+    await connectDB()
+    const body = await request.json()
+    
+    // Validate input
+    const validation = await validateRequest(userLoginSchema, body)
+    if (!validation.success) {
+      return addSecurityHeaders(NextResponse.json(
+        { error: 'Validation failed', details: validation.errors },
+        { status: 400 }
+      ))
     }
+    
+    const { email, password } = sanitizeMongoQuery(validation.data)
 
     const user = await User.findOne({ email })
     if (!user) {
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
+      logger.warn('Login failed - user not found', { email })
+      return addSecurityHeaders(NextResponse.json({ error: "Invalid email or password" }, { status: 401 }))
     }
 
-    const isPasswordValid = bcryptjs.compareSync(password, user.passwordHash)
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
     if (!isPasswordValid) {
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
+      logger.warn('Login failed - invalid password', { email })
+      return addSecurityHeaders(NextResponse.json({ error: "Invalid email or password" }, { status: 401 }))
     }
 
     const token = generateToken(user._id.toString())
 
-    return NextResponse.json({
+    logger.info('Login successful', { userId: user._id })
+
+    return addSecurityHeaders(NextResponse.json({
       token,
       user: {
         id: user._id,
         email: user.email,
         name: user.name,
       },
-    })
+    }))
   } catch (error) {
     logger.error('Login error', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined })
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return addSecurityHeaders(NextResponse.json({ error: "Internal server error" }, { status: 500 }))
   }
 }

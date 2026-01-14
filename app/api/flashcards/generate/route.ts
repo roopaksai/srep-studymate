@@ -2,7 +2,9 @@ import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import Document from "@/lib/models/Document"
 import FlashcardSet from "@/lib/models/FlashcardSet"
-import { verifyToken } from "@/lib/auth"
+import { secureRoute, addSecurityHeaders } from "@/lib/security"
+import { validateRequest, generateFlashcardsSchema, isValidObjectId } from "@/lib/validation"
+import { rateLimitConfigs } from "@/lib/rateLimit"
 import { logger } from "@/lib/logger"
 
 async function generateFlashcardsWithAI(text: string): Promise<{ question: string; answer: string }[]> {
@@ -69,38 +71,53 @@ async function generateFlashcardsWithAI(text: string): Promise<{ question: strin
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "")
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    // Apply security middleware with AI generation rate limiting
+    const security = await secureRoute(request, {
+      requireAuth: true,
+      rateLimit: rateLimitConfigs.aiGeneration,
+      allowedMethods: ['POST'],
+    })
+    
+    if (security.error) return addSecurityHeaders(security.error)
+    if (!security.userId) {
+      return addSecurityHeaders(NextResponse.json({ error: "Unauthorized" }, { status: 401 }))
     }
 
     await connectDB()
-    const { documentId, reattempt = false } = await request.json()
+    const body = await request.json()
+    
+    // Validate input
+    const validation = await validateRequest(generateFlashcardsSchema, body)
+    if (!validation.success) {
+      return addSecurityHeaders(NextResponse.json(
+        { error: 'Validation failed', details: validation.errors },
+        { status: 400 }
+      ))
+    }
+    
+    const { documentId } = validation.data
+    const reattempt = body.reattempt || false
 
     const document = await Document.findOne({
       _id: documentId,
-      userId: payload.userId,
+      userId: security.userId,
     })
 
     if (!document) {
-      return NextResponse.json({ error: "Document not found" }, { status: 404 })
+      logger.warn('Document not found for flashcard generation', { documentId, userId: security.userId })
+      return addSecurityHeaders(NextResponse.json({ error: "Document not found" }, { status: 404 }))
     }
 
     // Check if flashcards already exist for this document (unless reattempt)
     if (!reattempt) {
       const existingFlashcardSet = await FlashcardSet.findOne({
-        userId: payload.userId,
+        userId: security.userId,
         documentId,
       }).sort({ createdAt: -1 })
 
       if (existingFlashcardSet) {
-        logger.info('Found existing flashcard set', { documentId, userId: payload.userId })
-        return NextResponse.json(
+        logger.info('Found existing flashcard set', { documentId, userId: security.userId })
+        return addSecurityHeaders(NextResponse.json(
           {
             flashcardSet: {
               id: existingFlashcardSet._id,
@@ -112,13 +129,13 @@ export async function POST(request: NextRequest) {
             isExisting: true, // Flag to indicate this is an existing set
           },
           { status: 200 },
-        )
+        ))
       }
     } else {
-      logger.info('Reattempt requested, generating new flashcard set', { documentId, userId: payload.userId })
+      logger.info('Reattempt requested, generating new flashcard set', { documentId, userId: security.userId })
       // Delete old flashcard set if reattempt is true
       await FlashcardSet.deleteMany({
-        userId: payload.userId,
+        userId: security.userId,
         documentId,
       })
     }
@@ -131,7 +148,7 @@ export async function POST(request: NextRequest) {
     const flashcardTitle = `${docNameWithoutExt} Flashcards`
 
     const flashcardSet = new FlashcardSet({
-      userId: payload.userId,
+      userId: security.userId,
       documentId,
       title: flashcardTitle,
       cards,
@@ -139,7 +156,9 @@ export async function POST(request: NextRequest) {
 
     await flashcardSet.save()
 
-    return NextResponse.json(
+    logger.info('Flashcard set created', { flashcardSetId: flashcardSet._id, userId: security.userId })
+
+    return addSecurityHeaders(NextResponse.json(
       {
         flashcardSet: {
           id: flashcardSet._id,
@@ -151,9 +170,9 @@ export async function POST(request: NextRequest) {
         isExisting: false, // This is a newly generated set
       },
       { status: 201 },
-    )
+    ))
   } catch (error) {
     logger.error('Generate flashcards error', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined })
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return addSecurityHeaders(NextResponse.json({ error: "Internal server error" }, { status: 500 }))
   }
 }

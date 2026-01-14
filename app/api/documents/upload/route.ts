@@ -1,7 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import Document from "@/lib/models/Document"
-import { verifyToken } from "@/lib/auth"
+import { secureRoute, addSecurityHeaders } from "@/lib/security"
+import { validateFile, documentUploadSchema, validateRequest } from "@/lib/validation"
+import { rateLimitConfigs } from "@/lib/rateLimit"
 
 async function extractTextFromFile(file: File): Promise<string> {
   const fileBuffer = await file.arrayBuffer()
@@ -139,31 +141,40 @@ async function identifyTopics(text: string): Promise<string[]> {
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "")
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    // Apply security middleware with upload rate limiting
+    const security = await secureRoute(request, {
+      requireAuth: true,
+      rateLimit: rateLimitConfigs.upload,
+      allowedMethods: ['POST'],
+    })
+    
+    if (security.error) return addSecurityHeaders(security.error)
+    if (!security.userId) {
+      return addSecurityHeaders(NextResponse.json({ error: "Unauthorized" }, { status: 401 }))
     }
 
     await connectDB()
     const formData = await request.formData()
     const file = formData.get("file") as File
     const type = (formData.get("type") as string) || "study-material"
-
-    if (!file) {
-      return NextResponse.json({ error: "File is required" }, { status: 400 })
+    
+    // Validate file type field
+    const validation = await validateRequest(documentUploadSchema, { type })
+    if (!validation.success) {
+      return addSecurityHeaders(NextResponse.json(
+        { error: 'Invalid document type', details: validation.errors },
+        { status: 400 }
+      ))
     }
 
-    // Check file size (max 30MB)
-    const maxSize = 30 * 1024 * 1024 // 30MB
-    if (file.size > maxSize) {
-      return NextResponse.json({ 
-        error: `File too large. Maximum size is 30MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB` 
-      }, { status: 400 })
+    if (!file) {
+      return addSecurityHeaders(NextResponse.json({ error: "File is required" }, { status: 400 }))
+    }
+    
+    // Validate file
+    const fileValidation = validateFile(file)
+    if (!fileValidation.valid) {
+      return addSecurityHeaders(NextResponse.json({ error: fileValidation.error }, { status: 400 }))
     }
 
     console.log(`Processing document: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`)
@@ -172,32 +183,32 @@ export async function POST(request: NextRequest) {
     const extractedText = await extractTextFromFile(file)
 
     if (!extractedText || extractedText.trim().length === 0) {
-      return NextResponse.json(
+      return addSecurityHeaders(NextResponse.json(
         { error: "Could not extract text from file. Please ensure it's a valid PDF, DOCX, or TXT file." },
         { status: 400 }
-      )
+      ))
     }
 
     // Save document immediately with pending status
     const document = new Document({
-      userId: payload.userId,
+      userId: security.userId,
       originalFileName: file.name,
       extractedText: extractedText.substring(0, 5000), // Store 5000 chars (sufficient for AI processing)
       topics: [],
-      type,
-      processingStatus: type === "study-material" ? "pending" : "completed",
+      type: validation.data.type,
+      processingStatus: validation.data.type === "study-material" ? "pending" : "completed",
     })
 
     await document.save()
 
     // Trigger background topic identification for study materials (non-blocking)
-    if (type === "study-material") {
+    if (validation.data.type === "study-material") {
       processTopicsInBackground(document._id.toString(), extractedText).catch((err) => {
         console.error("Background topic processing failed:", err)
       })
     }
 
-    return NextResponse.json(
+    return addSecurityHeaders(NextResponse.json(
       {
         document: {
           id: document._id,
@@ -210,9 +221,9 @@ export async function POST(request: NextRequest) {
         },
       },
       { status: 201 },
-    )
+    ))
   } catch (error) {
     console.error("Upload error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return addSecurityHeaders(NextResponse.json({ error: "Internal server error" }, { status: 500 }))
   }
 }

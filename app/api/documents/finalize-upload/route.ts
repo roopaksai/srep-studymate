@@ -1,7 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import Document from "@/lib/models/Document"
-import { verifyToken } from "@/lib/auth"
+import { secureRoute, addSecurityHeaders } from "@/lib/security"
+import { validateRequest, documentUploadSchema } from "@/lib/validation"
+import { rateLimitConfigs } from "@/lib/rateLimit"
 import { readFile, readdir, unlink, rmdir } from "fs/promises"
 import { join } from "path"
 import { tmpdir } from "os"
@@ -108,20 +110,32 @@ async function processTopicsInBackground(documentId: string, text: string): Prom
  */
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "")
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    // Apply security middleware
+    const security = await secureRoute(request, {
+      requireAuth: true,
+      rateLimit: rateLimitConfigs.upload,
+      allowedMethods: ['POST'],
+    })
+    
+    if (security.error) return addSecurityHeaders(security.error)
+    if (!security.userId) {
+      return addSecurityHeaders(NextResponse.json({ error: "Unauthorized" }, { status: 401 }))
     }
 
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    const body = await request.json()
+    const { uploadId, fileName, type } = body
+    
+    // Validate document type
+    const validation = await validateRequest(documentUploadSchema, { type })
+    if (!validation.success) {
+      return addSecurityHeaders(NextResponse.json(
+        { error: 'Invalid document type', details: validation.errors },
+        { status: 400 }
+      ))
     }
 
-    const { uploadId, fileName, type } = await request.json()
-
-    if (!uploadId || !fileName || !type) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    if (!uploadId || !fileName) {
+      return addSecurityHeaders(NextResponse.json({ error: "Missing required fields" }, { status: 400 }))
     }
 
     await connectDB()
@@ -156,26 +170,26 @@ export async function POST(request: NextRequest) {
       }
       await rmdir(uploadDir).catch(() => {})
       
-      return NextResponse.json(
+      return addSecurityHeaders(NextResponse.json(
         { error: "Could not extract text from file" },
         { status: 400 }
-      )
+      ))
     }
 
     // Save document
     const document = new Document({
-      userId: payload.userId,
+      userId: security.userId,
       originalFileName: fileName,
       extractedText: extractedText.substring(0, 5000),
       topics: [],
-      type,
-      processingStatus: type === "study-material" ? "pending" : "completed",
+      type: validation.data.type,
+      processingStatus: validation.data.type === "study-material" ? "pending" : "completed",
     })
 
     await document.save()
 
     // Trigger background processing
-    if (type === "study-material") {
+    if (validation.data.type === "study-material") {
       processTopicsInBackground(document._id.toString(), extractedText).catch((err) => {
         console.error("Background processing failed:", err)
       })
@@ -189,7 +203,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`Upload finalized: ${fileName}`)
 
-    return NextResponse.json({
+    return addSecurityHeaders(NextResponse.json({
       document: {
         id: document._id,
         originalFileName: document.originalFileName,
@@ -199,9 +213,9 @@ export async function POST(request: NextRequest) {
         processingStatus: document.processingStatus,
         createdAt: document.createdAt,
       },
-    }, { status: 201 })
+    }, { status: 201 }))
   } catch (error) {
     console.error("Finalize upload error:", error)
-    return NextResponse.json({ error: "Failed to finalize upload" }, { status: 500 })
+    return addSecurityHeaders(NextResponse.json({ error: "Failed to finalize upload" }, { status: 500 }))
   }
 }
