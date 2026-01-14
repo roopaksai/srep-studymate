@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       return addSecurityHeaders(NextResponse.json({ error: "Invalid email or password" }, { status: 401 }))
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
+    const isPasswordValid = await bcryptjs.compare(password, user.passwordHash)
     if (!isPasswordValid) {
       logger.warn('Login failed - invalid password', { email })
       return addSecurityHeaders(NextResponse.json({ error: "Invalid email or password" }, { status: 401 }))
