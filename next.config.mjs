@@ -11,6 +11,14 @@ const nextConfig = {
     unoptimized: true,
   },
   
+  // Increase body size limit for API routes and Server Actions
+  api: {
+    bodyParser: {
+      sizeLimit: '30mb',
+    },
+    responseLimit: '30mb',
+  },
+  
   // Increase body size limit for file uploads
   experimental: {
     serverActions: {
