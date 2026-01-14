@@ -19,6 +19,7 @@ import ProgressTracking from "@/components/ProgressTracking"
 import toast from "react-hot-toast"
 import { motion } from "framer-motion"
 import { LayoutGrid, List } from "lucide-react"
+import { uploadFileInChunks, shouldUseChunkedUpload } from "@/lib/chunkedUpload"
 
 interface Document {
   _id: string
@@ -158,29 +159,42 @@ export default function DashboardPage() {
     try {
       setUploadLoading(true)
       setError("")
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("type", "study-material")
 
-      const res = await fetch("/api/documents/upload", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      })
-
-      if (res.ok) {
-        const data = await res.json()
+      // Use chunked upload for files > 4MB (Vercel Hobby limit)
+      if (shouldUseChunkedUpload(file.size)) {
+        console.log("Using chunked upload for large file")
+        const data = await uploadFileInChunks(file, token!, "study-material", (progress) => {
+          console.log(`Upload progress: ${progress.percentage}%`)
+        })
         setSelectedDocument(data.document.id)
         toast.success('Document uploaded successfully!')
-        await fetchDocuments()
-        // Scroll to features section after upload
-        setTimeout(() => {
-          document.getElementById('quick-actions')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-        }, 500)
       } else {
-        const error = await res.json()
-        toast.error(error.error || 'Upload failed')
+        // Regular upload for small files
+        const formData = new FormData()
+        formData.append("file", file)
+        formData.append("type", "study-material")
+
+        const res = await fetch("/api/documents/upload", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        })
+
+        if (res.ok) {
+          const data = await res.json()
+          setSelectedDocument(data.document.id)
+          toast.success('Document uploaded successfully!')
+        } else {
+          const error = await res.json()
+          toast.error(error.error || 'Upload failed')
+        }
       }
+      
+      await fetchDocuments()
+      // Scroll to features section after upload
+      setTimeout(() => {
+        document.getElementById('quick-actions')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }, 500)
     } catch (err) {
       toast.error('Upload failed. Please try again.')
       console.error("Upload error:", err)
