@@ -3,14 +3,5 @@
     "deploymentEnabled": {
       "main": true
     }
-  },
-  "functions": {
-    "api/**/*.ts": {
-      "maxDuration": 60,
-      "memory": 1024
-    }
-  },
-  "limits": {
-    "maxDuration": 60
   }
 }
