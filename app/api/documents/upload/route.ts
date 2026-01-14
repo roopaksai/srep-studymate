@@ -47,6 +47,33 @@ async function extractTextFromFile(file: File): Promise<string> {
   }
 }
 
+async function processTopicsInBackground(documentId: string, text: string): Promise<void> {
+  try {
+    await connectDB()
+    
+    // Update status to processing
+    await Document.findByIdAndUpdate(documentId, { processingStatus: "processing" })
+    
+    // Identify topics using AI
+    const topics = await identifyTopics(text)
+    
+    // Update document with topics and mark as completed
+    await Document.findByIdAndUpdate(documentId, {
+      topics,
+      processingStatus: "completed",
+      processingError: null,
+    })
+    
+    console.log(`Background processing completed for document ${documentId}`)
+  } catch (error) {
+    console.error(`Background processing failed for document ${documentId}:`, error)
+    await Document.findByIdAndUpdate(documentId, {
+      processingStatus: "failed",
+      processingError: error instanceof Error ? error.message : "Unknown error",
+    })
+  }
+}
+
 async function identifyTopics(text: string): Promise<string[]> {
   try {
     const apiKey = process.env.OPENROUTER_API_KEY
@@ -151,18 +178,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Identify topics using AI (only for study materials)
-    const topics = type === "study-material" ? await identifyTopics(extractedText) : []
-
+    // Save document immediately with pending status
     const document = new Document({
       userId: payload.userId,
       originalFileName: file.name,
       extractedText: extractedText.substring(0, 5000), // Store 5000 chars (sufficient for AI processing)
-      topics,
+      topics: [],
       type,
+      processingStatus: type === "study-material" ? "pending" : "completed",
     })
 
     await document.save()
+
+    // Trigger background topic identification for study materials (non-blocking)
+    if (type === "study-material") {
+      processTopicsInBackground(document._id.toString(), extractedText).catch((err) => {
+        console.error("Background topic processing failed:", err)
+      })
+    }
 
     return NextResponse.json(
       {
@@ -172,6 +205,7 @@ export async function POST(request: NextRequest) {
           topics: document.topics,
           extractedText: extractedText.substring(0, 500), // Preview first 500 chars in response
           type: document.type,
+          processingStatus: document.processingStatus,
           createdAt: document.createdAt,
         },
       },

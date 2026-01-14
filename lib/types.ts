@@ -10,6 +10,9 @@ export interface Document {
   originalFileName: string
   extractedText: string
   type: "study-material" | "answer-script"
+  processingStatus: "pending" | "processing" | "completed" | "failed"
+  processingError?: string | null
+  topics?: string[]
   createdAt: string
 }
 

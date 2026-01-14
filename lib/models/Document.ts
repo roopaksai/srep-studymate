@@ -26,6 +26,16 @@ const documentSchema = new mongoose.Schema(
       default: "study-material",
       index: true,
     },
+    processingStatus: {
+      type: String,
+      enum: ["pending", "processing", "completed", "failed"],
+      default: "pending",
+      index: true,
+    },
+    processingError: {
+      type: String,
+      default: null,
+    },
     deletedAt: {
       type: Date,
       default: null,

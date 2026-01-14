@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     // Fetch documents with pagination and lean queries for performance
     const [documents, total] = await Promise.all([
       Document.find({ userId: payload.userId })
-        .select('originalFileName type topics createdAt')
+        .select('originalFileName type topics processingStatus processingError createdAt')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)

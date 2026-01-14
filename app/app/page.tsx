@@ -24,6 +24,9 @@ interface Document {
   _id: string
   originalFileName: string
   type: string
+  processingStatus?: "pending" | "processing" | "completed" | "failed"
+  processingError?: string
+  topics?: string[]
   createdAt: string
 }
 
@@ -392,7 +395,24 @@ export default function DashboardPage() {
                       <div className="flex justify-between items-start gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-sm text-[#0F172A] dark:text-white mb-1 leading-snug">{doc.originalFileName}</p>
+                        <div className="flex items-center gap-2">
                           <p className="text-xs text-[#64748B] dark:text-gray-400 font-medium">{new Date(doc.createdAt).toLocaleDateString()}</p>
+                          {doc.processingStatus === "processing" && (
+                            <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                              <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Processing
+                            </span>
+                          )}
+                          {doc.processingStatus === "pending" && (
+                            <span className="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 px-2 py-0.5 rounded-full font-semibold">Pending</span>
+                          )}
+                          {doc.processingStatus === "failed" && (
+                            <span className="text-xs bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full font-semibold">Failed</span>
+                          )}
+                        </div>
                         </div>
                         <span className="text-xs bg-[#F1F5F9] dark:bg-gray-700 text-[#334155] dark:text-gray-300 px-2.5 py-1 rounded-full whitespace-nowrap font-semibold flex-shrink-0">{doc.type}</span>
                       </div>
@@ -429,7 +449,24 @@ export default function DashboardPage() {
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-sm text-[#0F172A] dark:text-white mb-2 line-clamp-2 leading-tight">{doc.originalFileName}</p>
                           <div className="flex items-center justify-between gap-2">
-                            <p className="text-xs text-[#64748B] dark:text-gray-400 font-medium">{new Date(doc.createdAt).toLocaleDateString()}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-[#64748B] dark:text-gray-400 font-medium">{new Date(doc.createdAt).toLocaleDateString()}</p>
+                              {doc.processingStatus === "processing" && (
+                                <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-lg font-semibold flex items-center gap-1">
+                                  <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Processing
+                                </span>
+                              )}
+                              {doc.processingStatus === "pending" && (
+                                <span className="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 px-2 py-0.5 rounded-lg font-semibold">Pending</span>
+                              )}
+                              {doc.processingStatus === "failed" && (
+                                <span className="text-xs bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-lg font-semibold">Failed</span>
+                              )}
+                            </div>
                             <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded-lg font-semibold whitespace-nowrap">{doc.type}</span>
                           </div>
                         </div>
