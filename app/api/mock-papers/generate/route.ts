@@ -19,29 +19,25 @@ async function generateQuestionsWithAI(
   text: string,
   questionType: 'mcq' | 'descriptive' | 'mixed'
 ): Promise<Question[]> {
-  try {
-    const apiKey = config.ai.apiKey
-    if (!apiKey) {
-      throw new Error(`${config.ai.provider} API key not configured`)
-    }
+  const apiKey = config.ai.apiKey
+  if (!apiKey) {
+    throw new Error(`${config.ai.provider} API key not configured`)
+  }
 
-    // Use full text prepared for AI instead of just first 3500 chars
-    const preparedText = prepareTextForAI(text, 12000)
+  // Use full text prepared for AI instead of just first 3500 chars
+  const preparedText = prepareTextForAI(text, 12000)
 
-    // Try primary model first, then fallback model
-    const models = [
-      { model: config.ai.model, name: 'primary' },
-      { model: 'google/gemma-3-27b-it:free', name: 'fallback' }
-    ]
+  // Try primary model first, then fallback model
+  const models = [
+    { model: config.ai.model, name: 'primary' },
+    { model: 'google/gemma-3-27b-it:free', name: 'fallback' }
+  ]
 
-    for (const modelConfig of models) {
-      logger.info(`Attempting question generation with ${modelConfig.name} model`, { model: modelConfig.model })
+  // Define prompts based on question type
+  let systemPrompt = ""
 
-    // Define prompts based on question type
-    let systemPrompt = ""
-
-    if (questionType === "mcq") {
-      systemPrompt = `You are an expert exam question creator. Generate EXACTLY 10 Multiple Choice Questions (MCQ) that comprehensively cover the entire study material.
+  if (questionType === "mcq") {
+    systemPrompt = `You are an expert exam question creator. Generate EXACTLY 10 Multiple Choice Questions (MCQ) that comprehensively cover the entire study material.
 
 IMPORTANT: Generate ONLY MCQ questions. Do NOT generate any descriptive or other question types.
 
@@ -64,9 +60,8 @@ Example format:
 ]
 
 Make questions that test understanding, application, and analysis across all topics from the document. Ensure options are clear, unambiguous, and test different concepts.`
-      questionCount = 10
-    } else if (questionType === "descriptive") {
-      systemPrompt = `You are an expert exam question creator. Generate EXACTLY 10 descriptive/long-answer questions that comprehensively cover the ENTIRE study material.
+  } else if (questionType === "descriptive") {
+    systemPrompt = `You are an expert exam question creator. Generate EXACTLY 10 descriptive/long-answer questions that comprehensively cover the ENTIRE study material.
 
 IMPORTANT: Generate ONLY descriptive questions. Do NOT generate any MCQ or other question types.
 
@@ -91,10 +86,9 @@ Create questions that:
 - Are balanced across the material (don't focus on just one area)
 
 Ensure all 10 questions together cover the complete study material.`
-      questionCount = 10
-    } else {
-      // mixed
-      systemPrompt = `You are an expert exam question creator. Generate 10 exam questions from the study material with a balanced mix:
+  } else {
+    // mixed
+    systemPrompt = `You are an expert exam question creator. Generate 10 exam questions from the study material with a balanced mix:
 - 4-5 MCQ questions (4 marks each, provide 4 options and correctAnswer as "A", "B", "C", or "D")
 - 2-3 short-answer questions (5 marks each)
 - 2-3 descriptive/long-answer questions (10 marks each)
@@ -107,12 +101,15 @@ Return ONLY a JSON array with objects containing:
 - correctAnswer: "A", "B", "C", or "D" (only for MCQ)
 
 Ensure questions test understanding, application, and analysis.`
-    }
+  }
 
-    // Use the working model with retry logic
-    let lastError = null
-    const maxRetries = 3
-    
+  // Try each model
+  let lastError: Error | null = null
+  const maxRetries = 3
+
+  for (const modelConfig of models) {
+    logger.info(`Attempting question generation with ${modelConfig.name} model`, { model: modelConfig.model })
+
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         if (attempt > 0) {
@@ -121,19 +118,15 @@ Ensure questions test understanding, application, and analysis.`
           logger.debug('Waiting before retry', { waitTime, attempt })
           await new Promise(resolve => setTimeout(resolve, waitTime))
         }
-        
-        logger.debug('Mock paper generation attempt', { attempt: attempt + 1, maxRetries })
-        
+
+        logger.debug('Mock paper generation attempt', { attempt: attempt + 1, maxRetries, model: modelConfig.name })
+
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
         }
 
-        // Add appropriate authorization header based on provider
-        if (config.ai.provider === "openai") {
-          headers["Authorization"] = `Bearer ${apiKey}`
-        } else {
-          headers["Authorization"] = `Bearer ${apiKey}`
-        }
+        // Add appropriate authorization header
+        headers["Authorization"] = `Bearer ${apiKey}`
 
         const response = await fetch(`${config.ai.apiUrl}/chat/completions`, {
           method: "POST",
@@ -150,16 +143,16 @@ Ensure questions test understanding, application, and analysis.`
                 content: `Create exam questions from this material:\n\n${preparedText}\n\nREMEMBER: Generate questions ONLY from the above material. Do NOT generate generic questions.`,
               },
             ],
-            temperature: 0.3, // Lower temperature for more consistent output
+            temperature: 0.3,
             max_tokens: 2000,
           }),
         })
 
         if (!response.ok) {
           const errorText = await response.text()
-          logger.error('AI API error', { status: response.status, statusText: response.statusText, errorText })
-          lastError = new Error(`AI API failed: ${response.status} ${response.statusText}`)
-          
+          logger.error('AI API error', { status: response.status, statusText: response.statusText, model: modelConfig.name })
+          lastError = new Error(`AI API failed: ${response.status}`)
+
           // Retry on rate limit or server errors
           if ((response.status === 429 || response.status >= 500) && attempt < maxRetries - 1) {
             logger.info('Rate limited or server error, retrying', { status: response.status, attempt })
@@ -183,51 +176,46 @@ Ensure questions test understanding, application, and analysis.`
           // Filter to ensure only the requested type and valid questions
           const filtered = questions.filter((q) => {
             if (!q.text || typeof q.marks !== 'number' || !q.type) return false
-            
+
             // Ensure type matches what was requested
             if (questionType === 'mcq' && q.type !== 'mcq') return false
             if (questionType === 'descriptive' && q.type !== 'descriptive') return false
-            
+
             // For MCQ, ensure it has options and correctAnswer
             if (questionType === 'mcq' && (!q.options || !q.correctAnswer)) return false
-            
+
             return true
           })
-          
+
           // Take only the first 10 questions of the correct type
           const finalQuestions = filtered.slice(0, 10)
-          
+
           if (finalQuestions.length >= 10) {
             logger.info('Successfully generated questions', { count: finalQuestions.length, type: questionType, model: modelConfig.name })
             return finalQuestions
           }
-          
+
           // If we didn't get enough questions, retry with this model
           throw new Error(`Only got ${finalQuestions.length} valid questions, need 10`)
         }
 
         throw new Error("Failed to parse AI response - no JSON array found")
-        
       } catch (error) {
-        lastError = error
-        logger.warn('Generation attempt failed', { attempt: attempt + 1, model: modelConfig.name, error: error instanceof Error ? error.message : String(error) })
-        
+        lastError = error instanceof Error ? error : new Error(String(error))
+        logger.warn('Generation attempt failed', { attempt: attempt + 1, model: modelConfig.name, error: lastError.message })
+
         // If this was the last attempt with this model, try next model
         if (attempt === maxRetries - 1) {
-          logger.info(`${modelConfig.name} model failed after ${maxRetries} attempts, trying next model`, { model: modelConfig.model })
+          logger.info(`${modelConfig.name} model failed after ${maxRetries} attempts, trying next model`)
           break // Break out of retry loop, try next model
         }
       }
     }
-    
-    // Throw if all models failed
-    throw lastError || new Error("All models failed to generate questions")
-  } catch (error) {
-    logger.error('AI generation failed completely', { error: error instanceof Error ? error.message : String(error), type: questionType })
-    
-    // Throw error to be handled by POST handler
-    throw error
   }
+
+  // All models failed
+  logger.error('All models failed to generate questions', { type: questionType, error: lastError?.message })
+  throw lastError || new Error("All models failed to generate questions")
 }
 
 export async function POST(request: NextRequest) {
