@@ -219,7 +219,10 @@ Ensure questions test understanding, application, and analysis.`
         }
       }
     }
-    } catch (error) {
+    
+    // Throw if all models failed
+    throw lastError || new Error("All models failed to generate questions")
+  } catch (error) {
     logger.error('AI generation failed completely', { error: error instanceof Error ? error.message : String(error), type: questionType })
     
     // Throw error to be handled by POST handler
