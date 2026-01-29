@@ -4,6 +4,8 @@ import Document from "@/lib/models/Document"
 import MockPaper from "@/lib/models/MockPaper"
 import { verifyToken } from "@/lib/auth"
 import { logger } from "@/lib/logger"
+import { config } from "@/lib/config"
+import { prepareTextForAI } from "@/lib/utils"
 
 interface Question {
   text: string
@@ -18,10 +20,13 @@ async function generateQuestionsWithAI(
   questionType: 'mcq' | 'descriptive' | 'mixed'
 ): Promise<Question[]> {
   try {
-    const apiKey = process.env.OPENROUTER_API_KEY
+    const apiKey = config.ai.apiKey
     if (!apiKey) {
-      throw new Error("OPENROUTER_API_KEY not configured")
+      throw new Error(`${config.ai.provider} API key not configured`)
     }
+
+    // Use full text prepared for AI instead of just first 3500 chars
+    const preparedText = prepareTextForAI(text, 12000)
 
     // Define prompts based on question type
     let systemPrompt = ""
@@ -111,16 +116,22 @@ Ensure questions test understanding, application, and analysis.`
         
         logger.debug('Mock paper generation attempt', { attempt: attempt + 1, maxRetries })
         
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        }
+
+        // Add appropriate authorization header based on provider
+        if (config.ai.provider === "openai") {
+          headers["Authorization"] = `Bearer ${apiKey}`
+        } else {
+          headers["Authorization"] = `Bearer ${apiKey}`
+        }
+
+        const response = await fetch(`${config.ai.apiUrl}/chat/completions`, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "http://localhost:3000",
-            "X-Title": "SREP StudyMate",
-          },
+          headers,
           body: JSON.stringify({
-            model: "openai/gpt-3.5-turbo",
+            model: config.ai.model,
             messages: [
               {
                 role: "system",
@@ -128,18 +139,18 @@ Ensure questions test understanding, application, and analysis.`
               },
               {
                 role: "user",
-                content: `Create exam questions from this material:\n\n${text.substring(0, 3500)}`,
+                content: `Create exam questions from this material:\n\n${preparedText}`,
               },
             ],
-            temperature: 0.7,
+            temperature: config.ai.temperature,
             max_tokens: 2000,
           }),
         })
 
         if (!response.ok) {
           const errorText = await response.text()
-          logger.error('OpenRouter API error', { status: response.status, statusText: response.statusText, errorText })
-          lastError = new Error(`OpenRouter API failed: ${response.status} ${response.statusText}`)
+          logger.error('AI API error', { status: response.status, statusText: response.statusText, errorText })
+          lastError = new Error(`AI API failed: ${response.status} ${response.statusText}`)
           
           // Retry on rate limit or server errors
           if ((response.status === 429 || response.status >= 500) && attempt < maxRetries - 1) {

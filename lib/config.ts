@@ -6,8 +6,11 @@
 export const config = {
   // AI Configuration
   ai: {
+    // Provider: 'openrouter', 'openai', 'anthropic', 'google', etc.
+    provider: process.env.AI_PROVIDER || "openrouter",
     model: process.env.AI_MODEL || "openai/gpt-3.5-turbo",
-    apiKey: process.env.OPENROUTER_API_KEY || "",
+    apiKey: process.env.AI_API_KEY || process.env.OPENROUTER_API_KEY || "",
+    apiUrl: process.env.AI_API_URL || "https://openrouter.ai/api/v1",
     maxRetries: 3,
     timeout: 30000, // 30 seconds
     temperature: 0.7,
@@ -107,7 +110,7 @@ export const config = {
  */
 export function validateConfig() {
   const required = [
-    { key: "OPENROUTER_API_KEY", value: config.ai.apiKey },
+    { key: "AI_API_KEY or OPENROUTER_API_KEY", value: config.ai.apiKey },
     { key: "MONGODB_URI", value: config.database.uri },
     { key: "JWT_SECRET", value: config.auth.jwtSecret },
   ]

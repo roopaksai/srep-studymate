@@ -2,23 +2,36 @@ import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import Document from "@/lib/models/Document"
 import { verifyToken } from "@/lib/auth"
+import { config } from "@/lib/config"
+import { prepareTextForAI } from "@/lib/utils"
 
 async function identifyTopics(text: string): Promise<string[]> {
   try {
-    const apiKey = process.env.OPENROUTER_API_KEY
+    const apiKey = config.ai.apiKey
     if (!apiKey) {
-      console.warn("OPENROUTER_API_KEY not configured, returning empty topics")
+      console.warn(`${config.ai.provider} API key not configured, returning empty topics`)
       return []
     }
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    // Use full text prepared for AI, not just first 3000 chars
+    const preparedText = prepareTextForAI(text, 12000)
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    }
+
+    // Add appropriate authorization header based on provider
+    if (config.ai.provider === "openai") {
+      headers["Authorization"] = `Bearer ${apiKey}`
+    } else {
+      headers["Authorization"] = `Bearer ${apiKey}`
+    }
+
+    const response = await fetch(`${config.ai.apiUrl}/chat/completions`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
-        model: "qwen/qwen3-coder:free",
+        model: config.ai.model,
         messages: [
           {
             role: "system",
@@ -33,14 +46,17 @@ async function identifyTopics(text: string): Promise<string[]> {
           },
           {
             role: "user",
-            content: `Analyze this study material and extract the main topics being discussed. Focus on the actual content, not just headings:\n\n${text.substring(0, 3000)}`,
+            content: `Analyze this study material and extract the main topics being discussed. Focus on the actual content, not just headings:\n\n${preparedText}`,
           },
         ],
+        temperature: config.ai.temperature,
+        max_tokens: 1000,
       }),
     })
 
     if (!response.ok) {
-      throw new Error(`OpenRouter API error: ${response.status}`)
+      const errorData = await response.text()
+      throw new Error(`AI API error (${response.status}): ${errorData}`)
     }
 
     const data = await response.json()

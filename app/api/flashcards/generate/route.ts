@@ -6,28 +6,37 @@ import { secureRoute, addSecurityHeaders } from "@/lib/security"
 import { validateRequest, generateFlashcardsSchema, isValidObjectId } from "@/lib/validation"
 import { rateLimitConfigs } from "@/lib/rateLimit"
 import { logger } from "@/lib/logger"
+import { config } from "@/lib/config"
+import { prepareTextForAI } from "@/lib/utils"
 
 async function generateFlashcardsWithAI(text: string): Promise<{ question: string; answer: string }[]> {
   try {
-    const apiKey = process.env.OPENROUTER_API_KEY
+    const apiKey = config.ai.apiKey
     if (!apiKey) {
-      throw new Error("OPENROUTER_API_KEY not configured")
+      throw new Error(`${config.ai.provider} API key not configured`)
     }
+
+    // Use full text prepared for AI instead of just first 3500 chars
+    const preparedText = prepareTextForAI(text, 12000)
 
     const systemPrompt = "You are an expert educator creating flashcards. Generate 10-12 high-quality flashcards from the provided study material. Cover all important concepts, definitions, and key facts. Return ONLY a JSON array with objects containing 'question' and 'answer' fields. Make questions clear and concise, and answers detailed but focused."
 
-    const userPrompt = `Create flashcards from this study material:\n\n${text.substring(0, 3500)}`
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    }
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    // Add appropriate authorization header based on provider
+    if (config.ai.provider === "openai") {
+      headers["Authorization"] = `Bearer ${apiKey}`
+    } else {
+      headers["Authorization"] = `Bearer ${apiKey}`
+    }
+
+    const response = await fetch(`${config.ai.apiUrl}/chat/completions`, {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
-        "X-Title": "SREP StudyMate",
-      },
+      headers,
       body: JSON.stringify({
-        model: "openai/gpt-3.5-turbo",
+        model: config.ai.model,
         messages: [
           {
             role: "system",
@@ -35,16 +44,16 @@ async function generateFlashcardsWithAI(text: string): Promise<{ question: strin
           },
           {
             role: "user",
-            content: userPrompt,
+            content: `Create flashcards from this study material:\n\n${preparedText}`,
           },
         ],
-        temperature: 0.7,
-        max_tokens: 1500,
+        temperature: config.ai.temperature,
+        max_tokens: 2000,
       }),
     })
 
     if (!response.ok) {
-      throw new Error(`OpenRouter API failed: ${response.statusText}`)
+      throw new Error(`AI API failed: ${response.statusText}`)
     }
 
     const data = await response.json()
