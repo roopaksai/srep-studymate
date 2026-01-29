@@ -216,16 +216,8 @@ Ensure questions test understanding, application, and analysis.`
   } catch (error) {
     logger.error('AI generation failed completely', { error: error instanceof Error ? error.message : String(error), type: questionType })
     
-    // Instead of returning generic fallback questions, return error
-    // This prevents returning irrelevant questions
-    return NextResponse.json(
-      { 
-        error: "Failed to generate questions from document", 
-        details: error instanceof Error ? error.message : String(error),
-        suggestion: "Please try again or reattempt the generation"
-      },
-      { status: 500 }
-    )
+    // Throw error to be handled by POST handler
+    throw error
   }
 }
 
@@ -335,7 +327,17 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     )
   } catch (error) {
-    logger.error('Generate mock paper error', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined })
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logger.error('Generate mock paper error', { error: errorMessage, stack: error instanceof Error ? error.stack : undefined })
+    
+    // Return more specific error message
+    return NextResponse.json(
+      { 
+        error: "Failed to generate questions from document",
+        details: errorMessage,
+        suggestion: "Please try again or reattempt the generation"
+      }, 
+      { status: 500 }
+    )
   }
 }
