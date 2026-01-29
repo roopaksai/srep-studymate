@@ -139,10 +139,10 @@ Ensure questions test understanding, application, and analysis.`
               },
               {
                 role: "user",
-                content: `Create exam questions from this material:\n\n${preparedText}`,
+                content: `Create exam questions from this material:\n\n${preparedText}\n\nREMEMBER: Generate questions ONLY from the above material. Do NOT generate generic questions.`,
               },
             ],
-            temperature: config.ai.temperature,
+            temperature: 0.3, // Lower temperature for more consistent output
             max_tokens: 2000,
           }),
         })
@@ -214,73 +214,18 @@ Ensure questions test understanding, application, and analysis.`
     // This shouldn't be reached, but just in case
     throw new Error("All retry attempts failed")
   } catch (error) {
-    logger.warn('AI generation failed, using fallback', { error: error instanceof Error ? error.message : String(error), type: questionType })
+    logger.error('AI generation failed completely', { error: error instanceof Error ? error.message : String(error), type: questionType })
     
-    // Fallback questions based on type
-    if (questionType === "mcq") {
-      return [
-        {
-          text: "What is the primary concept discussed in the material?",
-          marks: 4,
-          type: "mcq",
-          options: ["Basic fundamentals", "Advanced applications", "Historical context", "Future implications"],
-          correctAnswer: "A",
-        },
-        {
-          text: "Which of the following best describes the methodology?",
-          marks: 4,
-          type: "mcq",
-          options: ["Theoretical", "Practical", "Mixed approach", "Case-based"],
-          correctAnswer: "C",
-        },
-        {
-          text: "What is the main objective of the discussed approach?",
-          marks: 4,
-          type: "mcq",
-          options: ["Efficiency", "Accuracy", "Simplicity", "Scalability"],
-          correctAnswer: "B",
-        },
-      ]
-    } else if (questionType === "descriptive") {
-      return [
-        {
-          text: "Explain the main concepts covered in the study material in detail.",
-          marks: 10,
-          type: "descriptive",
-        },
-        {
-          text: "Analyze the relationships between different topics discussed and their practical implications.",
-          marks: 12,
-          type: "descriptive",
-        },
-        {
-          text: "Compare and contrast the key methodologies presented in the material.",
-          marks: 15,
-          type: "descriptive",
-        },
-      ]
-    } else {
-      // mixed fallback
-      return [
-        {
-          text: "What is the primary concept discussed in the material?",
-          marks: 4,
-          type: "mcq",
-          options: ["Basic fundamentals", "Advanced applications", "Historical context", "Future implications"],
-          correctAnswer: "A",
-        },
-        {
-          text: "Explain the main concepts covered in the study material.",
-          marks: 10,
-          type: "descriptive",
-        },
-        {
-          text: "Define the important terms mentioned in the text.",
-          marks: 5,
-          type: "short-answer",
-        },
-      ]
-    }
+    // Instead of returning generic fallback questions, return error
+    // This prevents returning irrelevant questions
+    return NextResponse.json(
+      { 
+        error: "Failed to generate questions from document", 
+        details: error instanceof Error ? error.message : String(error),
+        suggestion: "Please try again or reattempt the generation"
+      },
+      { status: 500 }
+    )
   }
 }
 
