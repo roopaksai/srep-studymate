@@ -28,9 +28,17 @@ async function generateQuestionsWithAI(
     // Use full text prepared for AI instead of just first 3500 chars
     const preparedText = prepareTextForAI(text, 12000)
 
+    // Try primary model first, then fallback model
+    const models = [
+      { model: config.ai.model, name: 'primary' },
+      { model: 'google/gemma-3-27b-it:free', name: 'fallback' }
+    ]
+
+    for (const modelConfig of models) {
+      logger.info(`Attempting question generation with ${modelConfig.name} model`, { model: modelConfig.model })
+
     // Define prompts based on question type
     let systemPrompt = ""
-    let questionCount = 10
 
     if (questionType === "mcq") {
       systemPrompt = `You are an expert exam question creator. Generate EXACTLY 10 Multiple Choice Questions (MCQ) that comprehensively cover the entire study material.
@@ -131,7 +139,7 @@ Ensure questions test understanding, application, and analysis.`
           method: "POST",
           headers,
           body: JSON.stringify({
-            model: config.ai.model,
+            model: modelConfig.model,
             messages: [
               {
                 role: "system",
@@ -190,11 +198,11 @@ Ensure questions test understanding, application, and analysis.`
           const finalQuestions = filtered.slice(0, 10)
           
           if (finalQuestions.length >= 10) {
-            logger.info('Successfully generated questions', { count: finalQuestions.length, type: questionType })
+            logger.info('Successfully generated questions', { count: finalQuestions.length, type: questionType, model: modelConfig.name })
             return finalQuestions
           }
           
-          // If we didn't get enough questions, retry
+          // If we didn't get enough questions, retry with this model
           throw new Error(`Only got ${finalQuestions.length} valid questions, need 10`)
         }
 
@@ -202,18 +210,16 @@ Ensure questions test understanding, application, and analysis.`
         
       } catch (error) {
         lastError = error
-        logger.warn('Generation attempt failed', { attempt: attempt + 1, error: error instanceof Error ? error.message : String(error) })
+        logger.warn('Generation attempt failed', { attempt: attempt + 1, model: modelConfig.name, error: error instanceof Error ? error.message : String(error) })
         
-        // If this was the last attempt, throw
+        // If this was the last attempt with this model, try next model
         if (attempt === maxRetries - 1) {
-          throw error
+          logger.info(`${modelConfig.name} model failed after ${maxRetries} attempts, trying next model`, { model: modelConfig.model })
+          break // Break out of retry loop, try next model
         }
       }
     }
-    
-    // This shouldn't be reached, but just in case
-    throw new Error("All retry attempts failed")
-  } catch (error) {
+    } catch (error) {
     logger.error('AI generation failed completely', { error: error instanceof Error ? error.message : String(error), type: questionType })
     
     // Throw error to be handled by POST handler
