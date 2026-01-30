@@ -24,83 +24,121 @@ async function generateQuestionsWithAI(
     throw new Error(`${config.ai.provider} API key not configured`)
   }
 
-  // Use full text prepared for AI instead of just first 3500 chars
-  const preparedText = prepareTextForAI(text, 12000)
+  logger.info('AI Config', { 
+    provider: config.ai.provider,
+    model: config.ai.model,
+    apiUrl: config.ai.apiUrl,
+    hasApiKey: !!apiKey,
+    apiKeyLength: apiKey.length,
+    apiKeyStart: apiKey.substring(0, 20) + '...'
+  })
+
+// Use prepared text (6000 chars optimal for free models - balances quality vs hallucination)
+    const preparedText = prepareTextForAI(text, 6000)
 
   // Define prompts based on question type
   let systemPrompt = ""
 
   if (questionType === "mcq") {
-    systemPrompt = `You are an expert exam question creator. Generate EXACTLY 10 Multiple Choice Questions (MCQ) that comprehensively cover the entire study material.
+    systemPrompt = `You are an expert MCQ question creator for academic exams. Your ONLY task is to generate Multiple Choice Questions based STRICTLY on the provided study material.
 
-IMPORTANT: Generate ONLY MCQ questions. Do NOT generate any descriptive or other question types.
+CRITICAL RULES:
+1. Generate EXACTLY 10 MCQ questions - no more, no fewer
+2. EVERY question must be directly traceable to the provided material
+3. Each question tests factual knowledge and conceptual understanding
+4. Create diverse, challenging options that test different aspects of knowledge
+5. Do NOT create generic or common knowledge questions
+6. Return ONLY valid JSON array - no other text
 
-Return ONLY a valid JSON array with EXACTLY 10 objects, each containing:
-- text: the question (string)
-- marks: 4 (integer - all MCQ questions are 4 marks)
-- type: "mcq" (string - must be exactly "mcq")
-- options: array of exactly 4 strings (different options, make them challenging and distinct)
-- correctAnswer: "A" or "B" or "C" or "D" (string - must be one of these)
-
-Example format:
+JSON Format (MUST be valid):
 [
   {
-    "text": "What is the primary concept?",
+    "text": "Question from the material only?",
     "marks": 4,
     "type": "mcq",
-    "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+    "options": ["A) First option", "B) Second option", "C) Third option", "D) Fourth option"],
     "correctAnswer": "A"
   }
+  ... 9 more questions ...
 ]
 
-Make questions that test understanding, application, and analysis across all topics from the document. Ensure options are clear, unambiguous, and test different concepts.`
+Guidelines for options:
+- Provide exactly 4 options labeled A), B), C), D)
+- One option is correct, three are plausible but incorrect
+- Incorrect options should be subtle but clearly wrong
+- Avoid "all of the above" or "none of the above"`
   } else if (questionType === "descriptive") {
-    systemPrompt = `You are an expert exam question creator. Generate EXACTLY 10 descriptive/long-answer questions that comprehensively cover the ENTIRE study material.
+    systemPrompt = `You are an expert descriptive question creator for academic exams. Your ONLY task is to generate long-answer questions based STRICTLY on the provided study material.
 
-IMPORTANT: Generate ONLY descriptive questions. Do NOT generate any MCQ or other question types.
+CRITICAL RULES:
+1. Generate EXACTLY 10 descriptive/long-answer questions - no more, no fewer
+2. EVERY question must be directly traceable to concepts in the provided material
+3. Questions should require detailed explanations, analysis, and synthesis
+4. Each question targets different key concepts or sections from the material
+5. Do NOT create generic knowledge questions outside the material
+6. Return ONLY valid JSON array - no other text
 
-Return ONLY a valid JSON array with EXACTLY 10 objects, each containing:
-- text: the question (string)
-- marks: 10 (integer - all questions are 10 marks)
-- type: "descriptive" (string - must be exactly "descriptive")
-
-Example format:
+JSON Format (MUST be valid):
 [
   {
-    "text": "Explain the main concept in detail.",
+    "text": "Explain [concept from material] with examples and analysis",
     "marks": 10,
     "type": "descriptive"
   }
+  ... 9 more questions ...
 ]
 
-Create questions that:
-- Cover different sections/topics from the entire document
-- Require detailed explanations, analysis, comparisons
-- Test conceptual understanding, application, and critical thinking
-- Are balanced across the material (don't focus on just one area)
-
-Ensure all 10 questions together cover the complete study material.`
+Question characteristics:
+- Require 300-500 word answers demonstrating deep understanding
+- Cover different sections/themes from the provided material
+- Test analysis, synthesis, comparison, evaluation
+- Each question should be answerable ONLY from the material provided
+- Avoid asking for information outside the scope of the material`
   } else {
     // mixed
-    systemPrompt = `You are an expert exam question creator. Generate 10 exam questions from the study material with a balanced mix:
-- 4-5 MCQ questions (4 marks each, provide 4 options and correctAnswer as "A", "B", "C", or "D")
-- 2-3 short-answer questions (5 marks each)
-- 2-3 descriptive/long-answer questions (10 marks each)
+    systemPrompt = `You are an expert exam question creator. Generate exactly 10 exam questions mixing question types, based STRICTLY on the provided study material.
 
-Return ONLY a JSON array with objects containing:
-- text: the question
-- marks: integer (4 for MCQ, 5 for short-answer, 10 for descriptive)
-- type: "mcq", "short-answer", or "descriptive"
-- options: array of 4 strings (only for MCQ)
-- correctAnswer: "A", "B", "C", or "D" (only for MCQ)
+QUESTION MIX:
+- 4 MCQ questions (4 marks each)
+- 3 short-answer questions (5 marks each)
+- 3 descriptive questions (10 marks each)
 
-Ensure questions test understanding, application, and analysis.`
+CRITICAL RULES:
+1. Generate EXACTLY 10 questions in the mix above
+2. EVERY question must come directly from the provided study material
+3. Do NOT generate generic or common knowledge questions
+4. Return ONLY valid JSON array - no other text
+5. Test diverse aspects and concepts from the material
+
+JSON Format (MUST be valid):
+[
+  {
+    "text": "MCQ question from material?",
+    "marks": 4,
+    "type": "mcq",
+    "options": ["A) Option", "B) Option", "C) Option", "D) Option"],
+    "correctAnswer": "A"
+  },
+  {
+    "text": "Short answer question from material",
+    "marks": 5,
+    "type": "short-answer"
+  },
+  {
+    "text": "Descriptive question requiring detailed explanation from material",
+    "marks": 10,
+    "type": "descriptive"
+  },
+  ... 7 more questions following the pattern ...
+]
+
+Order: MCQ (4) → Short-answer (3) → Descriptive (3)`
   }
 
-  // Try each model - all FREE models only
+  // Try each model - all FREE models only (Llama 3.3 > GPT-3.5 quality)
   const models = [
-    { model: 'qwen/qwen3-coder:free', name: 'primary' },
-    { model: 'google/gemma-3-27b-it:free', name: 'fallback' }
+    { model: 'meta-llama/llama-3.3-70b-instruct', name: 'primary' },
+    { model: 'qwen/qwen3-coder:free', name: 'fallback' }
   ]
 
   let lastError: Error | null = null
@@ -139,7 +177,7 @@ Ensure questions test understanding, application, and analysis.`
               },
               {
                 role: "user",
-                content: `Create exam questions from this material:\n\n${preparedText}\n\nREMEMBER: Generate questions ONLY from the above material. Do NOT generate generic questions.`,
+                content: `STUDY MATERIAL TO CREATE QUESTIONS FROM:\n\n${preparedText}\n\n\nIMPORTANT INSTRUCTIONS:\n- Create questions ONLY about the above material\n- Do NOT create generic questions\n- Do NOT add information not in the material\n- Ensure every question is directly from this material\n- Generate the exact format specified in system prompt\n- Start response with [ and end with ]\n- Return ONLY JSON, no explanations`,
               },
             ],
             temperature: 0.3,

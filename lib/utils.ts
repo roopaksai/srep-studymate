@@ -7,9 +7,9 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Process text for AI with intelligent chunking and token estimation
- * Intelligently chunks large texts while preserving context
+ * Optimized for free models: smaller context (6000) = less hallucination, better quality
  */
-export function prepareTextForAI(text: string, maxLength: number = 12000): string {
+export function prepareTextForAI(text: string, maxLength: number = 6000): string {
   if (!text) return ''
   
   // If text is within limit, return as-is

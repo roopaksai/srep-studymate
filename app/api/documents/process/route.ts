@@ -13,8 +13,8 @@ async function identifyTopics(text: string): Promise<string[]> {
       return []
     }
 
-    // Use full text prepared for AI, not just first 3000 chars
-    const preparedText = prepareTextForAI(text, 12000)
+    // Use full text prepared for AI (6000 chars optimal)
+    const preparedText = prepareTextForAI(text, 6000)
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",

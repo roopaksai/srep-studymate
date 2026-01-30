@@ -6,9 +6,10 @@
 export const config = {
   // AI Configuration
   ai: {
-    // Provider: 'openrouter', 'openai', 'anthropic', 'google', etc.
+    // Provider: 'openrouter' (free models via OpenRouter)
     provider: process.env.AI_PROVIDER || "openrouter",
-    model: process.env.AI_MODEL || "openai/gpt-3.5-turbo",
+    // Default to Llama 3.3 70B (free, high quality, better than GPT-3.5)
+    model: process.env.AI_MODEL || "meta-llama/llama-3.3-70b-instruct",
     apiKey: process.env.AI_API_KEY || process.env.OPENROUTER_API_KEY || "",
     apiUrl: process.env.AI_API_URL || "https://openrouter.ai/api/v1",
     maxRetries: 3,

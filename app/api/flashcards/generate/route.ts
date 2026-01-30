@@ -16,8 +16,8 @@ async function generateFlashcardsWithAI(text: string): Promise<{ question: strin
       throw new Error(`${config.ai.provider} API key not configured`)
     }
 
-    // Use full text prepared for AI instead of just first 3500 chars
-    const preparedText = prepareTextForAI(text, 12000)
+    // Use prepared text (6000 chars optimal for free models)
+    const preparedText = prepareTextForAI(text, 6000)
 
     const systemPrompt = "You are an expert educator creating flashcards. Generate 10-12 high-quality flashcards from the provided study material. Cover all important concepts, definitions, and key facts. Return ONLY a JSON array with objects containing 'question' and 'answer' fields. Make questions clear and concise, and answers detailed but focused."
 
