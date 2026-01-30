@@ -27,12 +27,6 @@ async function generateQuestionsWithAI(
   // Use full text prepared for AI instead of just first 3500 chars
   const preparedText = prepareTextForAI(text, 12000)
 
-  // Try primary model first, then fallback model
-  const models = [
-    { model: config.ai.model, name: 'primary' },
-    { model: 'google/gemma-3-27b-it:free', name: 'fallback' }
-  ]
-
   // Define prompts based on question type
   let systemPrompt = ""
 
