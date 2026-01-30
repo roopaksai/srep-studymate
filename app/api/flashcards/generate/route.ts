@@ -7,7 +7,7 @@ import { validateRequest, generateFlashcardsSchema, isValidObjectId } from "@/li
 import { rateLimitConfigs } from "@/lib/rateLimit"
 import { logger } from "@/lib/logger"
 import { config } from "@/lib/config"
-import { prepareTextForAI } from "@/lib/utils"
+import { prepareDocumentContent } from "@/lib/utils"
 
 async function generateFlashcardsWithAI(text: string): Promise<{ question: string; answer: string }[]> {
   try {
@@ -16,8 +16,8 @@ async function generateFlashcardsWithAI(text: string): Promise<{ question: strin
       throw new Error(`${config.ai.provider} API key not configured`)
     }
 
-    // Use prepared text (6000 chars optimal for free models)
-    const preparedText = prepareTextForAI(text, 6000)
+    // Prepare document content adaptively based on size
+    const preparedText = prepareDocumentContent(text)
 
     const systemPrompt = "You are an expert educator creating flashcards. Generate 10-12 high-quality flashcards from the provided study material. Cover all important concepts, definitions, and key facts. Return ONLY a JSON array with objects containing 'question' and 'answer' fields. Make questions clear and concise, and answers detailed but focused."
 

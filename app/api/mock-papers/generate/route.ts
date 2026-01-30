@@ -5,7 +5,7 @@ import MockPaper from "@/lib/models/MockPaper"
 import { verifyToken } from "@/lib/auth"
 import { logger } from "@/lib/logger"
 import { config } from "@/lib/config"
-import { prepareTextForAI } from "@/lib/utils"
+import { prepareDocumentContent } from "@/lib/utils"
 
 interface Question {
   text: string
@@ -33,8 +33,11 @@ async function generateQuestionsWithAI(
     apiKeyStart: apiKey.substring(0, 20) + '...'
   })
 
-// Use prepared text (6000 chars optimal for free models - balances quality vs hallucination)
-    const preparedText = prepareTextForAI(text, 6000)
+  // Prepare document content adaptively based on size
+  // Small docs (≤8 pages): use all, 6000 chars
+  // Medium docs (8-15 pages): use all, 7000 chars  
+  // Large docs (>15 pages): extract key sections, 8000 chars
+  const preparedText = prepareDocumentContent(text)
 
   // Define prompts based on question type
   let systemPrompt = ""

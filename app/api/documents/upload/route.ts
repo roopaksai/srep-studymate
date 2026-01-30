@@ -5,7 +5,7 @@ import { secureRoute, addSecurityHeaders } from "@/lib/security"
 import { validateFile, documentUploadSchema, validateRequest } from "@/lib/validation"
 import { rateLimitConfigs } from "@/lib/rateLimit"
 import { config } from "@/lib/config"
-import { prepareTextForAI } from "@/lib/utils"
+import { prepareDocumentContent } from "@/lib/utils"
 
 async function extractTextFromFile(file: File): Promise<string> {
   const fileBuffer = await file.arrayBuffer()
@@ -86,8 +86,10 @@ async function identifyTopics(text: string): Promise<string[]> {
       return []
     }
 
-    // Use the full text prepared for AI (6000 chars optimal)
-    const preparedText = prepareTextForAI(text, 6000)
+    // Prepare document content adaptively based on size
+    // Small docs: use all content
+    // Large docs: extract key sections
+    const preparedText = prepareDocumentContent(text)
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",

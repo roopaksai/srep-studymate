@@ -3,7 +3,7 @@ import connectDB from "@/lib/db"
 import Document from "@/lib/models/Document"
 import { verifyToken } from "@/lib/auth"
 import { config } from "@/lib/config"
-import { prepareTextForAI } from "@/lib/utils"
+import { prepareDocumentContent } from "@/lib/utils"
 
 async function identifyTopics(text: string): Promise<string[]> {
   try {
@@ -13,8 +13,8 @@ async function identifyTopics(text: string): Promise<string[]> {
       return []
     }
 
-    // Use full text prepared for AI (6000 chars optimal)
-    const preparedText = prepareTextForAI(text, 6000)
+    // Prepare document content adaptively based on size
+    const preparedText = prepareDocumentContent(text)
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
