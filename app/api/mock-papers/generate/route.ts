@@ -103,7 +103,12 @@ Return ONLY a JSON array with objects containing:
 Ensure questions test understanding, application, and analysis.`
   }
 
-  // Try each model
+  // Try each model - all FREE models only
+  const models = [
+    { model: 'qwen/qwen3-coder:free', name: 'primary' },
+    { model: 'google/gemma-3-27b-it:free', name: 'fallback' }
+  ]
+
   let lastError: Error | null = null
   const maxRetries = 3
 
