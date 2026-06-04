@@ -8,9 +8,60 @@ const documentSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    fileHash: {
+      type: String,
+      required: true,
+      index: true,
+    },
     originalFileName: {
       type: String,
       required: true,
+    },
+    title: {
+      type: String,
+      default: "",
+    },
+    sourceType: {
+      type: String,
+      enum: ["pdf", "docx", "doc", "txt"],
+      default: "pdf",
+      index: true,
+    },
+    pages: {
+      type: [
+        {
+          pageNumber: Number,
+          sections: [
+            {
+              heading: String,
+              content: [String],
+            },
+          ],
+        },
+      ],
+      default: [],
+    },
+    chunks: {
+      type: [
+        {
+          chunkId: String,
+          pageNumber: Number,
+          pageNumbers: [Number],
+          heading: String,
+          content: String,
+          wordCount: Number,
+        },
+      ],
+      default: [],
+    },
+    metadata: {
+      pages: { type: Number, default: 0 },
+      language: { type: String, default: "en" },
+      processedAt: { type: Date, default: null },
+      extractionMode: { type: String, default: "" },
+      scanned: { type: Boolean, default: false },
+      confidence: { type: Number, default: 1 },
+      warnings: { type: [String], default: [] },
     },
     extractedText: {
       type: String,
@@ -36,6 +87,11 @@ const documentSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    jobId: {
+      type: String,
+      default: null,
+      index: true,
+    },
     deletedAt: {
       type: Date,
       default: null,
@@ -52,6 +108,10 @@ documentSchema.pre(/^find/, function() {
 })
 
 // Compound indexes for common queries
+documentSchema.index(
+  { userId: 1, fileHash: 1 },
+  { unique: true, partialFilterExpression: { fileHash: { $type: "string" } } },
+)
 documentSchema.index({ userId: 1, type: 1 })
 documentSchema.index({ userId: 1, createdAt: -1 })
 documentSchema.index({ createdAt: -1 })

@@ -8,12 +8,48 @@ export interface Document {
   _id: string
   userId: string
   originalFileName: string
-  extractedText: string
+  fileHash?: string
+  title?: string
+  sourceType?: "pdf" | "docx" | "doc" | "txt"
   type: "study-material" | "answer-script"
   processingStatus: "pending" | "processing" | "completed" | "failed"
   processingError?: string | null
   topics?: string[]
+  pages?: Array<{
+    pageNumber: number
+    sections: Array<{
+      heading: string
+      content: string[]
+    }>
+  }>
+  chunks?: Array<{
+    chunkId: string
+    pageNumber: number
+    pageNumbers?: number[]
+    heading?: string
+    content: string
+    wordCount: number
+  }>
+  metadata?: {
+    pages?: number
+    language?: string
+    processedAt?: string
+    extractionMode?: string
+    scanned?: boolean
+    confidence?: number
+    warnings?: string[]
+  }
   createdAt: string
+}
+
+export interface DocumentJob {
+  jobId: string
+  documentId: string
+  resultId?: string
+  status: "processing" | "done" | "failed"
+  progress?: number
+  stage?: string
+  error?: string | null
 }
 
 export interface Flashcard {

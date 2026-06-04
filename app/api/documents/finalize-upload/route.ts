@@ -1,3 +1,4 @@
+import crypto from "crypto"
 import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import Document from "@/lib/models/Document"
@@ -7,48 +8,55 @@ import { rateLimitConfigs } from "@/lib/rateLimit"
 import { readFile, readdir, unlink, rmdir } from "fs/promises"
 import { join } from "path"
 import { tmpdir } from "os"
+import { config } from "@/lib/config"
+import { getDocumentSourceType, queueDocumentForProcessing } from "@/lib/documentUpload"
+import { extractPdfText, getPdfPageCount, type PdfPageData } from "@/lib/pdfExtractor"
+import { createStructuredDocumentFromPages, buildLegacyDocumentStructure } from "@/lib/documentPipeline"
 
-async function extractTextFromBuffer(buffer: Buffer, fileName: string): Promise<string> {
+interface ExtractResult {
+  text: string
+  pages?: PdfPageData[]
+}
+
+async function extractTextFromBuffer(buffer: Buffer, fileName: string): Promise<ExtractResult> {
   const fileNameLower = fileName.toLowerCase()
 
   try {
     if (fileNameLower.endsWith(".pdf")) {
-      // @ts-ignore
-      const pdfParse = (await import("pdf-parse-fork")).default
-      const data = await pdfParse(buffer)
-      return data.text || ""
+      const result = await extractPdfText(buffer)
+      return { text: result.text || "", pages: result.pages }
     } else if (fileNameLower.endsWith(".docx")) {
       const mammoth = await import("mammoth")
       const result = await mammoth.extractRawText({ buffer })
-      return result.value || ""
+      return { text: result.value || "" }
     } else if (fileNameLower.endsWith(".txt")) {
       const decoder = new TextDecoder("utf-8")
-      return decoder.decode(buffer)
+      return { text: decoder.decode(buffer) }
     } else {
       const decoder = new TextDecoder("utf-8")
-      return decoder.decode(buffer)
+      return { text: decoder.decode(buffer) }
     }
   } catch (error) {
     console.error("Text extraction error:", error)
-    return ""
+    return { text: "" }
   }
 }
 
 async function identifyTopics(text: string): Promise<string[]> {
   try {
-    const apiKey = process.env.OPENROUTER_API_KEY
+    const apiKey = config.ai.apiKey
     if (!apiKey) {
       return []
     }
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch(`${config.ai.apiUrl}/chat/completions`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "qwen/qwen3-coder:free",
+        model: config.ai.model,
         messages: [
           {
             role: "system",
@@ -133,6 +141,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       ))
     }
+    const documentType = validation.data.type
 
     if (!uploadId || !fileName) {
       return addSecurityHeaders(NextResponse.json({ error: "Missing required fields" }, { status: 400 }))
@@ -160,39 +169,104 @@ export async function POST(request: NextRequest) {
 
     console.log(`Merged ${chunkFiles.length} chunks, total size: ${(completeBuffer.length / (1024 * 1024)).toFixed(2)}MB`)
 
-    // Extract text
-    const extractedText = await extractTextFromBuffer(completeBuffer, fileName)
+    const sourceType = getDocumentSourceType({ name: fileName, type: fileName.endsWith(".pdf") ? "application/pdf" : "text/plain" } as File)
+    let pageCount: number | null = null
+    if (sourceType === "pdf") {
+      pageCount = await getPdfPageCount(completeBuffer)
+      if (pageCount > config.processing.maxPages) {
+        return addSecurityHeaders(NextResponse.json(
+          { error: `PDF exceeds maximum page limit of ${config.processing.maxPages}` },
+          { status: 400 },
+        ))
+      }
+    }
 
-    if (!extractedText || extractedText.trim().length === 0) {
-      // Cleanup
+    const uploadFile = new File([Buffer.from(completeBuffer)], fileName, {
+      type: sourceType === "pdf"
+        ? "application/pdf"
+        : sourceType === "docx"
+          ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          : sourceType === "doc"
+            ? "application/msword"
+            : "text/plain",
+    })
+
+    // Try Python processor first
+    try {
+      const queued = await queueDocumentForProcessing({
+        userId: security.userId,
+        file: uploadFile,
+        documentType,
+        pageCount,
+      })
+
+      // Cleanup chunks
       for (const chunkFile of chunkFiles) {
         await unlink(join(uploadDir, chunkFile)).catch(() => {})
       }
       await rmdir(uploadDir).catch(() => {})
-      
+
+      return addSecurityHeaders(NextResponse.json({
+        document: {
+          id: queued.documentId,
+          resultId: queued.resultId,
+          jobId: queued.jobId,
+          originalFileName: fileName,
+          type: documentType,
+          processingStatus: queued.status,
+        },
+        duplicate: queued.duplicate,
+      }, { status: queued.duplicate ? 200 : 202 }))
+    } catch (processorError) {
+      console.warn("Python processor unavailable, falling back to local extraction:", processorError)
+    }
+
+    // Fall back to local extraction
+    const { text: extractedText, pages: extractedPages } = await extractTextFromBuffer(completeBuffer, fileName)
+
+
+    if (!extractedText || extractedText.trim().length === 0) {
+      for (const chunkFile of chunkFiles) {
+        await unlink(join(uploadDir, chunkFile)).catch(() => {})
+      }
+      await rmdir(uploadDir).catch(() => {})
       return addSecurityHeaders(NextResponse.json(
         { error: "Could not extract text from file" },
         { status: 400 }
       ))
     }
 
-    // Save document
-    const document = new Document({
-      userId: security.userId,
-      originalFileName: fileName,
-      extractedText: extractedText.substring(0, 5000),
-      topics: [],
-      type: validation.data.type,
-      processingStatus: validation.data.type === "study-material" ? "pending" : "completed",
-    })
+    const title = fileName.replace(/\.[^.]+$/, "")
+    const structured = extractedPages
+      ? createStructuredDocumentFromPages(extractedPages, title, {
+          extractionMode: `local-${sourceType}`,
+          confidence: 0.9,
+        })
+      : buildLegacyDocumentStructure(extractedText, title, { sourceType })
 
-    await document.save()
+    const fileHash = crypto.createHash("sha256").update(completeBuffer).digest("hex")
+    const document = await Document.findOneAndUpdate(
+      { userId: security.userId, fileHash },
+      {
+        $set: {
+          originalFileName: fileName,
+          title,
+          sourceType,
+          type: documentType,
+          pages: structured.pages,
+          chunks: structured.chunks,
+          extractedText: structured.extractedText,
+          metadata: structured.metadata,
+          topics: [],
+          processingStatus: documentType === "study-material" ? "pending" : "completed",
+          processingError: null,
+        }
+      },
+      { new: true, upsert: true }
+    )
 
-    // Trigger background processing
-    if (validation.data.type === "study-material") {
-      processTopicsInBackground(document._id.toString(), extractedText).catch((err) => {
-        console.error("Background processing failed:", err)
-      })
+    if (documentType === "study-material") {
+      processTopicsInBackground(document._id.toString(), structured.extractedText).catch(() => {})
     }
 
     // Cleanup chunks
@@ -201,18 +275,15 @@ export async function POST(request: NextRequest) {
     }
     await rmdir(uploadDir).catch(() => {})
 
-    console.log(`Upload finalized: ${fileName}`)
-
     return addSecurityHeaders(NextResponse.json({
       document: {
         id: document._id,
         originalFileName: document.originalFileName,
-        topics: document.topics,
-        extractedText: extractedText.substring(0, 500),
+        title: document.title,
         type: document.type,
         processingStatus: document.processingStatus,
-        createdAt: document.createdAt,
       },
+      duplicate: false,
     }, { status: 201 }))
   } catch (error) {
     console.error("Finalize upload error:", error)

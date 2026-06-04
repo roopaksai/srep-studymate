@@ -4,6 +4,7 @@ import Document from "@/lib/models/Document"
 import { verifyToken } from "@/lib/auth"
 import { config } from "@/lib/config"
 import { prepareDocumentContent } from "@/lib/utils"
+import { combineChunksToText, buildLegacyDocumentStructure } from "@/lib/documentPipeline"
 
 async function identifyTopics(text: string): Promise<string[]> {
   try {
@@ -121,8 +122,12 @@ export async function POST(request: NextRequest) {
     await document.save()
 
     try {
+      const sourceText = document.chunks?.length
+        ? combineChunksToText(document.chunks)
+        : document.extractedText || buildLegacyDocumentStructure(document.extractedText || "", document.originalFileName).extractedText
+
       // Identify topics using AI
-      const topics = await identifyTopics(document.extractedText)
+      const topics = await identifyTopics(sourceText)
       
       // Update document with topics and mark as completed
       document.topics = topics

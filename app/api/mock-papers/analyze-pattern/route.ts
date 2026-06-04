@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import Document from "@/lib/models/Document"
 import { verifyToken } from "@/lib/auth"
+import { combineChunksToText, buildLegacyDocumentStructure } from "@/lib/documentPipeline"
 
 interface PatternAnalysis {
   commonTopics: string[]
@@ -150,8 +151,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No documents found" }, { status: 404 })
     }
 
-    // Combine all document texts
-    const combinedText = documents.map((doc) => doc.extractedText).join("\n\n---NEW PAPER---\n\n")
+    // Combine all structured chunks first, then fall back to legacy extracted text
+    const combinedText = documents
+      .map((doc) => {
+        if (doc.chunks?.length) {
+          return combineChunksToText(doc.chunks)
+        }
+
+        if (doc.extractedText) {
+          return buildLegacyDocumentStructure(doc.extractedText, doc.originalFileName).extractedText
+        }
+
+        return ""
+      })
+      .filter(Boolean)
+      .join("\n\n---NEW PAPER---\n\n")
 
     const patternAnalysis = await analyzePatternWithAI(combinedText)
 

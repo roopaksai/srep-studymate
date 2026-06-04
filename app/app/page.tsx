@@ -18,8 +18,9 @@ import QuickStats from "@/components/QuickStats"
 import ProgressTracking from "@/components/ProgressTracking"
 import toast from "react-hot-toast"
 import { motion } from "framer-motion"
-import { LayoutGrid, List } from "lucide-react"
+import { LayoutGrid, List, Trash2 } from "lucide-react"
 import { uploadFileInChunks, shouldUseChunkedUpload } from "@/lib/chunkedUpload"
+import { Progress, Alert } from "antd"
 
 interface Document {
   _id: string
@@ -38,8 +39,12 @@ export default function DashboardPage() {
   const [docLoading, setDocLoading] = useState(true)
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null)
   const [uploadLoading, setUploadLoading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [activeJobId, setActiveJobId] = useState<string | null>(null)
+  const [processingNotice, setProcessingNotice] = useState<{ type: "info" | "success" | "error"; message: string } | null>(null)
   const [error, setError] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [flashcardsCount, setFlashcardsCount] = useState(0)
   const [papersCount, setPapersCount] = useState(0)
   const [activities, setActivities] = useState<any[]>([])
@@ -63,6 +68,52 @@ export default function DashboardPage() {
     }
   }, [token])
 
+  useEffect(() => {
+    if (!activeJobId || !token) return
+
+    let cancelled = false
+
+    const pollJob = async () => {
+      try {
+        const response = await fetch(`/api/documents/jobs/${activeJobId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+
+        if (!response.ok || cancelled) return
+
+        const data = await response.json()
+        const status = data.job?.status
+
+        if (status === "done") {
+          setProcessingNotice({ type: "success", message: "Document processing completed." })
+          setActiveJobId(null)
+          setUploadProgress(100)
+          await fetchDocuments()
+          return
+        }
+
+        if (status === "failed") {
+          setProcessingNotice({ type: "error", message: data.job?.error || "Document processing failed." })
+          setActiveJobId(null)
+          return
+        }
+
+        const progress = typeof data.job?.progress === "number" ? data.job.progress : 70
+        setUploadProgress(Math.max(uploadProgress, progress))
+      } catch (error) {
+        console.error("Job polling failed:", error)
+      }
+    }
+
+    pollJob()
+    const interval = setInterval(pollJob, 2500)
+
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [activeJobId, token])
+
   const fetchDocuments = async () => {
     try {
       setDocLoading(true)
@@ -79,6 +130,35 @@ export default function DashboardPage() {
       setDocuments([]) // Ensure documents is always an array
     } finally {
       setDocLoading(false)
+    }
+  }
+
+  const handleDelete = async (docId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!token) return
+    if (!window.confirm("Delete this document permanently? This will also remove all associated flashcards, mock papers, and analysis reports.")) return
+
+    setDeletingId(docId)
+    try {
+      const res = await fetch("/api/documents", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ documentId: docId }),
+      })
+      if (res.ok) {
+        setDocuments((prev) => prev.filter((d) => d._id !== docId))
+        toast.success("Document deleted")
+      } else {
+        const err = await res.json()
+        toast.error(err.error || "Failed to delete")
+      }
+    } catch {
+      toast.error("Failed to delete document")
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -149,25 +229,33 @@ export default function DashboardPage() {
   const handleFileUpload = async (file: File) => {
     if (!file) return
 
-    // Check file size (max 30MB)
-    const maxSize = 30 * 1024 * 1024 // 30MB
+    // Check file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024 // 10MB
     if (file.size > maxSize) {
-      toast.error(`File too large. Maximum size is 30MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
+      toast.error(`File too large. Maximum size is 10MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
       return
     }
 
     try {
       setUploadLoading(true)
+      setUploadProgress(0)
+      setProcessingNotice(null)
       setError("")
 
       // Use chunked upload for files > 4MB (Vercel Hobby limit)
       if (shouldUseChunkedUpload(file.size)) {
         console.log("Using chunked upload for large file")
         const data = await uploadFileInChunks(file, token!, "study-material", (progress) => {
-          console.log(`Upload progress: ${progress.percentage}%`)
+          setUploadProgress(progress.percentage)
         })
+
         setSelectedDocument(data.document.id)
-        toast.success('Document uploaded successfully!')
+        if (data.document.jobId) {
+          setActiveJobId(data.document.jobId)
+          setProcessingNotice({ type: "info", message: "Upload complete. Structured extraction is running." })
+        } else {
+          toast.success('Document uploaded successfully!')
+        }
       } else {
         // Regular upload for small files
         const formData = new FormData()
@@ -183,13 +271,19 @@ export default function DashboardPage() {
         if (res.ok) {
           const data = await res.json()
           setSelectedDocument(data.document.id)
-          toast.success('Document uploaded successfully!')
+          if (data.document.jobId) {
+            setActiveJobId(data.document.jobId)
+            setProcessingNotice({ type: data.duplicate ? "info" : "info", message: data.duplicate ? "Reusing an existing processed document." : "Upload complete. Structured extraction is running." })
+          } else {
+            toast.success('Document uploaded successfully!')
+          }
         } else {
           const error = await res.json()
           toast.error(error.error || 'Upload failed')
         }
       }
       
+      setUploadProgress(100)
       await fetchDocuments()
       // Scroll to features section after upload
       setTimeout(() => {
@@ -257,12 +351,30 @@ export default function DashboardPage() {
               {/* Glass Shine */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
               <h2 className="relative text-lg font-bold text-[#0F172A] dark:text-white mb-4 tracking-tight leading-tight">Upload Document</h2>
+              {processingNotice && (
+                <div className="relative mb-4">
+                  <Alert
+                    type={processingNotice.type}
+                    showIcon
+                    message={processingNotice.message}
+                    className="rounded-xl"
+                  />
+                </div>
+              )}
+              {(uploadLoading || activeJobId) && (
+                <div className="relative mb-4 space-y-2">
+                  <Progress percent={uploadProgress} status={uploadProgress >= 100 ? "success" : "active"} />
+                  <p className="text-xs text-[#64748B] dark:text-gray-400">
+                    {activeJobId ? "Structured extraction in progress" : "Uploading file"}
+                  </p>
+                </div>
+              )}
               <div className="relative">
                 <FileUploadZone
                   onUpload={handleFileUpload}
                   loading={uploadLoading}
                   accept=".pdf,.txt,.doc,.docx"
-                  maxSize={30}
+                  maxSize={10}
                 />
               </div>
             </motion.div>
@@ -400,7 +512,7 @@ export default function DashboardPage() {
                       key={doc._id}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedDocument(doc._id)}
-                      className={`p-4 rounded-xl cursor-pointer transition-all duration-200 border backdrop-blur-md ${
+                      className={`group p-4 rounded-xl cursor-pointer transition-all duration-200 border backdrop-blur-md ${
                         selectedDocument === doc._id
                           ? "bg-[#F1F5F9]/90 dark:bg-gray-700/90 border-[#0F172A] dark:border-blue-500 shadow-md"
                           : "bg-white/60 dark:bg-gray-800/60 border-[#E2E8F0]/50 dark:border-gray-600/50 active:bg-[#F8FAFC]/80 dark:active:bg-gray-700/80 active:shadow-sm"
@@ -428,7 +540,16 @@ export default function DashboardPage() {
                           )}
                         </div>
                         </div>
-                        <span className="text-xs bg-[#F1F5F9] dark:bg-gray-700 text-[#334155] dark:text-gray-300 px-2.5 py-1 rounded-full whitespace-nowrap font-semibold flex-shrink-0">{doc.type}</span>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-xs bg-[#F1F5F9] dark:bg-gray-700 text-[#334155] dark:text-gray-300 px-2.5 py-1 rounded-full whitespace-nowrap font-semibold">{doc.type}</span>
+                          <button
+                            onClick={(e) => handleDelete(doc._id, e)}
+                            disabled={deletingId === doc._id}
+                            className="p-1.5 rounded-lg text-[#94A3B8] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </motion.div>
                   ))}  
@@ -440,7 +561,7 @@ export default function DashboardPage() {
                       key={doc._id}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedDocument(doc._id)}
-                      className={`p-4 rounded-xl cursor-pointer transition-all duration-200 border relative overflow-hidden min-h-[100px] backdrop-blur-md ${
+                      className={`group p-4 rounded-xl cursor-pointer transition-all duration-200 border relative overflow-hidden min-h-[100px] backdrop-blur-md ${
                         selectedDocument === doc._id
                           ? "bg-gradient-to-br from-slate-50/90 to-slate-100/90 dark:from-gray-700/90 dark:to-gray-800/90 border-[#0F172A] dark:border-blue-500 shadow-lg"
                           : "bg-white/60 dark:bg-gray-800/60 border-[#E2E8F0]/50 dark:border-gray-600/50 active:shadow-md"
@@ -481,7 +602,16 @@ export default function DashboardPage() {
                                 <span className="text-xs bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-lg font-semibold">Failed</span>
                               )}
                             </div>
-                            <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded-lg font-semibold whitespace-nowrap">{doc.type}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded-lg font-semibold whitespace-nowrap">{doc.type}</span>
+                              <button
+                                onClick={(e) => handleDelete(doc._id, e)}
+                                disabled={deletingId === doc._id}
+                                className="p-1.5 rounded-lg text-[#94A3B8] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>

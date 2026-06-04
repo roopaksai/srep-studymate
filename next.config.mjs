@@ -11,13 +11,6 @@ const nextConfig = {
     unoptimized: true,
   },
   
-  // Increase body size limit for API routes and Server Actions
-  api: {
-    bodyParser: {
-      sizeLimit: '30mb',
-    },
-    responseLimit: '30mb',
-  },
   
   // Increase body size limit for file uploads
   experimental: {
@@ -25,6 +18,9 @@ const nextConfig = {
       bodySizeLimit: '30mb',
     },
   },
+
+  // Prevent Next.js from bundling pdfjs-dist on the server, which breaks relative worker script loading
+  serverExternalPackages: ["pdfjs-dist"],
   
   env: {
     MONGODB_URI: process.env.MONGODB_URI,

@@ -4,6 +4,7 @@ import Document from "@/lib/models/Document"
 import AnalysisReport from "@/lib/models/AnalysisReport"
 import { verifyToken } from "@/lib/auth"
 import { logger } from "@/lib/logger"
+import { combineChunksToText, buildLegacyDocumentStructure } from "@/lib/documentPipeline"
 
 interface QuestionScore {
   questionNumber: number
@@ -171,7 +172,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Document not found" }, { status: 404 })
     }
 
-    const analysis = await generateAnalysisWithAI(document.extractedText)
+    const structuredText = document.chunks?.length
+      ? combineChunksToText(document.chunks)
+      : document.extractedText || buildLegacyDocumentStructure(document.extractedText || "", document.originalFileName).extractedText
+
+    const analysis = await generateAnalysisWithAI(structuredText)
 
     // Generate title: "doc name Analysis" (strip file extension from originalFileName)
     const docNameWithoutExt = document.originalFileName.replace(/\.(pdf|docx|doc|txt)$/i, '')

@@ -3,6 +3,7 @@ import type React from "react"
 
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
+import "antd/dist/reset.css"
 
 import { AuthProvider } from "@/app/context/AuthContext"
 import { ThemeProvider } from "@/app/context/ThemeContext"

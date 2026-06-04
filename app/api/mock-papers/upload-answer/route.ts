@@ -4,9 +4,9 @@ import Document from "@/lib/models/Document"
 import MockPaper from "@/lib/models/MockPaper"
 import AnalysisReport from "@/lib/models/AnalysisReport"
 import { verifyToken } from "@/lib/auth"
-
-// @ts-ignore
-import pdfParse from "pdf-parse-fork"
+import { hashFileBuffer, getDocumentSourceType } from "@/lib/documentUpload"
+import { buildLegacyDocumentStructure } from "@/lib/documentPipeline"
+import { extractPdfText } from "@/lib/pdfExtractor"
 import mammoth from "mammoth"
 
 async function extractTextFromFile(file: File): Promise<string> {
@@ -15,9 +15,9 @@ async function extractTextFromFile(file: File): Promise<string> {
   if (fileType === "application/pdf") {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
-    const data = await pdfParse(buffer)
-    console.log("PDF extraction successful, text length:", data.text.length)
-    return data.text
+    const result = await extractPdfText(buffer)
+    console.log("PDF extraction successful, text length:", result.text.length)
+    return result.text
   } else if (
     fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
     fileType === "application/msword"
@@ -189,21 +189,49 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "This is not a descriptive paper" }, { status: 400 })
     }
 
-    // Extract text from answer script
-    const extractedText = await extractTextFromFile(file)
-    const textToStore = extractedText.substring(0, 5000)
+    const fileBuffer = await file.arrayBuffer()
+    const fileHash = await hashFileBuffer(fileBuffer)
+    const sourceType = getDocumentSourceType(file)
 
-    // Save answer script as document
-    const answerDoc = new Document({
+    // Extract and structure the answer script
+    const extractedText = await extractTextFromFile(file)
+    const structuredDocument = buildLegacyDocumentStructure(extractedText, file.name, { sourceType })
+
+    let answerDoc = await Document.findOne({
       userId: payload.userId,
-      originalFileName: file.name,
-      extractedText: textToStore,
-      type: "answer-script",
+      fileHash,
     })
+
+    if (!answerDoc) {
+      answerDoc = new Document({
+        userId: payload.userId,
+        fileHash,
+        originalFileName: file.name,
+        title: file.name.replace(/\.[^.]+$/, ""),
+        sourceType,
+        extractedText: structuredDocument.extractedText,
+        pages: structuredDocument.pages,
+        chunks: structuredDocument.chunks,
+        metadata: structuredDocument.metadata,
+        type: "answer-script",
+        processingStatus: "completed",
+      })
+    } else {
+      answerDoc.extractedText = structuredDocument.extractedText
+      answerDoc.pages = structuredDocument.pages
+      answerDoc.chunks = structuredDocument.chunks
+      answerDoc.metadata = structuredDocument.metadata as any
+      answerDoc.processingStatus = "completed"
+      answerDoc.processingError = null
+      answerDoc.type = "answer-script"
+      answerDoc.title = file.name.replace(/\.[^.]+$/, "")
+      answerDoc.sourceType = sourceType
+    }
+
     await answerDoc.save()
 
     // Generate analysis using AI
-    const analysis = await generateAnalysisWithAI(extractedText, mockPaper.questions)
+    const analysis = await generateAnalysisWithAI(structuredDocument.extractedText, mockPaper.questions)
 
     // Fetch the original study material document to get its name
     const studyDocument = await Document.findById(mockPaper.documentId)

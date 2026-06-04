@@ -8,6 +8,8 @@ import { rateLimitConfigs } from "@/lib/rateLimit"
 import { logger } from "@/lib/logger"
 import { config } from "@/lib/config"
 import { prepareDocumentContent } from "@/lib/utils"
+import { buildLegacyDocumentStructure } from "@/lib/documentPipeline"
+import { generateFlashcardsFromChunks } from "@/lib/structuredAi"
 
 async function generateFlashcardsWithAI(text: string): Promise<{ question: string; answer: string }[]> {
   try {
@@ -117,6 +119,13 @@ export async function POST(request: NextRequest) {
       return addSecurityHeaders(NextResponse.json({ error: "Document not found" }, { status: 404 }))
     }
 
+    if (document.processingStatus !== "completed") {
+      return addSecurityHeaders(NextResponse.json(
+        { error: "Document is still processing", processingStatus: document.processingStatus },
+        { status: 409 },
+      ))
+    }
+
     // Check if flashcards already exist for this document (unless reattempt)
     if (!reattempt) {
       const existingFlashcardSet = await FlashcardSet.findOne({
@@ -149,8 +158,12 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Generate flashcards
-    const cards = await generateFlashcardsWithAI(document.extractedText)
+    const structuredChunks = document.chunks?.length
+      ? document.chunks
+      : buildLegacyDocumentStructure(document.extractedText || "", document.originalFileName).chunks
+
+    // Generate flashcards from structured chunks
+    const cards = await generateFlashcardsFromChunks(structuredChunks)
 
     // Generate title: "doc name Flashcards" (strip file extension from originalFileName)
     const docNameWithoutExt = document.originalFileName.replace(/\.(pdf|docx|doc|txt)$/i, '')

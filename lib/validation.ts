@@ -73,7 +73,7 @@ export const paginationSchema = z.object({
 
 // File validation
 export const fileValidation = {
-  maxSize: 30 * 1024 * 1024, // 30MB
+  maxSize: 10 * 1024 * 1024, // 10MB
   allowedTypes: [
     'application/pdf',
     'text/plain',

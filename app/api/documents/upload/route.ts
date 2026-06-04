@@ -1,3 +1,4 @@
+import crypto from "crypto"
 import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import Document from "@/lib/models/Document"
@@ -6,47 +7,47 @@ import { validateFile, documentUploadSchema, validateRequest } from "@/lib/valid
 import { rateLimitConfigs } from "@/lib/rateLimit"
 import { config } from "@/lib/config"
 import { prepareDocumentContent } from "@/lib/utils"
+import { getDocumentSourceType, queueDocumentForProcessing } from "@/lib/documentUpload"
+import { extractPdfText, getPdfPageCount, type PdfPageData } from "@/lib/pdfExtractor"
+import { createStructuredDocumentFromPages, buildLegacyDocumentStructure } from "@/lib/documentPipeline"
 
-async function extractTextFromFile(file: File): Promise<string> {
-  const fileBuffer = await file.arrayBuffer()
-  const fileName = file.name.toLowerCase()
+interface ExtractResult {
+  text: string
+  pages?: PdfPageData[]
+}
+
+async function extractFromFile(fileBuffer: Buffer, fileName: string): Promise<ExtractResult> {
+  const fileNameLower = fileName.toLowerCase()
 
   try {
-    if (fileName.endsWith(".pdf")) {
-      // @ts-ignore - pdf-parse-fork doesn't have type definitions
-      const pdfParse = (await import("pdf-parse-fork")).default
-      const buffer = Buffer.from(fileBuffer)
-      const data = await pdfParse(buffer)
-      console.log("PDF extraction successful, text length:", data.text?.length || 0)
-      return data.text || ""
-    } else if (fileName.endsWith(".docx")) {
+    if (fileNameLower.endsWith(".pdf")) {
+      const result = await extractPdfText(fileBuffer)
+      console.log("PDF extraction successful, text length:", result.text?.length || 0, `(${result.pages.length} pages)`)
+      return { text: result.text || "", pages: result.pages }
+    } else if (fileNameLower.endsWith(".docx")) {
       try {
         const mammoth = await import("mammoth")
-        const buffer = Buffer.from(fileBuffer)
-        const result = await mammoth.extractRawText({ buffer })
+        const result = await mammoth.extractRawText({ buffer: fileBuffer })
         console.log("DOCX extraction successful, text length:", result.value?.length || 0)
-        return result.value || ""
+        return { text: result.value || "" }
       } catch (docxError) {
         console.error("DOCX parsing failed:", docxError)
         throw new Error("Failed to extract text from DOCX: " + (docxError as Error).message)
       }
-    } else if (fileName.endsWith(".txt")) {
-      // Decode text file properly with UTF-8
+    } else if (fileNameLower.endsWith(".txt")) {
       const decoder = new TextDecoder("utf-8")
-      return decoder.decode(fileBuffer)
+      return { text: decoder.decode(fileBuffer) }
     } else {
-      // For unsupported formats, try UTF-8 decoding
       const decoder = new TextDecoder("utf-8")
-      return decoder.decode(fileBuffer)
+      return { text: decoder.decode(fileBuffer) }
     }
   } catch (error) {
     console.error("Text extraction error:", error)
-    // Last resort: try to decode as UTF-8
     try {
       const decoder = new TextDecoder("utf-8")
-      return decoder.decode(fileBuffer)
+      return { text: decoder.decode(fileBuffer) }
     } catch {
-      return ""
+      return { text: "" }
     }
   }
 }
@@ -184,6 +185,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       ))
     }
+    const documentType = validation.data.type
 
     if (!file) {
       return addSecurityHeaders(NextResponse.json({ error: "File is required" }, { status: 400 }))
@@ -195,10 +197,53 @@ export async function POST(request: NextRequest) {
       return addSecurityHeaders(NextResponse.json({ error: fileValidation.error }, { status: 400 }))
     }
 
-    console.log(`Processing document: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`)
+    const sourceType = getDocumentSourceType(file)
+    const arrayBuffer = await file.arrayBuffer()
+    const fileBuffer = Buffer.from(arrayBuffer)
+    let pageCount: number | null = null
 
-    // Extract text from PDF/DOCX/TXT
-    const extractedText = await extractTextFromFile(file)
+    if (sourceType === "pdf") {
+      pageCount = await getPdfPageCount(fileBuffer)
+      if (pageCount > config.processing.maxPages) {
+        return addSecurityHeaders(NextResponse.json(
+          { error: `PDF exceeds maximum page limit of ${config.processing.maxPages}` },
+          { status: 400 },
+        ))
+      }
+    }
+
+    // Try to queue for Python processor; fall back to local extraction if unavailable
+    try {
+      // Pass a fresh File backed by a cloned buffer to prevent detaching the main fileBuffer
+      const clonedFileForQueue = new File([Buffer.from(fileBuffer)], file.name, { type: file.type })
+      const queued = await queueDocumentForProcessing({
+        userId: security.userId,
+        file: clonedFileForQueue,
+        documentType,
+        pageCount,
+      })
+
+      return addSecurityHeaders(NextResponse.json(
+        {
+          document: {
+            id: queued.documentId,
+            resultId: queued.resultId,
+            jobId: queued.jobId,
+            originalFileName: file.name,
+            type: documentType,
+            processingStatus: queued.status,
+          },
+          duplicate: queued.duplicate,
+        },
+        { status: queued.duplicate ? 200 : 202 },
+      ))
+    } catch (processorError) {
+      console.warn("Python document processor unavailable, falling back to local extraction:", processorError)
+    }
+
+    // Local extraction fallback (when Python service is down)
+    console.log(`Processing document locally: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`)
+    const { text: extractedText, pages: extractedPages } = await extractFromFile(fileBuffer, file.name)
 
     if (!extractedText || extractedText.trim().length === 0) {
       return addSecurityHeaders(NextResponse.json(
@@ -207,21 +252,40 @@ export async function POST(request: NextRequest) {
       ))
     }
 
-    // Save document immediately with pending status
-    const document = new Document({
-      userId: security.userId,
-      originalFileName: file.name,
-      extractedText: extractedText.substring(0, 5000), // Store 5000 chars (sufficient for AI processing)
-      topics: [],
-      type: validation.data.type,
-      processingStatus: validation.data.type === "study-material" ? "pending" : "completed",
-    })
+    // Build structured document from page-by-page data (PDF) or legacy text (DOCX/TXT)
+    const title = file.name.replace(/\.[^.]+$/, "")
+    const structured = extractedPages
+      ? createStructuredDocumentFromPages(extractedPages, title, {
+          extractionMode: `local-${sourceType}`,
+          confidence: 0.9,
+        })
+      : buildLegacyDocumentStructure(extractedText, title, { sourceType })
 
-    await document.save()
+    // Save document with full structured data to MongoDB (upsert to handle cases where queueDocumentForProcessing already created a record before failing)
+    const fileHash = crypto.createHash("sha256").update(fileBuffer).digest("hex")
+    const document = await Document.findOneAndUpdate(
+      { userId: security.userId, fileHash },
+      {
+        $set: {
+          originalFileName: file.name,
+          title,
+          sourceType,
+          type: documentType,
+          pages: structured.pages,
+          chunks: structured.chunks,
+          extractedText: structured.extractedText,
+          metadata: structured.metadata,
+          topics: [],
+          processingStatus: documentType === "study-material" ? "pending" : "completed",
+          processingError: null,
+        }
+      },
+      { new: true, upsert: true }
+    )
 
     // Trigger background topic identification for study materials (non-blocking)
-    if (validation.data.type === "study-material") {
-      processTopicsInBackground(document._id.toString(), extractedText).catch((err) => {
+    if (documentType === "study-material") {
+      processTopicsInBackground(document._id.toString(), structured.extractedText).catch((err) => {
         console.error("Background topic processing failed:", err)
       })
     }
@@ -231,12 +295,11 @@ export async function POST(request: NextRequest) {
         document: {
           id: document._id,
           originalFileName: document.originalFileName,
-          topics: document.topics,
-          extractedText: extractedText.substring(0, 500), // Preview first 500 chars in response
+          title: document.title,
           type: document.type,
           processingStatus: document.processingStatus,
-          createdAt: document.createdAt,
         },
+        duplicate: false,
       },
       { status: 201 },
     ))

@@ -31,6 +31,7 @@ A modern full-stack Next.js application that helps students prepare for exams by
 
 - **User Authentication**: Secure JWT-based signup and login with bcrypt password hashing
 - **Document Upload**: Upload study materials (TXT/PDF/DOCX files) - stored in MongoDB
+- **Structured Document Pipeline**: Hash-based dedupe, job tracking, OCR fallback for scanned PDFs, and chunk-based storage
 - **AI Flashcards**: Generate intelligent flashcard sets from documents using Llama 3.1 AI
 - **AI Mock Papers**: Create practice exam papers with AI-generated questions and marks
 - **AI Answer Analysis**: Upload answer scripts and get detailed AI-powered feedback with strengths, weaknesses, and study recommendations
@@ -46,6 +47,7 @@ A modern full-stack Next.js application that helps students prepare for exams by
 - **Authentication**: JWT with jose library for token verification
 - **Database**: MongoDB Atlas with Mongoose ODM
 - **AI Integration**: OpenRouter API (Llama 3.1 8B Instruct)
+- **Document Processor**: FastAPI + OpenDataLoader + OCRmyPDF for structured extraction
 - **Password Hashing**: bcrypt for secure password storage
 - **State Management**: React Context API
 - **Styling**: Tailwind CSS v4
@@ -169,6 +171,7 @@ Authorization: Bearer <your_jwt_token>
 ### Documents
 - `POST /api/documents/upload` - Upload document (protected)
 - `GET /api/documents` - List user's documents (protected)
+- `GET /api/documents/jobs/[jobId]` - Poll structured processing job status (protected)
 
 ### Flashcards
 - `POST /api/flashcards/generate` - Generate flashcard set (protected)
@@ -244,6 +247,8 @@ The app can be deployed to any platform that supports Node.js:
 | `MONGODB_URI` | MongoDB connection string | `mongodb+srv://user:pass@cluster.mongodb.net/srep` |
 | `JWT_SECRET` | Secret key for JWT signing | `your-random-secret-key` |
 | `NEXT_PUBLIC_API_URL` | Frontend API base URL | `http://localhost:3000/api` |
+| `PDF_PROCESSOR_URL` | FastAPI processor base URL | `http://127.0.0.1:8000` |
+| `PDF_PROCESSOR_TOKEN` | Shared service token between Next.js and FastAPI | `your-shared-token` |
 
 ## Future Enhancements
 
@@ -355,5 +360,3 @@ For issues or questions, please create an issue in the GitHub repository.
 
 ---
 
-**Made with ❤️ for students everywhere. Happy studying!**  
-**Status:** ✅ Production-Ready | Enterprise-Grade | Fully Optimized

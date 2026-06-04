@@ -20,7 +20,7 @@ export const config = {
 
   // File Upload Configuration
   files: {
-    maxSize: 30 * 1024 * 1024, // 30MB
+    maxSize: 10 * 1024 * 1024, // 10MB
     allowedTypes: [".pdf", ".docx", ".doc", ".txt"],
     allowedMimeTypes: [
       "application/pdf",
@@ -70,6 +70,25 @@ export const config = {
     topicExtractionLength: 3000, // Max chars for topic extraction
   },
 
+  // Structured document processing
+  processing: {
+    serviceUrl: process.env.PDF_PROCESSOR_URL || "http://127.0.0.1:8000",
+    serviceToken: process.env.PDF_PROCESSOR_TOKEN || "",
+    requestTimeoutMs: 120000,
+    maxPages: 100,
+    chunkTargetWords: 400,
+    chunkMinWords: 300,
+    chunkMaxWords: 500,
+  },
+
+  // Deterministic generation defaults
+  generation: {
+    temperature: 0,
+    flashcardTargetCount: 12,
+    mcqTargetCount: 10,
+    descriptiveTargetCount: 10,
+  },
+
   // Mock Paper Configuration
   mockPaper: {
     mcqQuestionCount: 10,
@@ -114,6 +133,7 @@ export function validateConfig() {
     { key: "AI_API_KEY or OPENROUTER_API_KEY", value: config.ai.apiKey },
     { key: "MONGODB_URI", value: config.database.uri },
     { key: "JWT_SECRET", value: config.auth.jwtSecret },
+    { key: "PDF_PROCESSOR_TOKEN", value: config.processing.serviceToken },
   ]
 
   const missing = required.filter((item) => !item.value)

@@ -6,6 +6,8 @@ import { verifyToken } from "@/lib/auth"
 import { logger } from "@/lib/logger"
 import { config } from "@/lib/config"
 import { prepareDocumentContent } from "@/lib/utils"
+import { buildLegacyDocumentStructure } from "@/lib/documentPipeline"
+import { generateQuestionsFromChunks } from "@/lib/structuredAi"
 
 interface Question {
   text: string
@@ -290,6 +292,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Document not found" }, { status: 404 })
     }
 
+    if (document.processingStatus !== "completed") {
+      return NextResponse.json(
+        { error: "Document is still processing", processingStatus: document.processingStatus },
+        { status: 409 },
+      )
+    }
+
     // Check if a paper of this type already exists for this document (unless reattempt)
     if (!reattempt) {
       const existingPaper = await MockPaper.findOne({
@@ -329,7 +338,11 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const questions = await generateQuestionsWithAI(document.extractedText, questionType as 'mcq' | 'descriptive' | 'mixed')
+    const structuredChunks = document.chunks?.length
+      ? document.chunks
+      : buildLegacyDocumentStructure(document.extractedText || "", document.originalFileName).chunks
+
+    const questions = await generateQuestionsFromChunks(structuredChunks, questionType as 'mcq' | 'descriptive' | 'mixed')
 
     // Generate title: "doc name_type_mock paper" (strip file extension from originalFileName)
     const docNameWithoutExt = document.originalFileName.replace(/\.(pdf|docx|doc|txt)$/i, '')
