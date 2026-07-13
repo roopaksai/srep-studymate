@@ -3,10 +3,13 @@ import connectDB from "@/lib/db"
 import Document from "@/lib/models/Document"
 import MockPaper from "@/lib/models/MockPaper"
 import AnalysisReport from "@/lib/models/AnalysisReport"
-import { verifyToken } from "@/lib/auth"
 import { hashFileBuffer, getDocumentSourceType } from "@/lib/documentUpload"
 import { buildLegacyDocumentStructure } from "@/lib/documentPipeline"
 import { extractPdfText } from "@/lib/pdfExtractor"
+import { secureRoute, addSecurityHeaders } from "@/lib/security"
+import { config } from "@/lib/config"
+import { handleError } from "@/lib/errors"
+import { rateLimitConfigs } from "@/lib/rateLimit"
 import mammoth from "mammoth"
 
 async function extractTextFromFile(file: File): Promise<string> {
@@ -49,21 +52,16 @@ async function generateAnalysisWithAI(
   grade: string
 }> {
   try {
-    const apiKey = process.env.OPENROUTER_API_KEY
-    if (!apiKey) {
-      throw new Error("OPENROUTER_API_KEY not configured")
-    }
-
     const questionsText = questions.map((q, i) => `Q${i + 1}. ${q.text} (${q.marks} marks)`).join("\n")
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch(`${config.ai.apiUrl}/chat/completions`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${config.ai.apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "qwen/qwen3-coder:free",
+        model: config.ai.model,
         messages: [
           {
             role: "system",
@@ -145,15 +143,11 @@ weaknesses: ["Concurrent Programming", "Design Patterns", "Testing Strategies"]`
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "")
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
+    const { userId, error } = await secureRoute(request, {
+      requireAuth: true,
+      rateLimit: rateLimitConfigs.aiGeneration,
+    })
+    if (error) return error
 
     await connectDB()
 
@@ -178,7 +172,7 @@ export async function POST(request: NextRequest) {
     // Fetch the mock paper
     const mockPaper = await MockPaper.findOne({
       _id: mockPaperId,
-      userId: payload.userId,
+      userId,
     })
 
     if (!mockPaper) {
@@ -198,13 +192,13 @@ export async function POST(request: NextRequest) {
     const structuredDocument = buildLegacyDocumentStructure(extractedText, file.name, { sourceType })
 
     let answerDoc = await Document.findOne({
-      userId: payload.userId,
+      userId,
       fileHash,
     })
 
     if (!answerDoc) {
       answerDoc = new Document({
-        userId: payload.userId,
+        userId,
         fileHash,
         originalFileName: file.name,
         title: file.name.replace(/\.[^.]+$/, ""),
@@ -242,7 +236,7 @@ export async function POST(request: NextRequest) {
 
     // Create analysis report with title: "doc name_type_report"
     const analysisReport = new AnalysisReport({
-      userId: payload.userId,
+      userId,
       answerScriptDocumentId: answerDoc._id,
       title: reportTitle,
       summary: analysis.summary,
@@ -261,23 +255,22 @@ export async function POST(request: NextRequest) {
     mockPaper.analysisReportId = analysisReport._id
     await mockPaper.save()
 
-    return NextResponse.json(
-      {
-        message: "Answer script uploaded and analyzed successfully",
-        analysisReportId: analysisReport._id,
-        score: {
-          total: analysis.totalScore,
-          max: analysis.maxScore,
-          percentage: ((analysis.totalScore / analysis.maxScore) * 100).toFixed(1),
+    return addSecurityHeaders(
+      NextResponse.json(
+        {
+          message: "Answer script uploaded and analyzed successfully",
+          analysisReportId: analysisReport._id,
+          score: {
+            total: analysis.totalScore,
+            max: analysis.maxScore,
+            percentage: ((analysis.totalScore / analysis.maxScore) * 100).toFixed(1),
+          },
         },
-      },
-      { status: 201 },
+        { status: 201 },
+      ),
     )
   } catch (error) {
-    console.error("Answer script upload error:", error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to upload answer script" },
-      { status: 500 },
-    )
+    const { statusCode, message } = handleError(error)
+    return NextResponse.json({ error: message }, { status: statusCode })
   }
 }

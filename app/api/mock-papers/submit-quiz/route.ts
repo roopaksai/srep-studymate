@@ -3,19 +3,17 @@ import connectDB from "@/lib/db"
 import MockPaper from "@/lib/models/MockPaper"
 import AnalysisReport from "@/lib/models/AnalysisReport"
 import Document from "@/lib/models/Document"
-import { verifyToken } from "@/lib/auth"
+import { secureRoute, addSecurityHeaders } from "@/lib/security"
+import { handleError } from "@/lib/errors"
+import { rateLimitConfigs } from "@/lib/rateLimit"
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "")
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
+    const { userId, error } = await secureRoute(request, {
+      requireAuth: true,
+      rateLimit: rateLimitConfigs.general,
+    })
+    if (error) return error
 
     await connectDB()
     const { mockPaperId, userAnswers } = await request.json()
@@ -23,21 +21,27 @@ export async function POST(request: NextRequest) {
     // Fetch the mock paper
     const mockPaper = await MockPaper.findOne({
       _id: mockPaperId,
-      userId: payload.userId,
+      userId,
     })
 
     if (!mockPaper) {
-      return NextResponse.json({ error: "Mock paper not found" }, { status: 404 })
+      return addSecurityHeaders(
+        NextResponse.json({ error: "Mock paper not found" }, { status: 404 })
+      )
     }
 
     if (mockPaper.paperType !== "mcq") {
-      return NextResponse.json({ error: "This is not an MCQ paper" }, { status: 400 })
+      return addSecurityHeaders(
+        NextResponse.json({ error: "This is not an MCQ paper" }, { status: 400 })
+      )
     }
 
     // Fetch the document to get its name
     const document = await Document.findById(mockPaper.documentId)
     if (!document) {
-      return NextResponse.json({ error: "Document not found" }, { status: 404 })
+      return addSecurityHeaders(
+        NextResponse.json({ error: "Document not found" }, { status: 404 })
+      )
     }
 
     // Strip file extension from originalFileName
@@ -183,7 +187,7 @@ export async function POST(request: NextRequest) {
     const reportTitle = `${docNameWithoutExt}_${mockPaper.paperType}_report`
     
     const analysisReport = new AnalysisReport({
-      userId: payload.userId,
+      userId,
       answerScriptDocumentId: mockPaper.documentId,
       title: reportTitle,
       summary: `MCQ Quiz Performance: ${correctCount} correct, ${incorrectCount} incorrect, ${skippedCount} skipped out of ${mockPaper.questions.length} questions. Overall score: ${totalScore}/${maxScore} (${percentage.toFixed(1)}%).`,
@@ -204,7 +208,7 @@ export async function POST(request: NextRequest) {
     mockPaper.analysisReportId = analysisReport._id
     await mockPaper.save()
 
-    return NextResponse.json(
+    return addSecurityHeaders(NextResponse.json(
       {
         message: "Quiz submitted successfully",
         score: {
@@ -217,12 +221,11 @@ export async function POST(request: NextRequest) {
         analysisReportId: analysisReport._id,
       },
       { status: 200 },
-    )
+    ))
   } catch (error) {
-    console.error("Quiz submission error:", error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to submit quiz" },
-      { status: 500 },
+    const err = handleError(error)
+    return addSecurityHeaders(
+      NextResponse.json({ error: err.message }, { status: err.statusCode })
     )
   }
 }

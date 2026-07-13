@@ -10,6 +10,7 @@ import { config } from "@/lib/config"
 import { prepareDocumentContent } from "@/lib/utils"
 import { buildLegacyDocumentStructure } from "@/lib/documentPipeline"
 import { generateFlashcardsFromChunks } from "@/lib/structuredAi"
+import { withCache, generateAICacheKey, cacheTTL } from "@/lib/cache"
 
 async function generateFlashcardsWithAI(text: string): Promise<{ question: string; answer: string }[]> {
   try {
@@ -162,8 +163,11 @@ export async function POST(request: NextRequest) {
       ? document.chunks
       : buildLegacyDocumentStructure(document.extractedText || "", document.originalFileName).chunks
 
-    // Generate flashcards from structured chunks
-    const cards = await generateFlashcardsFromChunks(structuredChunks)
+    // Generate flashcards from structured chunks (cached unless reattempt)
+    const chunksKey = generateAICacheKey('flashcards', JSON.stringify(structuredChunks.map((c: any) => c.text || c).slice(0, 5)))
+    const cards = reattempt
+      ? await generateFlashcardsFromChunks(structuredChunks)
+      : await withCache(chunksKey, () => generateFlashcardsFromChunks(structuredChunks), cacheTTL.aiGeneration)
 
     // Generate title: "doc name Flashcards" (strip file extension from originalFileName)
     const docNameWithoutExt = document.originalFileName.replace(/\.(pdf|docx|doc|txt)$/i, '')

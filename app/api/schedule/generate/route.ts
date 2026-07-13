@@ -1,8 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import Schedule from "@/lib/models/Schedule"
-import { verifyToken } from "@/lib/auth"
 import { logger } from "@/lib/logger"
+import { secureRoute, addSecurityHeaders } from "@/lib/security"
+import { config } from "@/lib/config"
+import { handleError } from "@/lib/errors"
+import { rateLimitConfigs } from "@/lib/rateLimit"
 
 interface TopicWithPriority {
   topic: string
@@ -18,11 +21,6 @@ async function generateScheduleWithAI(
   restDays: number[]
 ): Promise<any[]> {
   try {
-    const apiKey = process.env.OPENROUTER_API_KEY
-    if (!apiKey) {
-      throw new Error("OPENROUTER_API_KEY not configured")
-    }
-
     const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
     const topicList = topics.map((t) => `${t.topic} (Priority: ${t.priority})`).join(", ")
 
@@ -55,16 +53,16 @@ ${topicList}
 Study hours per day: ${studyHoursPerDay}
 Rest days: ${restDays.length > 0 ? restDays.map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d]).join(", ") : "None"}`
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch(`${config.ai.apiUrl}/chat/completions`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${config.ai.apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": "http://localhost:3000",
         "X-Title": "SREP StudyMate",
       },
       body: JSON.stringify({
-        model: "openai/gpt-3.5-turbo",
+        model: config.ai.model,
         messages: [
           {
             role: "system",
@@ -193,15 +191,11 @@ function generateScheduleSlots(
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "")
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
+    const { userId, error } = await secureRoute(request, {
+      requireAuth: true,
+      rateLimit: rateLimitConfigs.aiGeneration,
+    })
+    if (error) return error
 
     await connectDB()
     const {
@@ -248,7 +242,7 @@ export async function POST(request: NextRequest) {
     )
 
     const schedule = new Schedule({
-      userId: payload.userId,
+      userId,
       title,
       startDate: new Date(startDate),
       endDate: new Date(endDate),
@@ -259,23 +253,25 @@ export async function POST(request: NextRequest) {
 
     await schedule.save()
 
-    return NextResponse.json(
-      {
-        schedule: {
-          id: schedule._id,
-          title: schedule.title,
-          startDate: schedule.startDate,
-          endDate: schedule.endDate,
-          studyHoursPerDay: schedule.studyHoursPerDay,
-          restDays: schedule.restDays,
-          slots: schedule.slots,
-          createdAt: schedule.createdAt,
+    return addSecurityHeaders(
+      NextResponse.json(
+        {
+          schedule: {
+            id: schedule._id,
+            title: schedule.title,
+            startDate: schedule.startDate,
+            endDate: schedule.endDate,
+            studyHoursPerDay: schedule.studyHoursPerDay,
+            restDays: schedule.restDays,
+            slots: schedule.slots,
+            createdAt: schedule.createdAt,
+          },
         },
-      },
-      { status: 201 },
+        { status: 201 },
+      ),
     )
   } catch (error) {
-    console.error("Generate schedule error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const { statusCode, message } = handleError(error)
+    return NextResponse.json({ error: message }, { status: statusCode })
   }
 }

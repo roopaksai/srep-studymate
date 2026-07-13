@@ -4,25 +4,16 @@ import Document from "@/lib/models/Document"
 import FlashcardSet from "@/lib/models/FlashcardSet"
 import MockPaper from "@/lib/models/MockPaper"
 import AnalysisReport from "@/lib/models/AnalysisReport"
-import { verifyToken } from "@/lib/auth"
+import { secureRoute, addSecurityHeaders } from "@/lib/security"
+import { handleError } from "@/lib/errors"
 import { logger } from "@/lib/logger"
 import { getPaginationParams, paginateResults } from "@/lib/pagination"
-
-function getToken(request: NextRequest): string | null {
-  return request.headers.get("authorization")?.replace("Bearer ", "") || null
-}
+import { rateLimitConfigs } from "@/lib/rateLimit"
 
 export async function GET(request: NextRequest) {
   try {
-    const token = getToken(request)
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
+    const { userId, error } = await secureRoute(request, { requireAuth: true, rateLimit: rateLimitConfigs.read })
+    if (error) return error
 
     await connectDB()
     
@@ -31,13 +22,13 @@ export async function GET(request: NextRequest) {
     
     // Fetch documents with pagination and lean queries for performance
     const [documents, total] = await Promise.all([
-      Document.find({ userId: payload.userId })
+      Document.find({ userId })
         .select('originalFileName title fileHash sourceType type topics processingStatus processingError jobId metadata createdAt')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      Document.countDocuments({ userId: payload.userId })
+      Document.countDocuments({ userId })
     ])
 
     // Transform _id to id for frontend compatibility
@@ -46,35 +37,29 @@ export async function GET(request: NextRequest) {
       id: doc._id.toString(),
     }))
 
-    return NextResponse.json(paginateResults(transformedDocuments, { page, limit, total }))
+    return addSecurityHeaders(NextResponse.json(paginateResults(transformedDocuments, { page, limit, total })))
   } catch (error) {
     logger.error('Get documents error', { error: error instanceof Error ? error.message : String(error) })
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const err = handleError(error)
+    return addSecurityHeaders(NextResponse.json({ error: err.message }, { status: err.statusCode }))
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
-    const token = getToken(request)
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
+    const { userId, error } = await secureRoute(request, { requireAuth: true, rateLimit: rateLimitConfigs.read })
+    if (error) return error
 
     const { documentId } = await request.json()
     if (!documentId) {
-      return NextResponse.json({ error: "documentId is required" }, { status: 400 })
+      return addSecurityHeaders(NextResponse.json({ error: "documentId is required" }, { status: 400 }))
     }
 
     await connectDB()
 
-    const document = await Document.findOne({ _id: documentId, userId: payload.userId })
+    const document = await Document.findOne({ _id: documentId, userId })
     if (!document) {
-      return NextResponse.json({ error: "Document not found" }, { status: 404 })
+      return addSecurityHeaders(NextResponse.json({ error: "Document not found" }, { status: 404 }))
     }
 
     // Hard-delete the document and all associated data
@@ -85,10 +70,11 @@ export async function DELETE(request: NextRequest) {
       AnalysisReport.deleteMany({ answerScriptDocumentId: documentId }),
     ])
 
-    logger.info('Document deleted', { documentId, userId: payload.userId })
-    return NextResponse.json({ success: true })
+    logger.info('Document deleted', { documentId, userId })
+    return addSecurityHeaders(NextResponse.json({ success: true }))
   } catch (error) {
     logger.error('Delete document error', { error: error instanceof Error ? error.message : String(error) })
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const err = handleError(error)
+    return addSecurityHeaders(NextResponse.json({ error: err.message }, { status: err.statusCode }))
   }
 }

@@ -1,10 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import Document from "@/lib/models/Document"
-import { verifyToken } from "@/lib/auth"
 import { config } from "@/lib/config"
 import { prepareDocumentContent } from "@/lib/utils"
 import { combineChunksToText } from "@/lib/documentPipeline"
+import { secureRoute, addSecurityHeaders } from "@/lib/security"
+import { handleError } from "@/lib/errors"
+import { rateLimitConfigs } from "@/lib/rateLimit"
 
 async function identifyTopics(text: string): Promise<string[]> {
   try {
@@ -64,31 +66,31 @@ async function identifyTopics(text: string): Promise<string[]> {
  */
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "")
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
+    const { userId, error } = await secureRoute(request, {
+      requireAuth: true,
+      rateLimit: rateLimitConfigs.aiGeneration,
+    })
+    if (error) return error
 
     const { documentId } = await request.json()
 
     if (!documentId) {
-      return NextResponse.json({ error: "Document ID is required" }, { status: 400 })
+      return addSecurityHeaders(
+        NextResponse.json({ error: "Document ID is required" }, { status: 400 })
+      )
     }
 
     await connectDB()
 
     const document = await Document.findOne({
       _id: documentId,
-      userId: payload.userId,
+      userId,
     })
 
     if (!document) {
-      return NextResponse.json({ error: "Document not found" }, { status: 404 })
+      return addSecurityHeaders(
+        NextResponse.json({ error: "Document not found" }, { status: 404 })
+      )
     }
 
     document.processingStatus = "processing"
@@ -107,30 +109,32 @@ export async function POST(request: NextRequest) {
       document.processingError = null
       await document.save()
 
-      return NextResponse.json({
+      return addSecurityHeaders(NextResponse.json({
         success: true,
         document: {
           id: document._id,
           topics: document.topics,
           processingStatus: document.processingStatus,
         },
-      })
+      }))
     } catch (error) {
       console.error("Topic processing error:", error)
       document.processingStatus = "failed"
       document.processingError = error instanceof Error ? error.message : "Unknown error"
       await document.save()
 
-      return NextResponse.json(
-        {
-          error: "Failed to process topics",
-          details: error instanceof Error ? error.message : "Unknown error",
-        },
-        { status: 500 },
+      const err = handleError(error)
+      return addSecurityHeaders(
+        NextResponse.json(
+          { error: "Failed to process topics", details: err.message },
+          { status: err.statusCode },
+        )
       )
     }
   } catch (error) {
-    console.error("Process endpoint error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const err = handleError(error)
+    return addSecurityHeaders(
+      NextResponse.json({ error: err.message }, { status: err.statusCode })
+    )
   }
 }

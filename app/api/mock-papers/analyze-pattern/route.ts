@@ -1,8 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import Document from "@/lib/models/Document"
-import { verifyToken } from "@/lib/auth"
 import { combineChunksToText, buildLegacyDocumentStructure } from "@/lib/documentPipeline"
+import { secureRoute, addSecurityHeaders } from "@/lib/security"
+import { config } from "@/lib/config"
+import { handleError } from "@/lib/errors"
+import { withCache, generateAICacheKey, cacheTTL } from "@/lib/cache"
+import { rateLimitConfigs } from "@/lib/rateLimit"
 
 interface PatternAnalysis {
   commonTopics: string[]
@@ -23,19 +27,14 @@ interface PatternAnalysis {
 
 async function analyzePatternWithAI(text: string): Promise<PatternAnalysis> {
   try {
-    const apiKey = process.env.OPENROUTER_API_KEY
-    if (!apiKey) {
-      throw new Error("OPENROUTER_API_KEY not configured")
-    }
-
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch(`${config.ai.apiUrl}/chat/completions`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${config.ai.apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "qwen/qwen3-coder:free",
+        model: config.ai.model,
         messages: [
           {
             role: "system",
@@ -121,15 +120,11 @@ Analyze question distribution, marks allocation, topic frequency, and provide ac
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "")
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
+    const { userId, error } = await secureRoute(request, {
+      requireAuth: true,
+      rateLimit: rateLimitConfigs.aiGeneration,
+    })
+    if (error) return error
 
     await connectDB()
     const { documentIds } = await request.json()
@@ -144,7 +139,7 @@ export async function POST(request: NextRequest) {
     // Fetch all previous papers
     const documents = await Document.find({
       _id: { $in: documentIds },
-      userId: payload.userId,
+      userId,
     })
 
     if (documents.length === 0) {
@@ -167,21 +162,24 @@ export async function POST(request: NextRequest) {
       .filter(Boolean)
       .join("\n\n---NEW PAPER---\n\n")
 
-    const patternAnalysis = await analyzePatternWithAI(combinedText)
+    const patternAnalysis = await withCache(
+      generateAICacheKey('pattern-analysis', combinedText.substring(0, 2000)),
+      () => analyzePatternWithAI(combinedText),
+      cacheTTL.aiGeneration,
+    )
 
-    return NextResponse.json(
-      {
-        message: "Pattern analysis completed successfully",
-        documentCount: documents.length,
-        pattern: patternAnalysis,
-      },
-      { status: 200 },
+    return addSecurityHeaders(
+      NextResponse.json(
+        {
+          message: "Pattern analysis completed successfully",
+          documentCount: documents.length,
+          pattern: patternAnalysis,
+        },
+        { status: 200 },
+      ),
     )
   } catch (error) {
-    console.error("Pattern analysis error:", error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to analyze pattern" },
-      { status: 500 },
-    )
+    const { statusCode, message } = handleError(error)
+    return NextResponse.json({ error: message }, { status: statusCode })
   }
 }
