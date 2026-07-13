@@ -61,7 +61,7 @@ async function generateAnalysisWithAI(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: config.ai.model,
+        model: config.ai.models.analysis,
         messages: [
           {
             role: "system",

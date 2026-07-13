@@ -1,4 +1,4 @@
-import { callAI, extractJSON } from "@/lib/services/aiService"
+import { callAI, extractJSON, type AIFeature } from "@/lib/services/aiService"
 import { config } from "@/lib/config"
 
 export interface AiChunk {
@@ -102,7 +102,7 @@ export async function generateFlashcardsFromChunks(chunks: AiChunk[], targetCoun
           content: `Chunk ID: ${chunk.chunkId}\nPage: ${chunk.pageNumber}\nHeading: ${chunk.heading || ""}\n\nContent:\n${chunk.content}`,
         },
       ],
-      { temperature: 0, maxTokens: 1200, useCache: false },
+      { temperature: 0, maxTokens: 1200, useCache: false, feature: 'flashcards' as AIFeature },
     )
 
     const cards = extractJSON<Array<{ question: string; answer: string }>>(response.content) || []
@@ -147,7 +147,7 @@ export async function generateQuestionsFromChunks(
           content: `Chunk ID: ${chunk.chunkId}\nPage: ${chunk.pageNumber}\nHeading: ${chunk.heading || ""}\n\nContent:\n${chunk.content}`,
         },
       ],
-      { temperature: 0, maxTokens: 1800, useCache: false },
+      { temperature: 0, maxTokens: 1800, useCache: false, feature: 'mockQuestions' as AIFeature },
     )
 
     const questions = extractJSON<Array<MockQuestionItem>>(response.content) || []

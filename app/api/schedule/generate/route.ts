@@ -62,7 +62,7 @@ Rest days: ${restDays.length > 0 ? restDays.map(d => ["Sun", "Mon", "Tue", "Wed"
         "X-Title": "SREP StudyMate",
       },
       body: JSON.stringify({
-        model: config.ai.model,
+        model: config.ai.models.schedule,
         messages: [
           {
             role: "system",

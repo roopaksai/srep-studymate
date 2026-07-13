@@ -6,16 +6,35 @@
 export const config = {
   // AI Configuration
   ai: {
-    // Provider: 'openrouter' (free models via OpenRouter)
     provider: process.env.AI_PROVIDER || "openrouter",
-    // Default to Llama 3.3 70B (free, high quality, better than GPT-3.5)
-    model: process.env.AI_MODEL || "meta-llama/llama-3.3-70b-instruct",
     apiKey: process.env.AI_API_KEY || process.env.OPENROUTER_API_KEY || "",
     apiUrl: process.env.AI_API_URL || "https://openrouter.ai/api/v1",
-    maxRetries: 3,
-    timeout: 30000, // 30 seconds
+    timeout: 30000,
     temperature: 0.7,
     maxTokens: 2000,
+    maxRetries: 3,
+
+    // Per-feature model selection (all free on OpenRouter)
+    // Quality-ranked: gemma-4-31b (65) > nemotron-3-super-120b (60) > gpt-oss-120b (55) > gemma-4-26b (52) > llama-3.3-70b (24)
+    models: {
+      // High-quality structured JSON generation (flashcards, questions)
+      flashcards: process.env.AI_MODEL_FLASHCARDS || "google/gemma-4-31b-it:free",
+      mockQuestions: process.env.AI_MODEL_MOCK_QUESTIONS || "nvidia/nemotron-3-super-120b-a12b:free",
+      // Reasoning-heavy tasks (analysis, assessment)
+      analysis: process.env.AI_MODEL_ANALYSIS || "openai/gpt-oss-120b:free",
+      // Planning tasks (schedule generation)
+      schedule: process.env.AI_MODEL_SCHEDULE || "google/gemma-4-26b-a4b-it:free",
+      // Lightweight tasks (topic identification, simple extraction)
+      topicIdentification: process.env.AI_MODEL_TOPICS || "meta-llama/llama-3.3-70b-instruct:free",
+      // Default fallback chain — tried in order on rate limit / failure
+      default: process.env.AI_MODEL || "google/gemma-4-31b-it:free",
+      fallbackChain: [
+        process.env.AI_MODEL || "google/gemma-4-31b-it:free",
+        "nvidia/nemotron-3-super-120b-a12b:free",
+        "openai/gpt-oss-120b:free",
+        "meta-llama/llama-3.3-70b-instruct:free",
+      ],
+    },
   },
 
   // File Upload Configuration

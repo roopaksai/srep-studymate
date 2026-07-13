@@ -58,7 +58,7 @@ export async function GET() {
         health.checks.aiService = {
           status: "configured",
           message: "AI API key is configured",
-          model: config.ai.model,
+          model: config.ai.models.default,
         }
       } else {
         health.checks.aiService = {

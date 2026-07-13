@@ -39,7 +39,7 @@ async function generateFlashcardsWithAI(text: string): Promise<{ question: strin
       method: "POST",
       headers,
       body: JSON.stringify({
-        model: config.ai.model,
+        model: config.ai.models.flashcards,
         messages: [
           {
             role: "system",

@@ -1,5 +1,5 @@
 /**
- * AI Service - Handles all AI-related operations
+ * AI Service - Handles all AI operations with fallback chains and caching
  */
 
 import { config } from "@/lib/config"
@@ -22,13 +22,29 @@ interface AIResponse {
   }
 }
 
+export type AIFeature = keyof typeof config.ai.models
+
 /**
- * Call OpenRouter AI API with retry logic and caching
+ * Resolve the best model for a feature, with fallback chain
+ */
+function resolveModelChain(feature?: AIFeature): string[] {
+  const primary = (feature
+    ? config.ai.models[feature]
+    : config.ai.models.default) as string
+
+  // Build chain: primary model first, then fallbacks (skip duplicates)
+  const chain = [primary, ...config.ai.models.fallbackChain.filter(m => m !== primary)]
+  return chain
+}
+
+/**
+ * Call AI with retry logic, model fallback chain, and caching
  */
 export async function callAI(
   messages: AIMessage[],
   options?: {
     model?: string
+    feature?: AIFeature
     temperature?: number
     maxTokens?: number
     maxRetries?: number
@@ -36,114 +52,162 @@ export async function callAI(
   }
 ): Promise<AIResponse> {
   const {
-    model = config.ai.model,
+    model: explicitModel,
+    feature,
     temperature = config.ai.temperature,
     maxTokens = config.ai.maxTokens,
     maxRetries = config.ai.maxRetries,
     useCache = true,
   } = options || {}
 
-  // Check cache first if enabled
-  if (useCache) {
-    const cacheKey = generateAICacheKey('ai-call', JSON.stringify(messages), { model, temperature })
-    const cached = getCached<AIResponse>(cacheKey)
-    if (cached) {
-      logger.debug('AI response retrieved from cache', { model })
-      return cached
-    }
-  }
-
   const apiKey = config.ai.apiKey
   if (!apiKey) {
     throw new ExternalServiceError("AI API key not configured")
   }
 
+  // Determine model chain
+  const modelChain = explicitModel
+    ? [explicitModel, ...config.ai.models.fallbackChain.filter(m => m !== explicitModel)]
+    : resolveModelChain(feature)
+
+  // Check cache first (only for primary model)
+  if (useCache) {
+    const cacheKey = generateAICacheKey(
+      feature || 'ai-call',
+      JSON.stringify(messages.slice(0, 2)),
+      { model: modelChain[0], temperature }
+    )
+    const cached = getCached<AIResponse>(cacheKey)
+    if (cached) {
+      logger.debug('AI response cache hit', { feature, model: cached.model })
+      return cached
+    }
+  }
+
   let lastError: Error | null = null
   const startTime = Date.now()
 
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      if (attempt > 0) {
-        // Exponential backoff
-        const waitTime = Math.pow(2, attempt) * 1000
-        console.log(`Waiting ${waitTime}ms before retry...`)
-        await new Promise((resolve) => setTimeout(resolve, waitTime))
-      }
+  // Try each model in the fallback chain
+  for (const currentModel of modelChain) {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          const waitTime = Math.pow(2, attempt) * 1000
+          await new Promise((resolve) => setTimeout(resolve, waitTime))
+        }
 
-      console.log(`AI call attempt ${attempt + 1}/${maxRetries}`)
+        logger.debug('AI call attempt', {
+          feature,
+          model: currentModel,
+          attempt: attempt + 1,
+          maxRetries,
+        })
 
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": config.api.baseUrl,
-          "X-Title": config.app.name,
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-          temperature,
-          max_tokens: maxTokens,
-        }),
-      })
+        const response = await fetch(`${config.ai.apiUrl}/chat/completions`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": config.api.baseUrl,
+            "X-Title": config.app.name,
+          },
+          body: JSON.stringify({
+            model: currentModel,
+            messages,
+            temperature,
+            max_tokens: maxTokens,
+          }),
+        })
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error(`AI API Error (${response.status}):`, errorText)
+        if (!response.ok) {
+          const errorText = await response.text()
+          const status = response.status
 
-        // Retry on rate limit or server errors
-        if ((response.status === 429 || response.status >= 500) && attempt < maxRetries - 1) {
-          lastError = new Error(`AI API failed: ${response.status}`)
+          // Rate limit or server error — retry this model, then try next model
+          if (status === 429 || status >= 500) {
+            lastError = new Error(`AI API ${status}: ${errorText.substring(0, 200)}`)
+            logger.warn('AI rate limit / server error', {
+              feature,
+              model: currentModel,
+              status,
+              attempt: attempt + 1,
+            })
+
+            // On 429, immediately try next model (don't waste retries on rate-limited model)
+            if (status === 429) break
+
+            continue
+          }
+
+          // Client error (400, 401, etc.) — don't retry, try next model
+          lastError = new Error(`AI API ${status}: ${errorText.substring(0, 200)}`)
+          logger.warn('AI client error, trying next model', {
+            feature,
+            model: currentModel,
+            status,
+          })
+          break
+        }
+
+        const data = await response.json()
+        const content = data.choices[0]?.message?.content
+
+        if (!content) {
+          lastError = new Error("Empty response from AI")
           continue
         }
 
-        throw new ExternalServiceError(
-          `AI API request failed: ${response.status} ${response.statusText}`,
-          { status: response.status, error: errorText }
-        )
-      }
+        const result: AIResponse = {
+          content,
+          model: data.model || currentModel,
+          usage: data.usage
+            ? {
+                promptTokens: data.usage.prompt_tokens,
+                completionTokens: data.usage.completion_tokens,
+                totalTokens: data.usage.total_tokens,
+              }
+            : undefined,
+        }
 
-      const data = await response.json()
-      const content = data.choices[0]?.message?.content
+        // Cache the response
+        if (useCache) {
+          const cacheKey = generateAICacheKey(
+            feature || 'ai-call',
+            JSON.stringify(messages.slice(0, 2)),
+            { model: currentModel, temperature }
+          )
+          setCache(cacheKey, result, cacheTTL.aiGeneration)
+        }
 
-      if (!content) {
-        throw new ExternalServiceError("Empty response from AI")
-      }
+        const duration = Date.now() - startTime
+        logger.aiOperation('AI call', currentModel, duration, result.usage?.totalTokens)
 
-      const result: AIResponse = {
-        content,
-        model: data.model || model,
-        usage: data.usage
-          ? {
-              promptTokens: data.usage.prompt_tokens,
-              completionTokens: data.usage.completion_tokens,
-              totalTokens: data.usage.total_tokens,
-            }
-          : undefined,
-      }
+        return result
+      } catch (error) {
+        lastError = error as Error
+        logger.error('AI call attempt failed', {
+          feature,
+          model: currentModel,
+          attempt: attempt + 1,
+          error: error instanceof Error ? error.message : String(error),
+        })
 
-      // Cache the response
-      if (useCache) {
-        const cacheKey = generateAICacheKey('ai-call', JSON.stringify(messages), { model, temperature })
-        setCache(cacheKey, result, cacheTTL.aiGeneration)
-      }
-
-      const duration = Date.now() - startTime
-      logger.aiOperation('AI call', model, duration, result.usage?.totalTokens)
-
-      return result
-    } catch (error) {
-      lastError = error as Error
-      logger.error(`AI call attempt ${attempt + 1} failed`, error)
-
-      if (attempt === maxRetries - 1) {
-        throw error
+        if (attempt === maxRetries - 1) {
+          break // Try next model
+        }
       }
     }
   }
 
-  throw lastError || new ExternalServiceError("AI call failed after all retries")
+  const duration = Date.now() - startTime
+  logger.error('All AI models failed', {
+    feature,
+    models: modelChain,
+    duration,
+    error: lastError?.message,
+  })
+
+  throw lastError || new ExternalServiceError("AI service unavailable — all models failed")
 }
 
 /**
@@ -151,14 +215,12 @@ export async function callAI(
  */
 export function extractJSON<T = any>(content: string): T | null {
   try {
-    // Try to find JSON in the response
     const jsonMatch = content.match(/\[[\s\S]*\]|\{[\s\S]*\}/)
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]) as T
     }
     return null
-  } catch (error) {
-    console.error("Failed to extract JSON from AI response:", error)
+  } catch {
     return null
   }
 }
@@ -210,7 +272,7 @@ Create questions that require detailed explanations, analysis, comparisons, and 
     },
   ]
 
-  const response = await callAI(messages)
+  const response = await callAI(messages, { feature: 'mockQuestions' })
   const questions = extractJSON<any[]>(response.content)
 
   if (!questions || !Array.isArray(questions)) {

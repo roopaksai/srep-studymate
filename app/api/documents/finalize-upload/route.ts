@@ -54,7 +54,7 @@ async function identifyTopics(text: string): Promise<string[]> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: config.ai.model,
+        model: config.ai.models.topicIdentification,
         messages: [
           {
             role: "system",
