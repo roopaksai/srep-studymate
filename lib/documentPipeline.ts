@@ -1,6 +1,6 @@
 import crypto from "crypto"
 import { cleanAndOptimizeText } from "@/lib/utils"
-import type { PdfPageData } from "@/lib/pdfExtractor"
+import type { ExtractionResult, PageResult } from "@/lib/pdfExtractor"
 
 export interface StructuredSection {
   heading: string
@@ -31,8 +31,11 @@ export interface StructuredDocument {
     processedAt: string
     extractionMode: string
     scanned: boolean
+    scannedPages?: number
     confidence: number
     warnings: string[]
+    totalChars?: number
+    extractionTimeMs?: number
   }
   extractedText: string
 }
@@ -66,6 +69,95 @@ function getHeadingFromText(text: string, fallback: string): string {
   }
   return trimmed.length > 120 ? fallback : trimmed
 }
+
+// ---------------------------------------------------------------------------
+// Primary: Build StructuredDocument from ExtractionResult (new pipeline)
+// ---------------------------------------------------------------------------
+
+/**
+ * Convert a PageResult from the new extraction pipeline into StructuredPage format.
+ * Preserves headings, lists, tables, and code blocks as structured sections.
+ */
+function pageResultToStructuredPage(page: PageResult): StructuredPage {
+  const sections: StructuredSection[] = []
+  let currentHeading = `Page ${page.pageNumber}`
+  let currentContent: string[] = []
+
+  for (const block of page.blocks) {
+    if (block.type === "heading") {
+      // Save previous section if it has content
+      if (currentContent.length > 0) {
+        sections.push({ heading: currentHeading, content: currentContent })
+      }
+      currentHeading = block.content
+      currentContent = []
+    } else {
+      // Paragraphs, lists, code, separators all go into content
+      if (block.content) {
+        currentContent.push(block.content)
+      }
+    }
+  }
+
+  // Push final section
+  if (currentContent.length > 0) {
+    sections.push({ heading: currentHeading, content: currentContent })
+  }
+
+  // Ensure at least one section
+  if (sections.length === 0) {
+    sections.push({
+      heading: `Page ${page.pageNumber}`,
+      content: [page.markdown || ""],
+    })
+  }
+
+  return { pageNumber: page.pageNumber, sections }
+}
+
+/**
+ * Build a StructuredDocument directly from the new extraction pipeline's ExtractionResult.
+ * This is the primary path for PDF extraction.
+ */
+export function createStructuredDocumentFromExtraction(
+  result: ExtractionResult,
+  title: string,
+): StructuredDocument {
+  const pages: StructuredPage[] = result.pages.map(pageResultToStructuredPage)
+
+  // Use the chunks from the extraction pipeline (already optimally sized)
+  const chunks: StructuredChunk[] = result.chunks.map((c) => ({
+    chunkId: c.chunkId,
+    pageNumber: c.pageNumber,
+    pageNumbers: c.pageNumbers,
+    heading: c.heading,
+    content: c.content,
+    wordCount: c.wordCount,
+  }))
+
+  return {
+    title: result.title || title,
+    pages,
+    chunks,
+    extractedText: result.extractedText,
+    metadata: {
+      pages: result.metadata.pageCount,
+      language: "en",
+      processedAt: new Date().toISOString(),
+      extractionMode: "pdf-extraction-v2",
+      scanned: result.metadata.scannedPages > 0,
+      scannedPages: result.metadata.scannedPages,
+      confidence: result.metadata.scannedPages > 0 ? 0.7 : 0.95,
+      warnings: result.metadata.warnings,
+      totalChars: result.metadata.totalChars,
+      extractionTimeMs: result.metadata.extractionTimeMs,
+    },
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Legacy: Text-based extraction (for DOCX, TXT, and fallback)
+// ---------------------------------------------------------------------------
 
 export function createStructuredDocumentFromText(
   text: string,
@@ -143,12 +235,21 @@ export function createStructuredDocumentFromText(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Legacy: Page-by-page extraction (backward compatible with old PdfPageData)
+// ---------------------------------------------------------------------------
+
+interface LegacyPdfPageData {
+  pageNumber: number
+  text: string
+}
+
 /**
- * Build a StructuredDocument from page-by-page extracted text (PdfPageData[]).
- * Each page maps to exactly one chunk (1:1 mapping).
+ * Build a StructuredDocument from page-by-page extracted text (legacy format).
+ * Kept for backward compatibility. Prefer createStructuredDocumentFromExtraction.
  */
 export function createStructuredDocumentFromPages(
-  pageData: PdfPageData[],
+  pageData: LegacyPdfPageData[],
   title: string,
   options?: {
     extractionMode?: string
@@ -170,7 +271,6 @@ export function createStructuredDocumentFromPages(
     return { pageNumber: pd.pageNumber, sections }
   })
 
-  // 1:1 page-to-chunk mapping
   const chunks: StructuredChunk[] = pages.map((page) => {
     const content = page.sections.map((s) => [s.heading, ...s.content].join("\n")).join("\n\n")
     return {
@@ -202,10 +302,6 @@ export function createStructuredDocumentFromPages(
   }
 }
 
-/**
- * Map each StructuredPage to exactly one chunk (1:1), replacing the old
- * word-count grouping algorithm.
- */
 export function chunkStructuredPages(
   pages: StructuredPage[],
   _options?: unknown,

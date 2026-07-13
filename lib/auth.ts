@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken"
 import { jwtVerify } from "jose"
 
-const secret = process.env.JWT_SECRET || "your-secret-key-change-in-production"
+const secret = process.env.JWT_SECRET!
 
 export function generateToken(userId: string) {
   return jwt.sign({ userId }, secret, { expiresIn: "7d" })

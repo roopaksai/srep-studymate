@@ -4,6 +4,38 @@ export interface User {
   name: string
 }
 
+export interface DocumentPageSection {
+  heading: string
+  content: string[]
+}
+
+export interface DocumentPage {
+  pageNumber: number
+  sections: DocumentPageSection[]
+}
+
+export interface DocumentChunk {
+  chunkId: string
+  pageNumber: number
+  pageNumbers?: number[]
+  heading?: string
+  content: string
+  wordCount: number
+}
+
+export interface DocumentMetadata {
+  pages?: number
+  language?: string
+  processedAt?: string
+  extractionMode?: string
+  scanned?: boolean
+  scannedPages?: number
+  confidence?: number
+  warnings?: string[]
+  totalChars?: number
+  extractionTimeMs?: number
+}
+
 export interface Document {
   _id: string
   userId: string
@@ -15,30 +47,10 @@ export interface Document {
   processingStatus: "pending" | "processing" | "completed" | "failed"
   processingError?: string | null
   topics?: string[]
-  pages?: Array<{
-    pageNumber: number
-    sections: Array<{
-      heading: string
-      content: string[]
-    }>
-  }>
-  chunks?: Array<{
-    chunkId: string
-    pageNumber: number
-    pageNumbers?: number[]
-    heading?: string
-    content: string
-    wordCount: number
-  }>
-  metadata?: {
-    pages?: number
-    language?: string
-    processedAt?: string
-    extractionMode?: string
-    scanned?: boolean
-    confidence?: number
-    warnings?: string[]
-  }
+  pages?: DocumentPage[]
+  chunks?: DocumentChunk[]
+  metadata?: DocumentMetadata
+  extractedText?: string
   createdAt: string
 }
 

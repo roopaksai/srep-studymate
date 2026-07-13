@@ -70,12 +70,10 @@ export const config = {
     topicExtractionLength: 3000, // Max chars for topic extraction
   },
 
-  // Structured document processing
+  // Document processing
   processing: {
-    serviceUrl: process.env.PDF_PROCESSOR_URL || "http://127.0.0.1:8000",
-    serviceToken: process.env.PDF_PROCESSOR_TOKEN || "",
-    requestTimeoutMs: 120000,
     maxPages: 100,
+    maxFileSize: 30 * 1024 * 1024, // 30MB
     chunkTargetWords: 400,
     chunkMinWords: 300,
     chunkMaxWords: 500,
@@ -133,7 +131,6 @@ export function validateConfig() {
     { key: "AI_API_KEY or OPENROUTER_API_KEY", value: config.ai.apiKey },
     { key: "MONGODB_URI", value: config.database.uri },
     { key: "JWT_SECRET", value: config.auth.jwtSecret },
-    { key: "PDF_PROCESSOR_TOKEN", value: config.processing.serviceToken },
   ]
 
   const missing = required.filter((item) => !item.value)

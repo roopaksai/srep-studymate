@@ -19,13 +19,13 @@ const nextConfig = {
     },
   },
 
-  // Prevent Next.js from bundling pdfjs-dist on the server, which breaks relative worker script loading
-  serverExternalPackages: ["pdfjs-dist"],
+  // Prevent Next.js from bundling these on the server, which breaks their runtime behavior
+  serverExternalPackages: [
+    "pdfjs-dist",        // Worker script loading breaks when bundled
+    "tesseract.js",      // WASM file loading breaks when bundled
+  ],
   
   env: {
-    MONGODB_URI: process.env.MONGODB_URI,
-    JWT_SECRET: process.env.JWT_SECRET,
-    OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
   },
 }
