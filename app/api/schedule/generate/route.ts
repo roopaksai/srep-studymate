@@ -58,8 +58,8 @@ Rest days: ${restDays.length > 0 ? restDays.map(d => ["Sun", "Mon", "Tue", "Wed"
       headers: {
         Authorization: `Bearer ${config.ai.apiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
-        "X-Title": "SREP StudyMate",
+        "HTTP-Referer": config.api.baseUrl,
+        "X-Title": config.app.name,
       },
       body: JSON.stringify({
         model: config.ai.models.schedule,

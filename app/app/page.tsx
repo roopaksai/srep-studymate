@@ -20,7 +20,6 @@ import toast from "react-hot-toast"
 import { motion } from "framer-motion"
 import { LayoutGrid, List, Trash2 } from "lucide-react"
 import { uploadFileInChunks, shouldUseChunkedUpload } from "@/lib/chunkedUpload"
-import { Progress, Alert } from "antd"
 
 interface Document {
   _id: string
@@ -352,18 +351,29 @@ export default function DashboardPage() {
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
               <h2 className="relative text-lg font-bold text-[#0F172A] dark:text-white mb-4 tracking-tight leading-tight">Upload Document</h2>
               {processingNotice && (
-                <div className="relative mb-4">
-                  <Alert
-                    type={processingNotice.type}
-                    showIcon
-                    message={processingNotice.message}
-                    className="rounded-xl"
-                  />
+                <div className={`relative mb-4 flex items-start gap-3 rounded-xl p-3 text-sm ${
+                  processingNotice.type === 'success'
+                    ? 'bg-green-50 text-green-800 border border-green-200'
+                    : processingNotice.type === 'error'
+                    ? 'bg-red-50 text-red-800 border border-red-200'
+                    : 'bg-blue-50 text-blue-800 border border-blue-200'
+                }`}>
+                  <span className="mt-0.5 text-lg">
+                    {processingNotice.type === 'success' ? '✓' : processingNotice.type === 'error' ? '✕' : 'ℹ'}
+                  </span>
+                  <span>{processingNotice.message}</span>
                 </div>
               )}
               {(uploadLoading || activeJobId) && (
                 <div className="relative mb-4 space-y-2">
-                  <Progress percent={uploadProgress} status={uploadProgress >= 100 ? "success" : "active"} />
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        uploadProgress >= 100 ? 'bg-green-500' : 'bg-blue-500'
+                      }`}
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
                   <p className="text-xs text-[#64748B] dark:text-gray-400">
                     {activeJobId ? "Structured extraction in progress" : "Uploading file"}
                   </p>

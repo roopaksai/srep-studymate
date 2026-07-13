@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import NavigationDropdown from "@/components/NavigationDropdown"
 import BottomNavigation from "@/components/BottomNavigation"
-import { FlashcardSkeleton, ListItemSkeleton } from "@/components/SkeletonLoaders"
+import { FlashcardSkeleton } from "@/components/SkeletonLoaders"
 import toast from "react-hot-toast"
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion"
 
