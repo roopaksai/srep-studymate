@@ -88,7 +88,7 @@ Grade scale: A+ (90-100%), A (80-89%), B+ (70-79%), B (60-69%), C (50-59%), D (4
 
     throw new Error("Failed to parse AI response")
   } catch (error) {
-    console.error("AI generation failed, using fallback:", error)
+    logger.error("AI generation failed, using fallback", { error: error instanceof Error ? error.message : String(error) })
     // Fallback analysis with scoring
     return {
       summary: "The answer script shows understanding of basic concepts but needs more depth in explanations and examples. Overall performance is satisfactory.",
@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     )
   } catch (error) {
-    console.error("Generate analysis error:", error)
+    logger.error("Generate analysis error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

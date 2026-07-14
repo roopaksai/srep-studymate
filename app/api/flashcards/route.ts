@@ -60,7 +60,7 @@ export async function GET_SINGLE(request: NextRequest, { params }: { params: { i
 
     return addSecurityHeaders(NextResponse.json({ flashcardSet }))
   } catch (error) {
-    console.error("Get flashcard set error:", error)
+    logger.error("Get flashcard set error", { error: error instanceof Error ? error.message : String(error) })
     const err = handleError(error)
     return addSecurityHeaders(NextResponse.json({ error: err.message }, { status: err.statusCode }))
   }

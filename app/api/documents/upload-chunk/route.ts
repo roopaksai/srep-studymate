@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { secureRoute, addSecurityHeaders } from "@/lib/security"
 import { rateLimitConfigs } from "@/lib/rateLimit"
 import { writeFile, mkdir } from "fs/promises"
+import { logger } from "@/lib/logger"
 import { join } from "path"
 import { tmpdir } from "os"
 
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     const chunkBuffer = Buffer.from(await chunk.arrayBuffer())
     await writeFile(chunkPath, chunkBuffer)
 
-    console.log(`Chunk ${chunkIndex + 1}/${totalChunks} saved for upload ${uploadId}`)
+    logger.info(`Chunk ${chunkIndex + 1}/${totalChunks} saved for upload ${uploadId}`)
 
     return addSecurityHeaders(NextResponse.json({
       success: true,
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
       uploadId,
     }))
   } catch (error) {
-    console.error("Chunk upload error:", error)
+    logger.error("Chunk upload error", { error: error instanceof Error ? error.message : String(error) })
     return addSecurityHeaders(NextResponse.json({ error: "Failed to upload chunk" }, { status: 500 }))
   }
 }

@@ -5,6 +5,7 @@ import { combineChunksToText, buildLegacyDocumentStructure } from "@/lib/documen
 import { secureRoute, addSecurityHeaders } from "@/lib/security"
 import { config } from "@/lib/config"
 import { handleError } from "@/lib/errors"
+import { logger } from "@/lib/logger"
 import { withCache, generateAICacheKey, cacheTTL } from "@/lib/cache"
 import { rateLimitConfigs } from "@/lib/rateLimit"
 
@@ -76,7 +77,7 @@ Analyze question distribution, marks allocation, topic frequency, and provide ac
 
     throw new Error("Failed to parse AI response")
   } catch (error) {
-    console.error("AI pattern analysis failed, using fallback:", error)
+    logger.error("AI pattern analysis failed, using fallback", { error: error instanceof Error ? error.message : String(error) })
     // Fallback pattern
     return {
       commonTopics: [

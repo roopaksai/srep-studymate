@@ -6,6 +6,7 @@ import { prepareDocumentContent } from "@/lib/utils"
 import { combineChunksToText } from "@/lib/documentPipeline"
 import { secureRoute, addSecurityHeaders } from "@/lib/security"
 import { handleError } from "@/lib/errors"
+import { logger } from "@/lib/logger"
 import { rateLimitConfigs } from "@/lib/rateLimit"
 
 async function identifyTopics(text: string): Promise<string[]> {
@@ -55,7 +56,7 @@ async function identifyTopics(text: string): Promise<string[]> {
     const lines = content.split("\n").filter((line: string) => line.trim())
     return lines.slice(0, 8).map((line: string) => line.replace(/^[-*•]\s*/, "").trim())
   } catch (error) {
-    console.error("Topic identification error:", error)
+    logger.error("Topic identification error", { error: error instanceof Error ? error.message : String(error) })
     return []
   }
 }
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
         },
       }))
     } catch (error) {
-      console.error("Topic processing error:", error)
+      logger.error("Topic processing error", { error: error instanceof Error ? error.message : String(error) })
       document.processingStatus = "failed"
       document.processingError = error instanceof Error ? error.message : "Unknown error"
       await document.save()

@@ -17,6 +17,7 @@ import {
   buildLegacyDocumentStructure,
 } from "@/lib/documentPipeline"
 import { prepareDocumentContent } from "@/lib/utils"
+import { logger } from "@/lib/logger"
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -35,7 +36,7 @@ async function extractTextFromBuffer(buffer: Buffer, fileName: string): Promise<
     const decoder = new TextDecoder("utf-8")
     return { text: decoder.decode(buffer) }
   } catch (error) {
-    console.error("Text extraction error:", error)
+    logger.error("Text extraction error", { error: error instanceof Error ? error.message : String(error) })
     return { text: "" }
   }
 }
@@ -84,7 +85,7 @@ async function identifyTopics(text: string): Promise<string[]> {
 
     return []
   } catch (error) {
-    console.error("Topic identification error:", error)
+    logger.error("Topic identification error", { error: error instanceof Error ? error.message : String(error) })
     return []
   }
 }
@@ -102,7 +103,7 @@ async function processTopicsInBackground(documentId: string, text: string): Prom
       processingError: null,
     })
   } catch (error) {
-    console.error(`Background processing failed for document ${documentId}:`, error)
+    logger.error(`Background processing failed for document ${documentId}`, { error: error instanceof Error ? error.message : String(error) })
     await Document.findByIdAndUpdate(documentId, {
       processingStatus: "failed",
       processingError: error instanceof Error ? error.message : "Unknown error",
@@ -168,7 +169,7 @@ export async function POST(request: NextRequest) {
     }
     const completeBuffer = Buffer.concat(chunks)
 
-    console.log(
+    logger.info(
       `Merged ${chunkFiles.length} chunks, total size: ${(completeBuffer.length / (1024 * 1024)).toFixed(2)}MB`,
     )
 
@@ -285,7 +286,7 @@ export async function POST(request: NextRequest) {
       ),
     )
   } catch (error) {
-    console.error("Finalize upload error:", error)
+    logger.error("Finalize upload error", { error: error instanceof Error ? error.message : String(error) })
     return addSecurityHeaders(
       NextResponse.json({ error: "Failed to finalize upload" }, { status: 500 }),
     )

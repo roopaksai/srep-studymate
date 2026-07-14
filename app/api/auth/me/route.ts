@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Me error:", error)
+    logger.error("Me error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -9,6 +9,7 @@ import { extractPdfText } from "@/lib/pdfExtractor"
 import { secureRoute, addSecurityHeaders } from "@/lib/security"
 import { config } from "@/lib/config"
 import { handleError } from "@/lib/errors"
+import { logger } from "@/lib/logger"
 import { rateLimitConfigs } from "@/lib/rateLimit"
 import mammoth from "mammoth"
 
@@ -19,7 +20,7 @@ async function extractTextFromFile(file: File): Promise<string> {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
     const result = await extractPdfText(buffer)
-    console.log("PDF extraction successful, text length:", result.text.length)
+    logger.info("PDF extraction successful", { textLength: result.text.length })
     return result.text
   } else if (
     fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
@@ -118,7 +119,7 @@ weaknesses: ["Concurrent Programming", "Design Patterns", "Testing Strategies"]`
 
     throw new Error("Failed to parse AI response")
   } catch (error) {
-    console.error("AI analysis failed, using fallback:", error)
+    logger.error("AI analysis failed, using fallback", { error: error instanceof Error ? error.message : String(error) })
     const maxScore = questions.reduce((sum, q) => sum + q.marks, 0)
     const totalScore = Math.floor(maxScore * 0.65)
 
@@ -167,7 +168,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    console.log(`Processing answer script: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`)
+    logger.info(`Processing answer script: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`)
 
     // Fetch the mock paper
     const mockPaper = await MockPaper.findOne({
