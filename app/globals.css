@@ -159,7 +159,8 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-gradient-to-b from-orange-50 to-orange-100 text-foreground min-h-screen;
+    @apply text-foreground min-h-screen;
+    background-color: #DEEEEE;
   }
 }
 
